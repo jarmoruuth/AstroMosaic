@@ -34,9 +34,21 @@ set rest of parameters automatically (unless they are given on a command line).
 Images are overlapped by 10%.
 
 Parameters:
-RA          hour minute seconds
-DEC         degrees minute seconds
-name        Optional object name, generates name.html file, default mosaic
-Telescope   Optional telescope name, default T1
-FOV         Optional image FOV in degrees, default 0.62 0.62
-size        Optional image size, default 300
+
+RA          
+hour minute seconds
+
+DEC         
+degrees minute seconds
+
+name        
+Optional object name, generates name.html file, default mosaic
+
+Telescope   
+Optional telescope name, default T1
+
+FOV         
+Optional image FOV in degrees, default 0.62 0.62
+
+size        
+Optional image size, default 300
