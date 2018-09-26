@@ -277,4 +277,5 @@ if aladin == 1:
 f.write("</body>\n")
 f.write("</html>\n")
 
+print ('Mosaic images in file ' + name + '.html')
 f.close()
