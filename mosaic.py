@@ -129,7 +129,7 @@ while row >= -size:
     row_dec = dec + row * img_fov * fov_y
     col = size
     while col >= -size:
-        col_ra = ra + col * (img_fov * fov_x * math.cos(math.radians(abs(row_dec))))
+        col_ra = ra + col * (img_fov * fov_x * (1/math.cos(math.radians(abs(row_dec)))))
         # convert from degrees to hours
         col_ra = col_ra / 15
         point = []
