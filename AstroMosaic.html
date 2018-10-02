@@ -1,0 +1,531 @@
+<!DOCTYPE HTML>
+<html lang = "en">
+<head>
+<!-- include Aladin Lite CSS file in the head section of your page -->
+<link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+<style>
+.flex-container {
+  display: flex;
+  flex-direction: row;
+}
+.flex-container > div {
+  margin: 5px;
+  padding: 5px;
+  font-size: 20px;
+}
+</style>
+    <title>AstroMosaic</title>
+    <meta charset = "UTF-8" />
+</head>
+
+<body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
+
+<h2 id="astro_mosaic_title" >Astro Mosaic</h2>
+
+<div class="flex-container">
+    <div>
+        <form action="javascript:ViewImage()">
+            Target:<br>
+            <input type="text" id="target"><br>
+        </form>
+        <br>
+        <button onclick="ViewImage()">View image</button>
+    </div>
+    <div>
+        <form>
+            Telescope:<br>
+            <select id="telescope">
+                <option value="T1">T1</option>
+                <option value="T2">T2</option>
+                <option value="T3">T3</option>
+                <option value="T4">T4</option>
+                <option value="C1">C1</option>
+            </select>
+        </form>
+    </div>
+    <div>
+        <form>
+            View:<br>
+            <select id="grid_type">
+                <option value="fov">FoV</option>
+                <option value="mosaic">Mosaic grid</option>
+                <option value="panels">Mosaic panels</option>
+            </select>
+        </form>
+    </div>
+    <div>
+        <form action="javascript:ViewImage()">
+            Mosaic overlap (%):<br>
+            <input type="number" id="overlap_percentage" min="1" max="100">
+        </form>    
+    </div>
+    <div>
+        <small id="status_text"></small>
+    </div>
+</div>
+
+<div class="flex-container">
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-0" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_0"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-1" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_1"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-2" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_2"></small>
+    </div>
+    </div>
+    <div class="flex-container">
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-3" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_3"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-4" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_4"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-5" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_5"></small>
+    </div>
+    </div>
+    <div class="flex-container">
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-6" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_6"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-7" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_7"></small>
+    </div>
+    <div>
+    <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
+    <div id="aladin-lite-div-8" style="width:300px;height:300px;"></div>
+    <br>
+    <small id="panel_text_8"></small>
+    </div>
+</div>
+        
+<script type="text/javascript">
+
+// size means number of panels on each side
+// 1 gives 3x3
+var size = 1;
+
+var telescope = "T1";
+var fov_x;
+var fov_y;
+var img_fov = 0.8;  // field of view for single image considering the overlap
+var img_size = 300;
+var image_target;
+
+var url = new URL(window.location);
+console.log(url);
+var searchParams = new URLSearchParams(url.search.slice(1));
+
+var url_target = searchParams.get('target');
+var url_telescope = searchParams.get('telescope');
+var url_name = searchParams.get('name');
+var url_type = searchParams.get('type');
+var url_overlap = searchParams.get('overlap');
+
+var xmlhttp;
+var resolved_name = null;
+var resolved_coordinates = null;
+
+if (!url_target) {
+    url_target = "05:40:49.0 -02:27:30";
+    url_target = "Horsehead nebula";
+}
+
+if (url_name) {
+    document.getElementById("astro_mosaic_title").innerHTML = url_name;
+}
+if (url_telescope) {
+    document.getElementById("telescope").value = url_telescope;
+}
+if (url_type) {
+    document.getElementById("grid_type").value = url_type;
+}
+if (url_overlap) {
+    document.getElementById("overlap_percentage").value = url_overlap;
+} else {
+    document.getElementById("overlap_percentage").value = 20;
+}
+
+if (url_target) {
+    document.getElementById("target").value = url_target;
+    ViewImage();
+}
+
+// Find coordinates from SIMBAD query
+function find_coordinates(str)
+{
+    console.log('find_coordinates');
+
+    var idx = str.indexOf("J2000");
+    if (idx == -1) {
+        console.log("find_coordinates:could not find 'J2000'");
+        return false;
+    }
+    str = str.substr(idx+4);
+    idx = str.indexOf(":");
+    if (idx == -1) {
+        console.log("find_coordinates:could not find ':'");
+        return false;
+    }
+    var coord = str.substr(idx+1, 100);
+    console.log("find_coordinates:get coordinates from '", coord, "'");
+    coord = trim_spaces(coord);
+    for (var i = 0; i < coord.length; i++) {
+        var c = coord.substr(i,1);
+        if ((c < '0' || c > '9') && c != '.' && c != '-' && c != '+' && c != ' ') {
+            break;
+        }
+    }
+    if (i < 12) {
+        console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
+        return false;
+    }
+
+    resolved_name = image_target;
+
+    // change image_taregt from name to coordinates
+    image_target = coord.substr(0, i);
+    image_target = trim_spaces(image_target);
+    console.log("find_coordinates:image_target=", image_target);
+    image_target = reformat_coordinates(image_target);
+    document.getElementById("status_text").innerHTML = "RA/DEC " + image_target;
+
+    resolved_coordinates = image_target;
+
+    return true;
+}
+
+function ViewImageByName()
+{
+    console.log('ViewImageByName');
+
+    if (resolved_name == image_target && resolved_coordinates != null) {
+        // same name already resolved, do not resolve again
+        document.getElementById("status_text").innerHTML = "RA/DEC " + resolved_coordinates;
+        image_target = resolved_coordinates;
+        ViewImageByType();
+        return;
+    }
+
+    var resolver_url = "https://simbad.u-strasbg.fr/simbad/sim-id?output.format=ASCII&Ident=";
+
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.onreadystatechange=function()
+    {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+            console.log('ViewImageByName, got response from HTTP GET: ', xmlhttp.responseText.substr(0, 40));
+            if (find_coordinates(xmlhttp.responseText)) {
+                ViewImageByType();
+            } else {
+                document.getElementById("status_text").innerHTML = "Failed to resolve name " + image_target;
+            }
+        }
+    }
+    resolver_url = resolver_url + image_target.replace(/ /g, "+");
+    console.log('ViewImageByName, send HTTP GET(' + resolver_url + ')');
+    xmlhttp.open("GET", resolver_url, false);
+    xmlhttp.send();    
+}
+
+function trim_spaces(str)
+{
+    // replace all whitespace to space
+    str = str.replace(/\s/g, " ");
+    // remove leading and trailing spaces
+    str = str.trim();
+    for (var i = 0; i < str.length && str.indexOf('  ') != -1; i++) {
+        // remove all duplicate spaces
+        str = str.replace(/  /g, " ");
+    }
+    return str;
+}
+
+function reformat_coordinates(coord)
+{
+    // number, assume coordinates
+    console.log('reformat_coordinates=', coord);
+    var numbers = coord.split(' ');
+    console.log('reformat_coordinates, numbers.length=', numbers.length);
+    if (numbers.length == 2) {
+        // assume already correct format
+    } else if (numbers.length == 6) {
+        // separated by space, add colons
+        coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
+                numbers[3] + ':' + numbers[4] + ':' + numbers[5];
+    } else {
+        // use as-is
+    }
+    return coord;
+}
+
+function ViewImage()
+{
+    console.log('ViewImage');
+
+    clearOldImage();
+
+    img_fov = document.getElementById("overlap_percentage").value;
+    img_fov = 1 - img_fov / 100;
+
+    telescope = document.getElementById("telescope").value;
+
+    // T1 FOV 37´
+    // T2 wide field FOV 43'
+    // T3 FOV 1.654° x 1.249°
+    // T4 FOV 0° 15' 57" x 0° 12' 03"
+    // C1 FOV 0° 31' 18" x 0° 20' 51"
+
+    if (telescope == "T1") {
+        fov_x = 37.0*60.0/3600.0;
+        fov_y = 37.0*60.0/3600.0;
+    } else if (telescope == "T2") {
+        fov_x = 43.0*60.0/3600.0;
+        fov_y = 43.0*60.0/3600.0;
+    } else if (telescope == "T3") {
+        fov_x = 1.654;
+        fov_y = 1.249;
+    } else if (telescope == "T4") {
+        fov_x = (15*60.0+57)/3600.0;
+        fov_y = (12*60.0+3)/3600.0;
+    } else if (telescope == "C1") {
+        fov_x = (31*60.0+18)/3600.0;
+        fov_y = (20*60.0+51)/3600.0;
+    }
+
+    document.getElementById("status_text").innerHTML = "";
+
+    image_target = document.getElementById("target").value;
+    image_target = trim_spaces(image_target);
+    console.log('target=', image_target);
+    var c = image_target.substr(0,1);
+    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+        image_target = reformat_coordinates(image_target);
+        ViewImageByType();
+    } else {
+        // try to resolve target as a name
+        ViewImageByName();
+    }
+}
+
+function ViewImageByType()
+{
+    console.log('ViewImageByType');
+    if (document.getElementById("grid_type").value == 'panels') {
+        ViewPanels();
+    } else {
+        ViewGrid();
+    }
+}
+
+function degrees_to_radians(degrees)
+{
+    var pi = Math.PI;
+    return degrees * (pi/180);
+}
+
+function clearOldImage()
+{
+    for (var i = 0; i < 9; i++) {
+        var panel_number = i + 1;
+        document.getElementById("aladin-lite-div-"+i.toString()).innerHTML = "";
+        document.getElementById("panel_text_"+i.toString()).innerHTML = "";
+    }
+}
+
+function ViewGrid()
+{
+    console.log('ViewGrid');
+
+    document.getElementById("aladin-lite-div-0").style.height = "700px";
+    document.getElementById("aladin-lite-div-0").style.width = "700px";
+
+    grid_type = document.getElementById("grid_type").value;
+
+    // Show image and get coordinated from there to
+    // calculate grid boxes.
+    var aladin_fov;
+    if (grid_type == "mosaic") {
+        aladin_fov = 3.2*fov_x;
+    } else {
+        aladin_fov = 1.2*fov_x;
+    }
+    var aladin = A.aladin('#aladin-lite-div-0', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
+                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                           showLayersControl:false, showGotoControl:false});
+    var radec = aladin.getRaDec();
+
+    console.log("cented RaDec = ", radec);
+
+    var ra = radec[0];
+    var dec = radec[1];
+
+    var i = 0;
+    var row = size;
+    var col;
+    var panel_radec;
+    var panel_row = 1;
+    var panel_radec2 = "";
+    while (row >= -size) {
+        var row_dec = dec + row * img_fov * fov_y;
+        col = size;
+        panel_radec = "";
+        while (col >= -size) {
+            var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+
+            console.log("panel ra/dec=", col_ra, "/", row_dec);
+
+            // now center ra/dec is col_ra/row_dec
+            // calculate corners
+            var row_dec1 = row_dec + fov_y/2;
+            var row_dec2 = row_dec - fov_y/2;
+            var col_ra1 = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+            var col_ra2 = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+            var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+            var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+
+            var panel = [
+                [col_ra1-col_ra1_delta, row_dec1], 
+                [col_ra1+col_ra1_delta, row_dec1], 
+                [col_ra2+col_ra2_delta, row_dec2], 
+                [col_ra2-col_ra2_delta, row_dec2], 
+                [col_ra1-col_ra1_delta, row_dec1]
+            ];
+
+            console.log("panel = ", panel);
+
+            var line_color = '#ee2345';
+
+            if (grid_type == "mosaic" || i == 4) {
+                var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+                aladin.addOverlay(overlay);
+                overlay.add(A.polyline(panel));
+            }
+            col = col - 1;
+            i = i + 1;
+
+            var col_ra_hours = col_ra / 15;
+
+            panel_radec = panel_radec + "P" + i.toString() + 
+                          " RA/DEC " + col_ra_hours.toFixed(5) + 
+                          "/" + row_dec.toFixed(5);
+            switch (i) {
+                case 1:
+                case 2:
+                case 4:
+                case 5:
+                case 7:
+                case 8:
+                    panel_radec = panel_radec + ' - ';
+                    break;
+            }
+        }
+        row = row - 1;
+        if (grid_type == "mosaic") {
+            panel_radec2 = panel_radec2 + "<br>" + panel_radec;
+        }
+        panel_row = panel_row + 1;
+    }
+    if (grid_type == "mosaic") {
+        document.getElementById("panel_text_0").innerHTML = panel_radec2;
+    }
+}
+
+function ViewPanels()
+{
+    console.log('ViewPanels');
+
+    document.getElementById("aladin-lite-div-0").style.height = "300px";
+    document.getElementById("aladin-lite-div-0").style.width = "300px";
+
+    // First show center panel and get coordinated from there to
+    // calculate other panels.
+    if (fov_x != fov_y) {
+        var height = 300 * fov_y / fov_x;
+        document.getElementById("aladin-lite-div-4").style.height = Math.floor(height).toString() + "px";
+    } else {
+        document.getElementById("aladin-lite-div-4").style.height = "300px";
+    }
+    console.log("image_target=" + image_target);
+    var aladin = A.aladin('#aladin-lite-div-4', {survey: "P/DSS2/color", fov:fov_x, target:image_target,
+                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                           showLayersControl:false, showGotoControl:false});
+    var radec = aladin.getRaDec();
+
+    var ra = radec[0];
+    var dec = radec[1];
+
+    var i = 0;
+    var row = size;
+    var col;
+    while (row >= -size) {
+        var row_dec = dec + row * img_fov * fov_y;
+        col = size;
+        while (col >= -size) {
+            var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+            // convert from degrees to hours
+            col_ra = col_ra / 15;
+
+            var point_ra_hour = Math.floor(col_ra);
+            var point_ra_sec = (Math.abs(col_ra) - Math.abs(point_ra_hour)) * 3600;
+            var point_ra_min = Math.floor(point_ra_sec / 60);
+            point_ra_sec = point_ra_sec - point_ra_min * 60;
+    
+            var point_dec_hour = Math.floor(row_dec);
+            var point_dec_sec = (Math.abs(row_dec) - Math.abs(point_dec_hour)) * 3600;
+            var point_dec_min = Math.floor(point_dec_sec / 60);
+            point_dec_sec = point_dec_sec - point_dec_min * 60;
+    
+            aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
+            aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
+
+            if (i != 4) {
+                var panel_id = 'aladin-lite-div-'+i.toString();
+                if (fov_x != fov_y) {
+                    var height = 300 * fov_y / fov_x;
+                    document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
+                } else {
+                    document.getElementById(panel_id).style.height = "300px";
+                }
+                aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
+                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, showLayersControl:false, showGotoControl:false});
+            }
+            var panel_number = i + 1;
+            document.getElementById("panel_text_"+i.toString()).innerHTML = panel_number.toString() + " RA/DEC " + col_ra.toFixed(5) + "/" + row_dec.toFixed(5);
+            col = col - 1;
+            i = i + 1;
+        }
+        row = row - 1;
+    }
+}
+
+</script>
+</body>
+</html>
