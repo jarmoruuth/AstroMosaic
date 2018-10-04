@@ -1,3 +1,4 @@
+<!-- Tool to visualize Slooh telescope FoV and mosaic grid. Jarmo Ruuth, 2018 -->
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
@@ -30,13 +31,11 @@
             Target:<br>
             <input type="text" id="target"><br>
         </form>
-        <br>
-        <button onclick="ViewImage()">View image</button>
     </div>
     <div>
         <form>
             Telescope:<br>
-            <select id="telescope">
+            <select id="telescope" onchange="javascript:ViewImage()">
                 <option value="T1">T1</option>
                 <option value="T2">T2</option>
                 <option value="T3">T3</option>
@@ -48,7 +47,7 @@
     <div>
         <form>
             View:<br>
-            <select id="grid_type">
+            <select id="grid_type" onchange="javascript:ViewImage()">
                 <option value="fov">FoV</option>
                 <option value="mosaic">Mosaic grid</option>
                 <option value="panels">Mosaic panels</option>
@@ -60,6 +59,10 @@
             Mosaic overlap (%):<br>
             <input type="number" id="overlap_percentage" min="1" max="100">
         </form>    
+    </div>
+    <div>
+        <br>
+        <button onclick="ViewImage()">View image</button>
     </div>
     <div>
         <small id="status_text"></small>
@@ -216,7 +219,7 @@ function find_coordinates(str)
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
-    document.getElementById("status_text").innerHTML = "RA/DEC " + image_target;
+    document.getElementById("status_text").innerHTML = "RA/DEC<br>" + image_target;
 
     resolved_coordinates = image_target;
 
@@ -229,7 +232,7 @@ function ViewImageByName()
 
     if (resolved_name == image_target && resolved_coordinates != null) {
         // same name already resolved, do not resolve again
-        document.getElementById("status_text").innerHTML = "RA/DEC " + resolved_coordinates;
+        document.getElementById("status_text").innerHTML = "RA/DEC<br>" + resolved_coordinates;
         image_target = resolved_coordinates;
         ViewImageByType();
         return;
@@ -245,7 +248,7 @@ function ViewImageByName()
             if (find_coordinates(xmlhttp.responseText)) {
                 ViewImageByType();
             } else {
-                document.getElementById("status_text").innerHTML = "Failed to resolve name " + image_target;
+                document.getElementById("status_text").innerHTML = "<br>Failed to resolve name " + image_target;
             }
         }
     }
@@ -369,7 +372,7 @@ function ViewGrid()
 
     grid_type = document.getElementById("grid_type").value;
 
-    // Show image and get coordinated from there to
+    // Show image and get coordinates from there to
     // calculate grid boxes.
     var aladin_fov;
     if (grid_type == "mosaic") {
@@ -379,7 +382,8 @@ function ViewGrid()
     }
     var aladin = A.aladin('#aladin-lite-div-0', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
                            showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                           showLayersControl:false, showGotoControl:false});
+                           showLayersControl:false, showGotoControl:false, 
+                           showControl: false, cooFrame: "J2000", showFrame: false});
     var radec = aladin.getRaDec();
 
     console.log("cented RaDec = ", radec);
@@ -476,7 +480,8 @@ function ViewPanels()
     console.log("image_target=" + image_target);
     var aladin = A.aladin('#aladin-lite-div-4', {survey: "P/DSS2/color", fov:fov_x, target:image_target,
                            showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                           showLayersControl:false, showGotoControl:false});
+                           showLayersControl:false, showGotoControl:false,
+                           showControl: false, cooFrame: "J2000", showFrame: false});
     var radec = aladin.getRaDec();
 
     var ra = radec[0];
@@ -515,7 +520,9 @@ function ViewPanels()
                     document.getElementById(panel_id).style.height = "300px";
                 }
                 aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
-                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, showLayersControl:false, showGotoControl:false});
+                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                                    showLayersControl:false, showGotoControl:false,
+                                    showControl: false, cooFrame: "J2000", showFrame: false});
             }
             var panel_number = i + 1;
             document.getElementById("panel_text_"+i.toString()).innerHTML = panel_number.toString() + " RA/DEC " + col_ra.toFixed(5) + "/" + row_dec.toFixed(5);
