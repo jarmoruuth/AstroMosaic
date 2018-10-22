@@ -129,7 +129,8 @@
     <small id="panel_text_8"></small>
     </div>
 </div>
-        
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
 // size means number of panels on each side
@@ -157,8 +158,23 @@ var xmlhttp;
 var resolved_name = null;
 var resolved_coordinates = null;
 
+var target_ra;
+var target_dec;
+var location_lat;
+var location_lng;
+var location_alt;
+
+var hour_ms = 60*60*1000;
+var day_ms = 24*hour_ms;
+var degToRad = Math.PI/180.0;
+var radToDeg = 180.0/Math.PI;
+var degToHours = 1/15;
+var hoursToDeg = 15;
+var JD2000 = 2451545.0;     // JD 2000-01-01 12:00
+var jd1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascrip zero time
+var JDcorrection = 0.0008;
+
 if (!url_target) {
-    url_target = "05:40:49.0 -02:27:30";
     url_target = "Horsehead nebula";
 }
 
@@ -180,6 +196,394 @@ if (url_overlap) {
 if (url_target) {
     document.getElementById("target").value = url_target;
     ViewImage();
+}
+
+// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees in target_ra and target_dec
+function get_target_ra_dec()
+{
+        // assume format HH:MM:SS DEG:HH:MM
+        var radec = image_target.split(' ');
+        
+        var raparts = radec[0].split(':');
+        var decparts = radec[1].split(':');
+
+        target_ra = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60 + parseFloat(raparts[2])) / 3600;
+        // convert from hours to degrees
+        target_ra = target_ra * hoursToDeg;
+        if (parseFloat(raparts[0]) < 0) {
+            target_ra = -target_ra;
+        }
+        target_dec = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60 + parseFloat(decparts[2])) / 3600;
+        if (parseFloat(decparts[0]) < 0) {
+            target_dec = -target_dec;
+        }
+}
+
+// scale degrees to 0-360
+function scale_to_360(v)
+{
+    while (v < 0) {
+        v = v + 360;
+    }
+    return v - Math.floor(v/360)*360;
+}
+
+// sin from decimal degrees
+function sind(deg)
+{
+    return Math.sin(deg*degToRad);
+}
+
+// cos from decimal regrees
+function cosd(deg)
+{
+    return Math.cos(deg*degToRad);
+}
+
+// Days from J2000, including fraction
+function getJ2000(d)
+{
+    return days = jd1970 + d / day_ms - JD2000 + JDcorrection;
+}
+
+// Calculate object altitude. 
+// Useful links:
+//      https://astronomy.stackexchange.com/questions/24859/local-sidereal-time
+//      https://observability.date/notes
+//      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
+//      http://www.stjarnhimlen.se/comp/tutorial.html
+function object_altitude(date, ra, dec, lat, lng)
+{
+    // universal time in decimal hours
+    var H = (date % day_ms) / hour_ms;
+
+    // Julian date including fraction - 2451545.0,
+    // that is days from J2000
+    var D = getJ2000(date);
+
+    // calculate local sidereal time in degrees
+    var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
+
+    // get hours
+    LST = LST % 360;
+
+    // calculate local hour angle in degrees
+    var LHA = LST - ra;
+
+    // calculate sin(altitude) in radian
+    var sin_altitude = sind(lat) * sind(dec) + cosd(lat) * cosd(dec) * cosd(LHA);
+
+    var altitude = Math.asin(sin_altitude) * radToDeg;
+
+    //console.log("object_altitude, last=",LST*degToHours,",lha=",LHA*degToHours,",sinalt=",sin_altitude,",alt=",altitude,",H=",H);
+
+    return altitude;
+}
+
+// Simplified version of moon position at given time.
+// - there are a lot of variables that affect correct moon position that
+//    are ignored here
+// - we do not correct for altitude
+// Links:
+//      http://www.stjarnhimlen.se/comp/tutorial.html
+function moon_position(date)
+{
+    // Days from J2000
+    var d = getJ2000(date);
+    var pi = Math.PI;
+    var nloop;
+    //console.log("moon d=",d);
+
+    var N = scale_to_360(125.1228 - 0.0529538083 * d);
+    var i = 5.1454;
+    var w = scale_to_360(318.0634 + 0.1643573223 * d);
+    var a = 60.2666;
+    var e = 0.054900;
+    var M = scale_to_360(115.3654 + 13.0649929509 * d);
+    //console.log(N,i,w,a,e,M);
+
+    var E = M + e*(180/pi) * sind(M) * ( 1.0 + e * cosd(M) );
+    for (nloop = 0; nloop < 100; nloop++) {
+        var E0 = E;
+        E = E0 - (E0 - e * (180/pi) * sind(E0) - M) / (1- e * cosd(E0));
+        if (Math.abs(E-E0) <= 0.001) {
+            break;
+        }
+    }
+    //console.log("E", E, "nloop", nloop);
+
+    var x = a * ( cosd(E) - e );
+    var y = a * Math.sqrt(1.0 - e*e) * sind(E);
+    //console.log("x,y",x,y);
+
+    var r = Math.sqrt( x*x + y*y );
+    var v = Math.atan2( y, x ) * radToDeg;
+
+    // moon position in ecliptic coordinates
+    var xeclip = r * ( cosd(N) * cosd(v+w) - sind(N) * sind(v+w) * cosd(i) );
+    var yeclip = r * ( sind(N) * cosd(v+w) + cosd(N) * sind(v+w) * cosd(i) );
+    var zeclip = r * ( sind(v+w) * sind(i) );
+    //console.log("moon xeclip=",xeclip,",yeclip=",yeclip,",zeclip=",zeclip);
+
+    // calculate equatorial coordinates
+    var RA  = Math.atan2( yeclip, xeclip ) * radToDeg;
+    var Dec = Math.atan2( zeclip, Math.sqrt(xeclip*xeclip+yeclip*yeclip) ) * radToDeg;
+
+    //console.log("moon ra",RA,",dec",Dec);
+
+    return {ra:RA, dec:Dec};
+}
+
+// a simple version for parallax correction
+function moon_parallax_correction(alt)
+{
+    var r = 60.336;
+    return alt - Math.asin(1/r) * cosd(alt);
+}
+
+// Sun position at given time.
+// Links:
+//      http://www.stjarnhimlen.se/comp/tutorial.html
+function sun_position(date)
+{
+    // Days from J2000
+    var d = getJ2000(date);
+    var pi = Math.PI;
+    console.log("sun_position d", d);
+
+    var w = scale_to_360(282.9404 + 4.70935E-5 * d);
+    var a = 1.0;
+    var e = 0.016709 - 1.151E-9 * d;
+    var M = scale_to_360(356.0470 + 0.9856002585 * d);
+
+    //console.log(w,a,e,M);
+
+    var oblecl = scale_to_360(23.4393 - 3.563E-7 * d);
+    var L = scale_to_360(w + M);
+    //console.log("L", L,"oblecl", oblecl);
+
+    var E = scale_to_360((M + (180/pi) * e * sind(M) * (1 + e * cosd(M))));
+    //console.log("E", E);
+
+    var x = cosd(E) - e;
+    var y = sind(E) * Math.sqrt(1 - e*e);
+    //console.log("x,y", x,y);
+
+    var r = Math.sqrt(x*x + y*y);
+    var v = Math.atan2( y, x ) * radToDeg;
+    //console.log("r,v", r,v);
+
+    var lon = scale_to_360(v + w);
+    //console.log("lon", lon);
+
+    x = r * cosd(lon);
+    y = r * sind(lon);
+    //console.log("x,y", x,y);
+
+    var xequat = x;
+    var yequat = y * cosd(oblecl);
+    var zequat = y * sind(oblecl);
+    //console.log("xequat,yequat", xequat,yequat);
+
+    var RA  = Math.atan2( yequat, xequat ) * radToDeg;
+    var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
+
+    console.log("Sun_position", RA, Dec);
+
+    return {ra:RA, dec:Dec};
+}
+
+// Simplified version of rise and set times.
+// - we do not correct for altitude
+// - we use current day rise time as next day rise time
+// Links:
+//      http://www.stjarnhimlen.se/comp/tutorial.html
+function sun_rise_set(midday, lat, lon, h)
+{
+    var d = getJ2000(midday);
+    
+    var sun_pos = sun_position(midday);
+    var LST = sun_pos.ra;
+
+    var w = scale_to_360(282.9404 + 4.70935E-5 * d);
+    var M = scale_to_360(356.0470 + 0.9856002585 * d);
+    var L = M + w;
+    var GMST0 = scale_to_360(L + 180);
+
+    var UT_sun = (LST - GMST0 - lon) * degToHours;
+    if (UT_sun < 0) {
+        UT_sun = UT_sun + 24;
+    }
+    console.log("Sun_rise_set UT_sun", UT_sun);
+
+    // calculate midday at location
+    midday = midday - 12 * hour_ms + UT_sun * hour_ms;
+
+    var cos_LHA = (sind(h) - sind(lat)*sind(sun_pos.dec)) / (cosd(lat) * cosd(sun_pos.dec));
+
+    var LHA = (Math.acos(cos_LHA) * radToDeg) * degToHours;
+    console.log("Sun_rise_set LHA", LHA);
+
+    console.log("Sun_rise_set set rise", 12+LHA, 12-LHA);
+
+    // we use the current day sunrise as the next sunrise which is not exactly correct
+    return {sunset: midday + LHA*hour_ms, sunrise: midday - LHA*hour_ms + day_ms};
+}
+
+// Calculate distance in degrees between two (ra,dec) positions
+function moon_distance(ra1, dec1, ra2, dec2)
+{
+    var cos_A = sind(dec1) * sind(dec2) + cosd(dec1) * cosd(dec2) * cosd(ra1 - ra2);
+    var A = Math.acos(cos_A) * radToDeg;
+    if (A < 0) {
+        A = -A;
+    }
+    if (A > 180) {
+        A = A - 180;
+    }
+    return A;
+}
+
+// Convert to dtate string to that e.g. 1:0 becomes 01:00
+function toDateString(num)
+{
+    if (num < 10) {
+        return '0' + num.toString();
+    } else {
+        return num.toString();
+    }
+}
+
+// Draw FoV/mosaic grid and object visibility
+// TODO
+// twilight color
+// more correct moon times
+// location altitude
+// year visibility
+function drawVisibilityandGrid() 
+{
+    console.log("drawVisibilityandGrid");
+
+    ViewGrid();
+
+    var data = new google.visualization.DataTable();
+    // get current date
+    var curdate = new Date();
+    // get midday in UTC time in ms
+    var midday = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), 
+                          curdate.getUTCDate(), 12);
+    var UTCmidday = new Date(midday);
+
+    //data.addColumn('datetime', 'Time'); Can't get this working...
+    data.addColumn('string', 'Time');
+    data.addColumn('number', 'Object alt');         // object altitude
+    data.addColumn('number', 'Moon alt');           // moon altitude
+    data.addColumn('number', 'Object low alt');     // object altitude if below 30 degrees
+
+    var interval = day_ms/(24*6); // 10 minutes
+    
+    var ra = target_ra;
+    var dec = target_dec;
+    
+    var lat = location_lat;
+    var lng = location_lng;
+
+    var rowdata = [];
+
+    var draw_full_day = 0;  // if 0 draw only during astronimical twilight
+
+    // sun rise and set times at astronomical twilight at -15 degrees
+    suntimes = sun_rise_set(midday, lat, lng, -15);
+
+    var UTCsunset = new Date(suntimes.sunset);
+    var UTCsunrise = new Date(suntimes.sunrise);
+    var prevalt = null;
+
+    for (var i = 0; i <= day_ms; i = i + interval) {
+        var d = midday+i;
+        //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
+        if (draw_full_day || (d > suntimes.sunset && d < suntimes.sunrise)) {
+            var objectalt = object_altitude(d, ra, dec, lat, lng);
+
+            var moonpos = moon_position(d);
+            var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng);
+            moonalt = moon_parallax_correction(moonalt);
+            var UTCdate = new Date(d);
+            //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
+
+            // When object is below 30 dgrees it is too low for proper imaging.
+            // we fraw a different line (different color) when object is below
+            // 30 degrees (objectlowalt).
+            var objecthighalt = objectalt;
+            var objectlowalt = null;
+            if (objectalt < 0) {
+                objecthighalt = null;
+            } else if (objectalt < 30) {
+                if (prevalt != null && prevalt >= 30) {
+                    // close the gap
+                    objectlowalt = objectalt;
+                } else {
+                    objectlowalt = objectalt;
+                    objecthighalt = null;
+                }
+            } else {
+                if (prevalt != null && prevalt < 30) {
+                    // close the gap
+                    objectlowalt = objectalt;
+                }
+            }
+            prevalt = objectalt;
+            if (moonalt < 0) {
+                moonalt = null;
+            }
+            var row = [
+                        toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
+                        //new Date(d),
+                        objecthighalt,
+                        moonalt,
+                        objectlowalt];
+            //console.log("row", row);
+            rowdata[rowdata.length] = row;
+        }
+    }
+
+    data.addRows(rowdata);
+
+    var options = {
+        title: 'Object visibility',
+        hAxis: { title: 'Time (UTC)' },
+        vAxis: { title: 'Altitude (degrees)' },
+        gridlines: {    // Can't get gridlines to work...
+            count: -1
+            //units: { days: {format: ['MMM dd']}, hours: {format: ['HH:mm', 'ha']}, }
+        },
+        minorGridlines: {
+            //units: { hours: {format: ['hh:mm:ss a', 'ha']}, minutes: {format: ['HH:mm a Z', ':mm']} }
+        },
+        series: { 2: { lineDashStyle: [4, 4] } }    // Can't get dasklines to work...
+    };
+
+    document.getElementById("aladin-lite-div-3").style.height = "300px";
+    document.getElementById("aladin-lite-div-3").style.width = "500px";
+
+    var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
+
+    chart.draw(data, google.charts.Line.convertOptions(options));
+
+    var sunpos_midnight = sun_position(midday+day_ms/2);
+    var moonpos_midnight = moon_position(midday+day_ms/2);
+    // We use sun and moon distance in dgrees at midnight to approximate 
+    // the moon "phase". I guess there is also a correct way...
+    var sun_moon_angle = moon_distance(sunpos_midnight.ra, sunpos_midnight.dec, moonpos_midnight.ra, moonpos_midnight.dec);
+    // Moon distance from object at midnight. Distance changes during the night
+    // but not much so this should be fine.
+    var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
+
+    document.getElementById("panel_text_3").innerHTML = 
+        "Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
+        "Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
+        "Moon phase: " + Math.floor((sun_moon_angle/180) * 100) + "%<br>" +
+        "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
 }
 
 // Find coordinates from SIMBAD query
@@ -214,7 +618,7 @@ function find_coordinates(str)
 
     resolved_name = image_target;
 
-    // change image_taregt from name to coordinates
+    // change image_target from name to coordinates
     image_target = coord.substr(0, i);
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
@@ -226,6 +630,7 @@ function find_coordinates(str)
     return true;
 }
 
+// Resolve image coordinates from Simbad database using name
 function ViewImageByName()
 {
     console.log('ViewImageByName');
@@ -258,6 +663,7 @@ function ViewImageByName()
     xmlhttp.send();    
 }
 
+// Remove aleading, trailing and duplicate spaces
 function trim_spaces(str)
 {
     // replace all whitespace to space
@@ -271,11 +677,19 @@ function trim_spaces(str)
     return str;
 }
 
+// Reformt coordinates to a format HH:MM:SS DD:MM:SS
+// Input can be: 
+// HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
+// HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
 function reformat_coordinates(coord)
 {
     // number, assume coordinates
     console.log('reformat_coordinates=', coord);
-    var numbers = coord.split(' ');
+    var numbers = coord.split('/');
+    if (numbers.length == 2) {
+        coord = trim_spaces(numbers[0] + ' ' + numbers[1]);
+    }
+    numbers = coord.split(' ');
     console.log('reformat_coordinates, numbers.length=', numbers.length);
     if (numbers.length == 2) {
         // assume already correct format
@@ -289,6 +703,8 @@ function reformat_coordinates(coord)
     return coord;
 }
 
+// Main function to view image. Get parameters
+// and call correct view function
 function ViewImage()
 {
     console.log('ViewImage');
@@ -299,6 +715,11 @@ function ViewImage()
     img_fov = 1 - img_fov / 100;
 
     telescope = document.getElementById("telescope").value;
+
+    // assume Teide, both in degrees
+    location_lat = 28.29970;        // N28.29970 (N28° 17′ 58.92″)
+    location_lng = -16.50826;       // W016.50826 (W016° 30′ 29.736″)
+    location_alt = 2372;
 
     // T1 FOV 37´
     // T2 wide field FOV 43'
@@ -319,8 +740,12 @@ function ViewImage()
         fov_x = (15*60.0+57)/3600.0;
         fov_y = (12*60.0+3)/3600.0;
     } else if (telescope == "C1") {
-        fov_x = (31*60.0+18)/3600.0;
+        fov_x = (31*60.0+18)/3600.0; 
         fov_y = (20*60.0+51)/3600.0;
+        // Chile location in degrees
+        location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
+        location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
+        location_alt = 1450;
     }
 
     document.getElementById("status_text").innerHTML = "";
@@ -344,7 +769,10 @@ function ViewImageByType()
     if (document.getElementById("grid_type").value == 'panels') {
         ViewPanels();
     } else {
-        ViewGrid();
+        get_target_ra_dec();
+
+        google.charts.load('current', {'packages':['line']});
+        google.charts.setOnLoadCallback(drawVisibilityandGrid);
     }
 }
 
@@ -435,7 +863,7 @@ function ViewGrid()
             col = col - 1;
             i = i + 1;
 
-            var col_ra_hours = col_ra / 15;
+            var col_ra_hours = col_ra * degToHours;
 
             panel_radec = panel_radec + "P" + i.toString() + 
                           " RA/DEC " + col_ra_hours.toFixed(5) + 
@@ -468,6 +896,8 @@ function ViewPanels()
 
     document.getElementById("aladin-lite-div-0").style.height = "300px";
     document.getElementById("aladin-lite-div-0").style.width = "300px";
+    document.getElementById("aladin-lite-div-3").style.height = "300px";
+    document.getElementById("aladin-lite-div-3").style.width = "300px";
 
     // First show center panel and get coordinated from there to
     // calculate other panels.
@@ -496,7 +926,7 @@ function ViewPanels()
         while (col >= -size) {
             var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
             // convert from degrees to hours
-            col_ra = col_ra / 15;
+            col_ra = col_ra * degToHours;
 
             var point_ra_hour = Math.floor(col_ra);
             var point_ra_sec = (Math.abs(col_ra) - Math.abs(point_ra_hour)) * 3600;
