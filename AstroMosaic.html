@@ -61,6 +61,12 @@
         </form>    
     </div>
     <div>
+        <form action="javascript:ViewImage()">
+            Date (YYYY-MM-DD):<br>
+            <input type="text" id="view_date">
+        </form>    
+    </div>
+    <div>
         <br>
         <button onclick="ViewImage()">View image</button>
     </div>
@@ -144,6 +150,8 @@ var img_fov = 0.8;  // field of view for single image considering the overlap
 var img_size = 300;
 var image_target;
 
+var UTCdate_ms;
+
 var url = new URL(window.location);
 console.log(url);
 var searchParams = new URLSearchParams(url.search.slice(1));
@@ -153,6 +161,7 @@ var url_telescope = searchParams.get('telescope');
 var url_name = searchParams.get('name');
 var url_type = searchParams.get('type');
 var url_overlap = searchParams.get('overlap');
+var url_date = searchParams.get('date');
 
 var xmlhttp;
 var resolved_name = null;
@@ -170,9 +179,7 @@ var degToRad = Math.PI/180.0;
 var radToDeg = 180.0/Math.PI;
 var degToHours = 1/15;
 var hoursToDeg = 15;
-var JD2000 = 2451545.0;     // JD 2000-01-01 12:00
-var jd1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascrip zero time
-var JDcorrection = 0.0008;
+var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascrip zero time
 
 if (!url_target) {
     url_target = "Horsehead nebula";
@@ -191,6 +198,12 @@ if (url_overlap) {
     document.getElementById("overlap_percentage").value = url_overlap;
 } else {
     document.getElementById("overlap_percentage").value = 20;
+}
+if (url_date) {
+    document.getElementById("view_date").value = url_date;
+} else {
+    var d = new Date();
+    document.getElementById("view_date").value = d.toISOString().substr(0, 10);
 }
 
 if (url_target) {
@@ -240,10 +253,18 @@ function cosd(deg)
     return Math.cos(deg*degToRad);
 }
 
-// Days from J2000, including fraction
-function getJ2000(d)
+// Julian Days from 2000, including fraction, used by sun and moon calculations
+function getJD(d)
 {
-    return days = jd1970 + d / day_ms - JD2000 + JDcorrection;
+    var days = JD1970 + d / day_ms - 2451543.5;
+    return days;
+}
+
+// Days from J2000, including fraction, used by altitude calculations
+function getJ2000_2(d)
+{
+    var days = JD1970 + d / day_ms - 2451545.0;
+    return days;
 }
 
 // Calculate object altitude. 
@@ -259,7 +280,7 @@ function object_altitude(date, ra, dec, lat, lng)
 
     // Julian date including fraction - 2451545.0,
     // that is days from J2000
-    var D = getJ2000(date);
+    var D = getJ2000_2(date);
 
     // calculate local sidereal time in degrees
     var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
@@ -289,10 +310,10 @@ function object_altitude(date, ra, dec, lat, lng)
 function moon_position(date)
 {
     // Days from J2000
-    var d = getJ2000(date);
+    var d = getJD(date);
     var pi = Math.PI;
     var nloop;
-    //console.log("moon d=",d);
+    //console.log("moon position d=",d,"JD=",JD1970+d/day_ms);
 
     var N = scale_to_360(125.1228 - 0.0529538083 * d);
     var i = 5.1454;
@@ -300,7 +321,7 @@ function moon_position(date)
     var a = 60.2666;
     var e = 0.054900;
     var M = scale_to_360(115.3654 + 13.0649929509 * d);
-    //console.log(N,i,w,a,e,M);
+    //console.log("N",N,"i",i,"w",w,"a",a,"e",e,"M",M);
 
     var E = M + e*(180/pi) * sind(M) * ( 1.0 + e * cosd(M) );
     for (nloop = 0; nloop < 100; nloop++) {
@@ -317,25 +338,39 @@ function moon_position(date)
     //console.log("x,y",x,y);
 
     var r = Math.sqrt( x*x + y*y );
-    var v = Math.atan2( y, x ) * radToDeg;
+    var v = scale_to_360(Math.atan2( y, x ) * radToDeg);
+    //console.log("r,v",r,v);
 
-    // moon position in ecliptic coordinates
+    // moon geocentric position in ecliptic coordinates
     var xeclip = r * ( cosd(N) * cosd(v+w) - sind(N) * sind(v+w) * cosd(i) );
     var yeclip = r * ( sind(N) * cosd(v+w) + cosd(N) * sind(v+w) * cosd(i) );
     var zeclip = r * ( sind(v+w) * sind(i) );
     //console.log("moon xeclip=",xeclip,",yeclip=",yeclip,",zeclip=",zeclip);
 
-    // calculate equatorial coordinates
-    var RA  = Math.atan2( yeclip, xeclip ) * radToDeg;
-    var Dec = Math.atan2( zeclip, Math.sqrt(xeclip*xeclip+yeclip*yeclip) ) * radToDeg;
+    // ecliptic longitude and latitude
+    //var lonecl = scale_to_360(Math.atan2( yeclip, xeclip ) * radToDeg);
+    //var latecl = Math.atan2( zeclip, Math.sqrt(xeclip*xeclip+yeclip*yeclip) ) * radToDeg;
+    //console.log("lonecl,latecl",lonecl,latecl);
+
+    var oblecl = 23.4;
+
+    // rotate ecliptic coordinates to equatorial coordinates
+    var xequat = xeclip;
+    var yequat = yeclip * cosd(oblecl) - zeclip * sind(oblecl);
+    var zequat = yeclip * sind(oblecl) + zeclip * cosd(oblecl);
+    //console.log("moon xequat=",xequat,",yequat=",yequat,",zequat=",zequat);
+
+    // calculate RA and Dec
+    var RA  = scale_to_360(Math.atan2( yequat, xequat ) * radToDeg);
+    var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
 
     //console.log("moon ra",RA,",dec",Dec);
 
     return {ra:RA, dec:Dec};
 }
 
-// a simple version for parallax correction
-function moon_parallax_correction(alt)
+// a simple version for topocentric correction
+function moon_topocentric_correction(alt)
 {
     var r = 60.336;
     return alt - Math.asin(1/r) * cosd(alt);
@@ -347,9 +382,9 @@ function moon_parallax_correction(alt)
 function sun_position(date)
 {
     // Days from J2000
-    var d = getJ2000(date);
+    var d = getJD(date);
     var pi = Math.PI;
-    console.log("sun_position d", d);
+    //console.log("sun_position d", d);
 
     var w = scale_to_360(282.9404 + 4.70935E-5 * d);
     var a = 1.0;
@@ -400,7 +435,7 @@ function sun_position(date)
 //      http://www.stjarnhimlen.se/comp/tutorial.html
 function sun_rise_set(midday, lat, lon, h)
 {
-    var d = getJ2000(midday);
+    var d = getJD(midday);
     
     var sun_pos = sun_position(midday);
     var LST = sun_pos.ra;
@@ -414,7 +449,7 @@ function sun_rise_set(midday, lat, lon, h)
     if (UT_sun < 0) {
         UT_sun = UT_sun + 24;
     }
-    console.log("Sun_rise_set UT_sun", UT_sun);
+    //console.log("Sun_rise_set UT_sun", UT_sun);
 
     // calculate midday at location
     midday = midday - 12 * hour_ms + UT_sun * hour_ms;
@@ -422,9 +457,9 @@ function sun_rise_set(midday, lat, lon, h)
     var cos_LHA = (sind(h) - sind(lat)*sind(sun_pos.dec)) / (cosd(lat) * cosd(sun_pos.dec));
 
     var LHA = (Math.acos(cos_LHA) * radToDeg) * degToHours;
-    console.log("Sun_rise_set LHA", LHA);
+    //console.log("Sun_rise_set LHA", LHA);
 
-    console.log("Sun_rise_set set rise", 12+LHA, 12-LHA);
+    //console.log("Sun_rise_set set rise", 12+LHA, 12-LHA);
 
     // we use the current day sunrise as the next sunrise which is not exactly correct
     return {sunset: midday + LHA*hour_ms, sunrise: midday - LHA*hour_ms + day_ms};
@@ -439,9 +474,36 @@ function moon_distance(ra1, dec1, ra2, dec2)
         A = -A;
     }
     if (A > 180) {
-        A = A - 180;
+        A = 360 - A;
     }
     return A;
+}
+
+// This method can be found in many places, somwhow
+// it gives weird results
+function get_moon_phase2(midday)
+{
+    var d = getJD(midday);
+
+    var v = (d-2451550.1) / 29.530588853;
+    v = v - Math.floor(v);
+    if (v < 0) {
+        v = v + 1;
+    }
+
+    var age = v * 29.53;
+    return age;
+}
+
+// My own version, calcuate sun-moon angle to get
+// approximate "phase" in percentages
+function get_moon_phase(midday)
+{
+    var sunpos = sun_position(midday);
+    var moonpos = moon_position(midday);
+    var dist = moon_distance(sunpos.ra, sunpos.dec, moonpos.ra, moonpos.dec);
+    //console.log("get_moon_phase dist", dist);
+    return (scale_to_360(dist) / 180) * 100;
 }
 
 // Convert to dtate string to that e.g. 1:0 becomes 01:00
@@ -460,6 +522,8 @@ function toDateString(num)
 // more correct moon times
 // location altitude
 // year visibility
+// pleides C1 off by 45 min??? horizon limits
+// curdate need to be UTC
 function drawVisibilityandGrid() 
 {
     console.log("drawVisibilityandGrid");
@@ -467,18 +531,15 @@ function drawVisibilityandGrid()
     ViewGrid();
 
     var data = new google.visualization.DataTable();
-    // get current date
-    var curdate = new Date();
     // get midday in UTC time in ms
-    var midday = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), 
-                          curdate.getUTCDate(), 12);
+    var midday = UTCdate_ms + day_ms/2;
     var UTCmidday = new Date(midday);
 
     //data.addColumn('datetime', 'Time'); Can't get this working...
     data.addColumn('string', 'Time');
-    data.addColumn('number', 'Object alt');         // object altitude
+    data.addColumn('number', 'Alt >= 30');         // object altitude
+    data.addColumn('number', 'Alt < 30');     // object altitude if below 30 degrees
     data.addColumn('number', 'Moon alt');           // moon altitude
-    data.addColumn('number', 'Object low alt');     // object altitude if below 30 degrees
 
     var interval = day_ms/(24*6); // 10 minutes
     
@@ -493,7 +554,7 @@ function drawVisibilityandGrid()
     var draw_full_day = 0;  // if 0 draw only during astronimical twilight
 
     // sun rise and set times at astronomical twilight at -15 degrees
-    suntimes = sun_rise_set(midday, lat, lng, -15);
+    suntimes = sun_rise_set(midday, lat, lng, -12);
 
     var UTCsunset = new Date(suntimes.sunset);
     var UTCsunrise = new Date(suntimes.sunrise);
@@ -507,7 +568,7 @@ function drawVisibilityandGrid()
 
             var moonpos = moon_position(d);
             var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng);
-            moonalt = moon_parallax_correction(moonalt);
+            moonalt = moon_topocentric_correction(moonalt);
             var UTCdate = new Date(d);
             //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
 
@@ -520,8 +581,9 @@ function drawVisibilityandGrid()
                 objecthighalt = null;
             } else if (objectalt < 30) {
                 if (prevalt != null && prevalt >= 30) {
-                    // close the gap
+                    // close the gap, coming down
                     objectlowalt = objectalt;
+                    //console.log("close the gap down", rowdata.length-1);
                 } else {
                     objectlowalt = objectalt;
                     objecthighalt = null;
@@ -529,7 +591,8 @@ function drawVisibilityandGrid()
             } else {
                 if (prevalt != null && prevalt < 30) {
                     // close the gap
-                    objectlowalt = objectalt;
+                    rowdata[rowdata.length-1][1] =  prevalt;
+                    //console.log("close the gap up", rowdata.length-1);
                 }
             }
             prevalt = objectalt;
@@ -540,12 +603,16 @@ function drawVisibilityandGrid()
                         toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
                         //new Date(d),
                         objecthighalt,
-                        moonalt,
-                        objectlowalt];
+                        objectlowalt,
+                        moonalt];
             //console.log("row", row);
             rowdata[rowdata.length] = row;
         }
     }
+
+    //for (var i = 0; i < rowdata.length; i++) {
+    //    console.log("rowdata", i, rowdata[i])
+    //}
 
     data.addRows(rowdata);
 
@@ -560,30 +627,37 @@ function drawVisibilityandGrid()
         minorGridlines: {
             //units: { hours: {format: ['hh:mm:ss a', 'ha']}, minutes: {format: ['HH:mm a Z', ':mm']} }
         },
-        series: { 2: { lineDashStyle: [4, 4] } }    // Can't get dasklines to work...
+        //series: { 2: { lineDashStyle: [4, 4] } }    // Can't get dashlines to work...
+        series: { 
+            0: { color: 'blue' },
+            1: { color: 'orange' },
+            2: { color: 'green' } 
+        }
     };
 
-    document.getElementById("aladin-lite-div-3").style.height = "300px";
-    document.getElementById("aladin-lite-div-3").style.width = "500px";
+    document.getElementById("aladin-lite-div-3").style.height = "400px";
+    document.getElementById("aladin-lite-div-3").style.width = "700px";
 
     var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
 
     chart.draw(data, google.charts.Line.convertOptions(options));
 
-    var sunpos_midnight = sun_position(midday+day_ms/2);
-    var moonpos_midnight = moon_position(midday+day_ms/2);
     // We use sun and moon distance in dgrees at midnight to approximate 
     // the moon "phase". I guess there is also a correct way...
-    var sun_moon_angle = moon_distance(sunpos_midnight.ra, sunpos_midnight.dec, moonpos_midnight.ra, moonpos_midnight.dec);
+    var moon_phase = get_moon_phase(midday);
     // Moon distance from object at midnight. Distance changes during the night
     // but not much so this should be fine.
+    var moonpos_midnight = moon_position(midday+day_ms/2);
     var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
 
     document.getElementById("panel_text_3").innerHTML = 
         "Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
         "Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
-        "Moon phase: " + Math.floor((sun_moon_angle/180) * 100) + "%<br>" +
+        "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
         "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
+
+    //console.log("TEST 1990-04-19");
+    //moon_position(Date.UTC(1990, 3, 19));
 }
 
 // Find coordinates from SIMBAD query
@@ -710,6 +784,18 @@ function ViewImage()
     console.log('ViewImage');
 
     clearOldImage();
+
+    // get current date
+    var view_date = document.getElementById("view_date").value;
+    var curdate = new Date(view_date);
+    if (curdate == null || isNaN(curdate.valueOf())) {
+        document.getElementById("status_text").innerHTML = "<br>Invalid ISO format date " + view_date;
+        return;
+    }
+    //console.log("curdate", curdate);
+    UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
+                          parseInt(view_date.substr(8, 2)));
+
 
     img_fov = document.getElementById("overlap_percentage").value;
     img_fov = 1 - img_fov / 100;
