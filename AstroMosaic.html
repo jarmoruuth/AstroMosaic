@@ -537,6 +537,7 @@ function drawVisibilityandGrid()
 
     //data.addColumn('datetime', 'Time'); Can't get this working...
     data.addColumn('string', 'Time');
+    //data.addColumn('datetime', 'Time');
     data.addColumn('number', 'Alt >= 30');         // object altitude
     data.addColumn('number', 'Alt < 30');     // object altitude if below 30 degrees
     data.addColumn('number', 'Moon alt');           // moon altitude
@@ -601,7 +602,7 @@ function drawVisibilityandGrid()
             }
             var row = [
                         toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
-                        //new Date(d),
+                        //UTCdate,
                         objecthighalt,
                         objectlowalt,
                         moonalt];
@@ -616,31 +617,37 @@ function drawVisibilityandGrid()
 
     data.addRows(rowdata);
 
+    // problems with timezone if using date
+    //var formatter = new google.visualization.DateFormat({timeZone: 0});
+    //formatter.format(data, 0);
+
     var options = {
         title: 'Object visibility',
-        hAxis: { title: 'Time (UTC)' },
+        hAxis: { 
+            title: 'Time (UTC)'
+            //format: 'HH:mm' 
+        },
         vAxis: { title: 'Altitude (degrees)' },
         gridlines: {    // Can't get gridlines to work...
-            count: -1
-            //units: { days: {format: ['MMM dd']}, hours: {format: ['HH:mm', 'ha']}, }
+            // count: -1
+            //units: { hours: {format: ['HH:MM']}, }
         },
-        minorGridlines: {
-            //units: { hours: {format: ['hh:mm:ss a', 'ha']}, minutes: {format: ['HH:mm a Z', ':mm']} }
-        },
-        //series: { 2: { lineDashStyle: [4, 4] } }    // Can't get dashlines to work...
+        // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
         series: { 
             0: { color: 'blue' },
             1: { color: 'orange' },
-            2: { color: 'green' } 
+            2: { color: 'green', lineDashStyle: [4, 4] }
         }
     };
 
     document.getElementById("aladin-lite-div-3").style.height = "400px";
     document.getElementById("aladin-lite-div-3").style.width = "700px";
 
-    var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
+    // material var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-3'));
 
-    chart.draw(data, google.charts.Line.convertOptions(options));
+    // material chart.draw(data, google.charts.Line.convertOptions(options));
+    chart.draw(data, options);
 
     // We use sun and moon distance in dgrees at midnight to approximate 
     // the moon "phase". I guess there is also a correct way...
@@ -665,35 +672,47 @@ function find_coordinates(str)
 {
     console.log('find_coordinates');
 
-    var idx = str.indexOf("J2000");
-    if (idx == -1) {
-        console.log("find_coordinates:could not find 'J2000'");
-        return false;
-    }
-    str = str.substr(idx+4);
-    idx = str.indexOf(":");
-    if (idx == -1) {
-        console.log("find_coordinates:could not find ':'");
-        return false;
-    }
-    var coord = str.substr(idx+1, 100);
-    console.log("find_coordinates:get coordinates from '", coord, "'");
-    coord = trim_spaces(coord);
-    for (var i = 0; i < coord.length; i++) {
-        var c = coord.substr(i,1);
-        if ((c < '0' || c > '9') && c != '.' && c != '-' && c != '+' && c != ' ') {
-            break;
+    var idx = str.indexOf("<jpos>");
+    if (idx > 0) {
+        // Assume Sesame XML format
+        var coord = str.substr(idx+6, 100);
+        var idx2 = coord.indexOf("</jpos>");
+        if (idx2 == -1) {
+            console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
+            return false;
         }
+        image_target = coord.substr(0, idx2);
+    } else {
+        // Simbad ascii output
+        idx = str.indexOf("J2000");
+        if (idx == -1) {
+            console.log("find_coordinates:could not find 'J2000'");
+            return false;
+        }
+        str = str.substr(idx+4);
+        idx = str.indexOf(":");
+        if (idx == -1) {
+            console.log("find_coordinates:could not find ':'");
+            return false;
+        }
+        var coord = str.substr(idx+1, 100);
+        console.log("find_coordinates:get coordinates from '", coord, "'");
+        coord = trim_spaces(coord);
+        for (var i = 0; i < coord.length; i++) {
+            var c = coord.substr(i,1);
+            if ((c < '0' || c > '9') && c != '.' && c != '-' && c != '+' && c != ' ') {
+                break;
+            }
+        }
+        if (i < 12) {
+            console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
+            return false;
+        }
+        image_target = coord.substr(0, i);
     }
-    if (i < 12) {
-        console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
-        return false;
-    }
-
     resolved_name = image_target;
 
     // change image_target from name to coordinates
-    image_target = coord.substr(0, i);
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
@@ -717,13 +736,20 @@ function ViewImageByName()
         return;
     }
 
-    var resolver_url = "https://simbad.u-strasbg.fr/simbad/sim-id?output.format=ASCII&Ident=";
+    // Simbad ascii, some problems when accessing the site
+    // var resolver_url = "https://simbad.u-strasbg.fr/simbad/sim-id?output.format=ASCII&Ident=";
+    
+    // Mirror of Simbad u-strasbg? Worked when u-strasbg failed.
+    // var resolver_url = "http://simbad.cfa.harvard.edu/simbad/sim-id?output.format=ASCII&Ident=";
+
+    // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
+    var resolver_url = "http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
 
     xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange=function()
     {
         if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            console.log('ViewImageByName, got response from HTTP GET: ', xmlhttp.responseText.substr(0, 40));
+            console.log('simbad_resolve, got response from HTTP GET: ', xmlhttp.responseText.substr(0, 40));
             if (find_coordinates(xmlhttp.responseText)) {
                 ViewImageByType();
             } else {
@@ -758,21 +784,31 @@ function trim_spaces(str)
 function reformat_coordinates(coord)
 {
     // number, assume coordinates
+    coord = trim_spaces(coord);
     console.log('reformat_coordinates=', coord);
     var numbers = coord.split('/');
     if (numbers.length == 2) {
         coord = trim_spaces(numbers[0] + ' ' + numbers[1]);
+        console.log('reformat_coordinates, split by /', coord);
     }
     numbers = coord.split(' ');
     console.log('reformat_coordinates, numbers.length=', numbers.length);
     if (numbers.length == 2) {
         // assume already correct format
+        console.log('reformat_coordinates, length 2, assume correct format', coord);
     } else if (numbers.length == 6) {
         // separated by space, add colons
         coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                 numbers[3] + ':' + numbers[4] + ':' + numbers[5];
+        console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
+    } else if (numbers.length == 5) {
+        // assume zero last number, separated by space, add colons
+        coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
+                numbers[3] + ':' + numbers[4] + ':' + 0;
+        console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
     } else {
         // use as-is
+        console.log('reformat_coordinates, length 6, reformat', coord);
     }
     return coord;
 }
@@ -857,7 +893,8 @@ function ViewImageByType()
     } else {
         get_target_ra_dec();
 
-        google.charts.load('current', {'packages':['line']});
+        // material google.charts.load('current', {'packages':['line']});
+        google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawVisibilityandGrid);
     }
 }
