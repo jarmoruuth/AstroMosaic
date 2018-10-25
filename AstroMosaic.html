@@ -481,9 +481,9 @@ function moon_distance(ra1, dec1, ra2, dec2)
 
 // This method can be found in many places, somwhow
 // it gives weird results
-function get_moon_phase2(midday)
+function get_moon_phase2(date)
 {
-    var d = getJD(midday);
+    var d = getJD(date);
 
     var v = (d-2451550.1) / 29.530588853;
     v = v - Math.floor(v);
@@ -497,10 +497,10 @@ function get_moon_phase2(midday)
 
 // My own version, calcuate sun-moon angle to get
 // approximate "phase" in percentages
-function get_moon_phase(midday)
+function get_moon_phase(d)
 {
-    var sunpos = sun_position(midday);
-    var moonpos = moon_position(midday);
+    var sunpos = sun_position(d);
+    var moonpos = moon_position(d);
     var dist = moon_distance(sunpos.ra, sunpos.dec, moonpos.ra, moonpos.dec);
     //console.log("get_moon_phase dist", dist);
     return (scale_to_360(dist) / 180) * 100;
@@ -561,54 +561,61 @@ function drawVisibilityandGrid()
     var UTCsunrise = new Date(suntimes.sunrise);
     var prevalt = null;
 
-    for (var i = 0; i <= day_ms; i = i + interval) {
-        var d = midday+i;
+    var starttime;
+    var endtime;
+    if (draw_full_day) {
+        starttime = midday;
+        endtime = starttime + day_ms;
+    } else {
+        starttime = suntimes.sunset - suntimes.sunset % interval;
+        endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
+    }
+
+    for (var d = starttime; d <= endtime; d = d + interval) {
         //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
-        if (draw_full_day || (d > suntimes.sunset && d < suntimes.sunrise)) {
-            var objectalt = object_altitude(d, ra, dec, lat, lng);
+        var objectalt = object_altitude(d, ra, dec, lat, lng);
 
-            var moonpos = moon_position(d);
-            var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng);
-            moonalt = moon_topocentric_correction(moonalt);
-            var UTCdate = new Date(d);
-            //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
+        var moonpos = moon_position(d);
+        var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng);
+        moonalt = moon_topocentric_correction(moonalt);
+        var UTCdate = new Date(d);
+        //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
 
-            // When object is below 30 dgrees it is too low for proper imaging.
-            // we fraw a different line (different color) when object is below
-            // 30 degrees (objectlowalt).
-            var objecthighalt = objectalt;
-            var objectlowalt = null;
-            if (objectalt < 0) {
-                objecthighalt = null;
-            } else if (objectalt < 30) {
-                if (prevalt != null && prevalt >= 30) {
-                    // close the gap, coming down
-                    objectlowalt = objectalt;
-                    //console.log("close the gap down", rowdata.length-1);
-                } else {
-                    objectlowalt = objectalt;
-                    objecthighalt = null;
-                }
+        // When object is below 30 dgrees it is too low for proper imaging.
+        // we fraw a different line (different color) when object is below
+        // 30 degrees (objectlowalt).
+        var objecthighalt = objectalt;
+        var objectlowalt = null;
+        if (objectalt < 0) {
+            objecthighalt = null;
+        } else if (objectalt < 30) {
+            if (prevalt != null && prevalt >= 30) {
+                // close the gap, coming down
+                objectlowalt = objectalt;
+                //console.log("close the gap down", rowdata.length-1);
             } else {
-                if (prevalt != null && prevalt < 30) {
-                    // close the gap
-                    rowdata[rowdata.length-1][1] =  prevalt;
-                    //console.log("close the gap up", rowdata.length-1);
-                }
+                objectlowalt = objectalt;
+                objecthighalt = null;
             }
-            prevalt = objectalt;
-            if (moonalt < 0) {
-                moonalt = null;
+        } else {
+            if (prevalt != null && prevalt < 30) {
+                // close the gap
+                rowdata[rowdata.length-1][1] =  prevalt;
+                //console.log("close the gap up", rowdata.length-1);
             }
-            var row = [
-                        toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
-                        //UTCdate,
-                        objecthighalt,
-                        objectlowalt,
-                        moonalt];
-            //console.log("row", row);
-            rowdata[rowdata.length] = row;
         }
+        prevalt = objectalt;
+        if (moonalt < 0) {
+            moonalt = null;
+        }
+        var row = [
+                    toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
+                    //UTCdate,
+                    objecthighalt,
+                    objectlowalt,
+                    moonalt];
+        //console.log("row", row);
+        rowdata[rowdata.length] = row;
     }
 
     //for (var i = 0; i < rowdata.length; i++) {
@@ -617,7 +624,7 @@ function drawVisibilityandGrid()
 
     data.addRows(rowdata);
 
-    // problems with timezone if using date
+    // problems with timezone if using date, formatter does not solve all problems
     //var formatter = new google.visualization.DateFormat({timeZone: 0});
     //formatter.format(data, 0);
 
@@ -649,12 +656,14 @@ function drawVisibilityandGrid()
     // material chart.draw(data, google.charts.Line.convertOptions(options));
     chart.draw(data, options);
 
+    var midnight = suntimes.sunset - (suntimes.sunrise - suntimes.sunset) / 2;
+
     // We use sun and moon distance in dgrees at midnight to approximate 
     // the moon "phase". I guess there is also a correct way...
-    var moon_phase = get_moon_phase(midday);
+    var moon_phase = get_moon_phase(midnight);
     // Moon distance from object at midnight. Distance changes during the night
     // but not much so this should be fine.
-    var moonpos_midnight = moon_position(midday+day_ms/2);
+    var moonpos_midnight = moon_position(midnight);
     var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
 
     document.getElementById("panel_text_3").innerHTML = 
@@ -667,7 +676,8 @@ function drawVisibilityandGrid()
     //moon_position(Date.UTC(1990, 3, 19));
 }
 
-// Find coordinates from SIMBAD query
+// Find coordinates from Sesame XML output
+// or SIMBAD ascii output
 function find_coordinates(str)
 {
     console.log('find_coordinates');
@@ -743,7 +753,7 @@ function ViewImageByName()
     // var resolver_url = "http://simbad.cfa.harvard.edu/simbad/sim-id?output.format=ASCII&Ident=";
 
     // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
-    var resolver_url = "http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
+    var resolver_url = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
 
     xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange=function()
@@ -763,7 +773,7 @@ function ViewImageByName()
     xmlhttp.send();    
 }
 
-// Remove aleading, trailing and duplicate spaces
+// Remove leading, trailing and duplicate spaces
 function trim_spaces(str)
 {
     // replace all whitespace to space
@@ -777,7 +787,7 @@ function trim_spaces(str)
     return str;
 }
 
-// Reformt coordinates to a format HH:MM:SS DD:MM:SS
+// Reformat coordinates to a format HH:MM:SS DD:MM:SS
 // Input can be: 
 // HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
 // HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
@@ -802,7 +812,7 @@ function reformat_coordinates(coord)
                 numbers[3] + ':' + numbers[4] + ':' + numbers[5];
         console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
     } else if (numbers.length == 5) {
-        // assume zero last number, separated by space, add colons
+        // badly formatted SIMBAD case, assume zero last number, separated by space, add colons
         coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                 numbers[3] + ':' + numbers[4] + ':' + 0;
         console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
@@ -910,6 +920,7 @@ function clearOldImage()
     for (var i = 0; i < 9; i++) {
         var panel_number = i + 1;
         document.getElementById("aladin-lite-div-"+i.toString()).innerHTML = "";
+        document.getElementById("aladin-lite-div-"+i.toString()).style.borderStyle = "none";;
         document.getElementById("panel_text_"+i.toString()).innerHTML = "";
     }
 }
