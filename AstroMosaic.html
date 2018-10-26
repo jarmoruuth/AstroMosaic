@@ -154,14 +154,23 @@ var UTCdate_ms;
 
 var url = new URL(window.location);
 console.log(url);
-var searchParams = new URLSearchParams(url.search.slice(1));
 
-var url_target = searchParams.get('target');
-var url_telescope = searchParams.get('telescope');
-var url_name = searchParams.get('name');
-var url_type = searchParams.get('type');
-var url_overlap = searchParams.get('overlap');
-var url_date = searchParams.get('date');
+var url_target = null;
+var url_telescope = null;
+var url_name = null;
+var url_type = null;
+var url_overlap = null;
+var url_date = null;
+
+if (typeof URLSearchParams === "function") {
+    searchParams = new URLSearchParams(url.search.slice(1));
+    url_target = searchParams.get('target');
+    url_telescope = searchParams.get('telescope');
+    url_name = searchParams.get('name');
+    url_type = searchParams.get('type');
+    url_overlap = searchParams.get('overlap');
+    url_date = searchParams.get('date');
+}
 
 var xmlhttp;
 var resolved_name = null;
@@ -629,7 +638,7 @@ function drawVisibilityandGrid()
     //formatter.format(data, 0);
 
     var options = {
-        title: 'Object visibility',
+        title: 'Target visibility',
         hAxis: { 
             title: 'Time (UTC)'
             //format: 'HH:mm' 
