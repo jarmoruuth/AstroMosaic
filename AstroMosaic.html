@@ -538,9 +538,9 @@ function toDateString(num)
 // year visibility
 // pleides C1 off by 45 min??? horizon limits
 // curdate need to be UTC
-function drawVisibilityandGrid() 
+function drawDayVisibilityandGrid() 
 {
-    console.log("drawVisibilityandGrid");
+    console.log("drawDayVisibilityandGrid");
 
     ViewGrid();
 
@@ -670,7 +670,7 @@ function drawVisibilityandGrid()
     // material chart.draw(data, google.charts.Line.convertOptions(options));
     chart.draw(data, options);
 
-    var midnight = suntimes.sunset - (suntimes.sunrise - suntimes.sunset) / 2;
+    var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
 
     // We use sun and moon distance in dgrees at midnight to approximate 
     // the moon "phase". I guess there is also a correct way...
@@ -681,13 +681,91 @@ function drawVisibilityandGrid()
     var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
 
     document.getElementById("panel_text_3").innerHTML = 
-        "Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
-        "Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
+        //"Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
+        //"Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
         "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
         "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
 
     //console.log("TEST 1990-04-19");
     //moon_position(Date.UTC(1990, 3, 19));
+}
+
+function drawYearVisibility() 
+{
+    console.log("drawYearVisibility");
+
+    var data = new google.visualization.DataTable();
+    // get midday in UTC time in ms
+    var midday = UTCdate_ms + day_ms/2;
+
+    //data.addColumn('datetime', 'Time'); Can't get this working...
+    data.addColumn('date', 'Date');
+    data.addColumn('number', 'Target alt');         // object altitude
+    data.addColumn('number', 'Moon alt');           // moon altitude
+
+    var interval = day_ms; // day
+    
+    var ra = target_ra;
+    var dec = target_dec;
+    
+    var lat = location_lat;
+    var lng = location_lng;
+
+    var rowdata = [];
+
+    var starttime = midday;
+    var endtime = starttime + 365 * day_ms;
+
+    for (var d = starttime; d <= endtime; d = d + interval) {
+        var suntimes = sun_rise_set(d, lat, lng, 0);
+
+        // get appriximate midnight
+        var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
+
+        var objectalt = object_altitude(midnight, ra, dec, lat, lng);
+
+        var moonpos = moon_position(midnight);
+        var moonalt = object_altitude(midnight, moonpos.ra, moonpos.dec, lat, lng);
+        moonalt = moon_topocentric_correction(moonalt);
+        if (objectalt < 0) {
+            objectalt = null;
+        }
+        if (moonalt < 0) {
+            moonalt = null;
+        }
+        var row = [
+                new Date(d),
+                    objectalt,
+                    moonalt];
+        rowdata[rowdata.length] = row;
+    }
+
+    data.addRows(rowdata);
+
+    var options = {
+        title: 'Target visibility at midnight over next 12 months',
+        hAxis: { 
+            //title: 'Date'
+            //format: 'HH:mm' 
+        },
+        vAxis: { title: 'Altitude (degrees)' },
+        gridlines: {    // Can't get gridlines to work...
+            // count: -1
+            //units: { hours: {format: ['HH:MM']}, }
+        },
+        // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
+        series: { 
+            0: { color: 'blue' },
+            1: { color: 'green', lineDashStyle: [4, 4] }
+        }
+    };
+
+    document.getElementById("aladin-lite-div-6").style.height = "400px";
+    document.getElementById("aladin-lite-div-6").style.width = "700px";
+
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-6'));
+
+    chart.draw(data, options);
 }
 
 // Find coordinates from Sesame XML output
@@ -919,7 +997,8 @@ function ViewImageByType()
 
         // material google.charts.load('current', {'packages':['line']});
         google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawVisibilityandGrid);
+        google.charts.setOnLoadCallback(drawDayVisibilityandGrid);
+        google.charts.setOnLoadCallback(drawYearVisibility);
     }
 }
 
@@ -1046,6 +1125,8 @@ function ViewPanels()
     document.getElementById("aladin-lite-div-0").style.width = "300px";
     document.getElementById("aladin-lite-div-3").style.height = "300px";
     document.getElementById("aladin-lite-div-3").style.width = "300px";
+    document.getElementById("aladin-lite-div-6").style.height = "300px";
+    document.getElementById("aladin-lite-div-6").style.width = "300px";
 
     // First show center panel and get coordinated from there to
     // calculate other panels.
