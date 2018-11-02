@@ -1050,6 +1050,7 @@ function ViewGrid()
     var row = size;
     var col;
     var panel_radec;
+    var fov_panel_radec;
     var panel_row = 1;
     var panel_radec2 = "";
     while (row >= -size) {
@@ -1095,6 +1096,10 @@ function ViewGrid()
             panel_radec = panel_radec + "P" + i.toString() + 
                           " RA/DEC " + col_ra_hours.toFixed(5) + 
                           "/" + row_dec.toFixed(5);
+            if (i == 4) {
+                fov_panel_radec = " RA/DEC " + col_ra_hours.toFixed(5) + 
+                                  "/" + row_dec.toFixed(5);
+            }
             switch (i) {
                 case 1:
                 case 2:
@@ -1114,6 +1119,8 @@ function ViewGrid()
     }
     if (grid_type == "mosaic") {
         document.getElementById("panel_text_0").innerHTML = panel_radec2;
+    } else {
+        document.getElementById("panel_text_0").innerHTML = fov_panel_radec;
     }
 }
 
