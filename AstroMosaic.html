@@ -38,9 +38,11 @@
             <select id="telescope" onchange="javascript:ViewImage()">
                 <option value="T1">T1</option>
                 <option value="T2">T2</option>
+                <option value="T2UWF">T2 UWF</option>
                 <option value="T3">T3</option>
                 <option value="T4">T4</option>
                 <option value="C1">C1</option>
+                <option value="C1UWF">C1 UWF</option>
             </select>
         </form>
     </div>
@@ -530,14 +532,6 @@ function toDateString(num)
     }
 }
 
-// Draw FoV/mosaic grid and object visibility
-// TODO
-// twilight color
-// more correct moon times
-// location altitude
-// year visibility
-// pleides C1 off by 45 min??? horizon limits
-// curdate need to be UTC
 function drawDayVisibilityandGrid() 
 {
     console.log("drawDayVisibilityandGrid");
@@ -941,15 +935,18 @@ function ViewImage()
     telescope = document.getElementById("telescope").value;
 
     // assume Teide, both in degrees
+    var location = 'teide';
     location_lat = 28.29970;        // N28.29970 (N28° 17′ 58.92″)
     location_lng = -16.50826;       // W016.50826 (W016° 30′ 29.736″)
     location_alt = 2372;
 
     // T1 FOV 37´
     // T2 wide field FOV 43'
+    // T2 ultra wide field FOV 1° 47' 06" x 1° 12' 12"
     // T3 FOV 1.654° x 1.249°
     // T4 FOV 0° 15' 57" x 0° 12' 03"
     // C1 FOV 0° 31' 18" x 0° 20' 51"
+    // C1 ultra wide field FOV 1° 21' 49" x 1° 00' 22"
 
     if (telescope == "T1") {
         fov_x = 37.0*60.0/3600.0;
@@ -957,6 +954,9 @@ function ViewImage()
     } else if (telescope == "T2") {
         fov_x = 43.0*60.0/3600.0;
         fov_y = 43.0*60.0/3600.0;
+    } else if (telescope == "T2UWF") {
+        fov_x = 1+(47.0*60.0+6.0)/3600.0;
+        fov_y = 1+(12.0*60.0+12.0)/3600.0;
     } else if (telescope == "T3") {
         fov_x = 1.654;
         fov_y = 1.249;
@@ -966,6 +966,14 @@ function ViewImage()
     } else if (telescope == "C1") {
         fov_x = (31*60.0+18)/3600.0; 
         fov_y = (20*60.0+51)/3600.0;
+        location = 'chile';
+    } else if (telescope == "C1UWF") {
+        fov_x = 1+(21*60.0+49)/3600.0; 
+        fov_y = 1+22/3600.0;
+        location = 'chile';
+    }
+
+    if (location == 'chile') {
         // Chile location in degrees
         location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
         location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
