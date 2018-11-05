@@ -64,6 +64,13 @@
     </div>
     <div>
         <form action="javascript:ViewImage()">
+            Grid size (x,y):<br>
+            <input type="number" id="size_x" min="1" max="5">
+            <input type="number" id="size_y" min="1" max="5">
+        </form>    
+    </div>
+    <div>
+        <form action="javascript:ViewImage()">
             Date (YYYY-MM-DD):<br>
             <input type="text" id="view_date">
         </form>    
@@ -140,15 +147,18 @@
 
 <footer>
     <small>Author: Jarmo Ruuth. Send feedback to: <a href="mailto:astromosaicxyz@gmail.com">
-        astromosaicxyz@gmail.com</a>.</small>
+        astromosaicxyz@gmail.com</a></small>
 </footer>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
 // size means number of panels on each side
-// 1 gives 3x3
-var size = 1;
+// 0.5 means 2 panels
+// 1 means 3 panels
+// 1.5 means 4 panes etc.
+var size_x = 1;
+var size_y = 1;
 
 var telescope = "T1";
 var fov_x;
@@ -226,6 +236,9 @@ if (url_target) {
     document.getElementById("target").value = url_target;
     ViewImage();
 }
+
+document.getElementById("size_x").value = 3;
+document.getElementById("size_y").value = 3;
 
 // convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees in target_ra and target_dec
 function get_target_ra_dec()
@@ -439,7 +452,7 @@ function sun_position(date)
     var RA  = Math.atan2( yequat, xequat ) * radToDeg;
     var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
 
-    console.log("Sun_position", RA, Dec);
+    //console.log("Sun_position", RA, Dec);
 
     return {ra:RA, dec:Dec};
 }
@@ -1035,11 +1048,25 @@ function ViewGrid()
 
     grid_type = document.getElementById("grid_type").value;
 
+    var grid_size_x = parseInt(document.getElementById("size_x").value);
+    var grid_size_y = parseInt(document.getElementById("size_y").value);
+    if (grid_type == "mosaic") {
+        size_x = grid_size_x / 2 - 0.5;
+        size_y = grid_size_y / 2 - 0.5;
+    } else {
+        size_x = 1;
+        size_y = 1;
+    }
+
     // Show image and get coordinates from there to
     // calculate grid boxes.
     var aladin_fov;
     if (grid_type == "mosaic") {
-        aladin_fov = 3.2*fov_x;
+        if (grid_size_x > grid_size_y) {
+            aladin_fov = (grid_size_x+0.2)*fov_x;
+        } else {
+            aladin_fov = (grid_size_y+0.2)*fov_x;
+        }
     } else {
         aladin_fov = 1.2*fov_x;
     }
@@ -1049,23 +1076,26 @@ function ViewGrid()
                            showControl: false, cooFrame: "J2000", showFrame: false});
     var radec = aladin.getRaDec();
 
-    console.log("cented RaDec = ", radec);
+    console.log("center RaDec = ", radec);
 
     var ra = radec[0];
     var dec = radec[1];
 
-    var i = 0;
-    var row = size;
+    var x;
+    var y;
+    var row = size_y;
     var col;
-    var panel_radec;
-    var fov_panel_radec;
-    var panel_row = 1;
-    var panel_radec2 = "";
-    while (row >= -size) {
+    var panel_radec = [];
+    for (x = 0; x < grid_size_x; x++) {
+        panel_radec[x] = [];
+    }
+    y = 0;
+    while (row >= -size_y) {
         var row_dec = dec + row * img_fov * fov_y;
-        col = size;
-        panel_radec = "";
-        while (col >= -size) {
+        col = size_x;
+        panel_radec[x] = [];
+        x = 0;
+        while (col >= -size_x) {
             var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
 
             console.log("panel ra/dec=", col_ra, "/", row_dec);
@@ -1087,54 +1117,52 @@ function ViewGrid()
                 [col_ra1-col_ra1_delta, row_dec1]
             ];
 
-            console.log("panel = ", panel);
+            //console.log("panel = ", panel);
 
             var line_color = '#ee2345';
 
-            if (grid_type == "mosaic" || i == 4) {
+            if (grid_type == "mosaic" || (x == 1 && y == 1)) {
                 var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
                 aladin.addOverlay(overlay);
                 overlay.add(A.polyline(panel));
             }
             col = col - 1;
-            i = i + 1;
 
             var col_ra_hours = col_ra * degToHours;
 
-            panel_radec = panel_radec + "P" + i.toString() + 
-                          " RA/DEC " + col_ra_hours.toFixed(5) + 
-                          "/" + row_dec.toFixed(5);
-            if (i == 4) {
-                fov_panel_radec = " RA/DEC " + col_ra_hours.toFixed(5) + 
-                                  "/" + row_dec.toFixed(5);
-            }
-            switch (i) {
-                case 1:
-                case 2:
-                case 4:
-                case 5:
-                case 7:
-                case 8:
-                    panel_radec = panel_radec + ' - ';
-                    break;
-            }
+            panel_radec[x][y] = "RA/DEC " + col_ra_hours.toFixed(5) + 
+                                "/" + row_dec.toFixed(5);
+            x = x + 1;
         }
         row = row - 1;
-        if (grid_type == "mosaic") {
-            panel_radec2 = panel_radec2 + "<br>" + panel_radec;
-        }
-        panel_row = panel_row + 1;
+        y = y + 1;
     }
     if (grid_type == "mosaic") {
+        var i = 1;
+        var panel_radec2 = "";
+        for (y = 0; y < grid_size_y; y++) {
+            for (x = 0; x < grid_size_x; x++) {
+                panel_radec2 = panel_radec2 + "P" + i.toString() + " " + panel_radec[x][y];
+                if (x < grid_size_x-1) {
+                    panel_radec2 = panel_radec2 + " - ";
+                }
+                i = i + 1;
+            }
+            panel_radec2 = panel_radec2 + "<BR>";
+        }
         document.getElementById("panel_text_0").innerHTML = panel_radec2;
     } else {
-        document.getElementById("panel_text_0").innerHTML = fov_panel_radec;
+        document.getElementById("panel_text_0").innerHTML = panel_radec[1][1];
     }
 }
 
 function ViewPanels()
 {
     console.log('ViewPanels');
+
+    // show only 3x3
+    size_x = 1;
+    size_y = 1;
 
     document.getElementById("aladin-lite-div-0").style.height = "300px";
     document.getElementById("aladin-lite-div-0").style.width = "300px";
@@ -1162,12 +1190,12 @@ function ViewPanels()
     var dec = radec[1];
 
     var i = 0;
-    var row = size;
+    var row = size_y;
     var col;
-    while (row >= -size) {
+    while (row >= -size_y) {
         var row_dec = dec + row * img_fov * fov_y;
-        col = size;
-        while (col >= -size) {
+        col = size_x;
+        while (col >= -size_x) {
             var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
             // convert from degrees to hours
             col_ra = col_ra * degToHours;
