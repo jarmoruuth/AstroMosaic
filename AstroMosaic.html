@@ -1144,12 +1144,17 @@ function ViewGrid()
 
     var grid_size_x = parseInt(document.getElementById("size_x").value);
     var grid_size_y = parseInt(document.getElementById("size_y").value);
+    if (grid_size_x == 1 && grid_size_y == 1) {
+        grid_type = "fov";
+    }
     if (grid_type == "mosaic") {
         size_x = grid_size_x / 2 - 0.5;
         size_y = grid_size_y / 2 - 0.5;
     } else {
         size_x = 1;
         size_y = 1;
+        grid_size_x = 3;
+        grid_size_y = 3;
     }
 
     // Show image and get coordinates from there to
