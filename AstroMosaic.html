@@ -10,9 +10,8 @@
   flex-direction: row;
 }
 .flex-container > div {
-  margin: 5px;
-  padding: 5px;
-  font-size: 20px;
+  margin: 2px;
+  padding: 2px;
 }
 </style>
     <title>AstroMosaic</title>
@@ -79,6 +78,9 @@
         <br>
         <button onclick="ViewImage()">View image</button>
     </div>
+</div>
+
+<div class="flex-container">
     <div>
         <small id="status_text"></small>
     </div>
@@ -205,11 +207,51 @@ var degToRad = Math.PI/180.0;
 var radToDeg = 180.0/Math.PI;
 var degToHours = 1/15;
 var hoursToDeg = 15;
-var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascrip zero time
+var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascript zero time
+
+// Hard and soft limits for current telecope
+var horizonHard = [];
+var horizonSoft = [];
+
+var chile1Hard = [
+7.75,5.75,3.5,1.75,1.75,1.75,6.75,1.5,1,0.75,0.5,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0.75,1.25,0.75,0.5,0.5,4,13.5,11,
+8.5,6,2.25,0,0.25,1.25,4,5.25,6.5,7.5,8.25,9.25,10,10.25,10.5,10.75,11,11.25,11.25,11,11.75,12.25,13,13.5,32.5,16.75,11.5,12,
+12.75,13.25,13,12.75,11.75,10.75
+];
+var chileSoft = [
+18,18,18,18,18,18,18,18,18,20,22,24,25,30,35,42,47,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,
+50,50,50,47,40,35,30,25,24,22,20,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18
+];
+var teide1Hard = [
+27,25,24,23,21.5,20,18,16,13.5,11,10,9,9,9,9,9,9,9,9,9,10,11,11.5,12,13.5,15,17,19,22,25,26.5,28,29.5,31,32,33,32,31,29.5,
+28,26.5,25,22,19,18,15,14,13,13,13,13.5,14,14,14,12,12,12.5,13,12.5,12,12,12,15,16,18.5,21,22,23,23.5,24,26
+];
+var teide2Hard = [
+30,26.6,24.8,23.8,22.7,21.2,19.6,17.6,15.5,13,10.8,9.8,9,9,9,9,9,9,9,9,9.2,10.2,11.1,11.6,12.3,13.8,15.4,17.4,19.6,33,33,33,
+33,33,33,33,33,33,33,33,33,26.2,24.4,21.4,18.8,17.4,14.8,13.8,13,13,13.1,13.6,14,14,13.6,12,12.1,12.6,12.9,12.4,12,12,12.6,
+15.2,16.5,19,21.2,22.2,23.1,23.6,24.4
+];
+var teide3Hard = [
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
+];
+var teide4Hard = [
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
+];
+var teideSoft = [
+30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
+30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
+];
+
+var transit_limit = (30 * 60) / 3600 * hoursToDeg;
 
 if (!url_target) {
     url_target = "Horsehead nebula";
 }
+
+//url_target = "Tarantula nebula";
+//document.getElementById("telescope").value = "C1";
 
 if (url_name) {
     document.getElementById("astro_mosaic_title").innerHTML = url_name;
@@ -240,7 +282,7 @@ if (url_target) {
 document.getElementById("size_x").value = 3;
 document.getElementById("size_y").value = 3;
 
-// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees in target_ra and target_dec
+// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
 function get_target_ra_dec()
 {
         // assume format HH:MM:SS DEG:HH:MM
@@ -302,6 +344,7 @@ function getJ2000_2(d)
 //      https://observability.date/notes
 //      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
 //      http://www.stjarnhimlen.se/comp/tutorial.html
+//      http://www.stargazing.net/kepler/altaz.html
 function object_altitude(date, ra, dec, lat, lng)
 {
     // universal time in decimal hours
@@ -325,9 +368,21 @@ function object_altitude(date, ra, dec, lat, lng)
 
     var altitude = Math.asin(sin_altitude) * radToDeg;
 
+    // calculate AZ
+    var cos_A = (sind(dec) - sind(altitude)*sind(lat)) / (cosd(altitude)*cosd(lat));
+
+    var A = Math.acos(cos_A) * radToDeg;
+
+    var AZ;
+    if (sind(LHA) < 0) {
+        AZ = A;
+    } else {
+        AZ = 360 - A;
+    }
+
     //console.log("object_altitude, last=",LST*degToHours,",lha=",LHA*degToHours,",sinalt=",sin_altitude,",alt=",altitude,",H=",H);
 
-    return altitude;
+    return {alt:altitude, az:AZ};
 }
 
 // Simplified version of moon position at given time.
@@ -559,11 +614,12 @@ function drawDayVisibilityandGrid()
     //data.addColumn('datetime', 'Time'); Can't get this working...
     data.addColumn('string', 'Time');
     //data.addColumn('datetime', 'Time');
-    data.addColumn('number', 'Alt >= 30');         // object altitude
-    data.addColumn('number', 'Alt < 30');     // object altitude if below 30 degrees
+    data.addColumn('number', 'Visible');            // object altitude
+    data.addColumn('number', 'Below soft horizon'); // object altitude if below soft horizon
+    data.addColumn('number', 'Not visible');        // object altitude below hard horizon or meridian transit
     data.addColumn('number', 'Moon alt');           // moon altitude
 
-    var interval = day_ms/(24*6); // 10 minutes
+    var interval = 5*60*1000; // 5 minutes
     
     var ra = target_ra;
     var dec = target_dec;
@@ -573,14 +629,13 @@ function drawDayVisibilityandGrid()
 
     var rowdata = [];
 
-    var draw_full_day = 0;  // if 0 draw only during astronimical twilight
+    var draw_full_day = 0;  // if 0 draw only during astronomical twilight
 
-    // sun rise and set times at astronomical twilight at -15 degrees
-    suntimes = sun_rise_set(midday, lat, lng, -12);
+    // sun rise and set times that close match Slloh dome open times
+    var suntimes = sun_rise_set(midday, lat, lng, -12);
 
     var UTCsunset = new Date(suntimes.sunset);
     var UTCsunrise = new Date(suntimes.sunrise);
-    var prevalt = null;
 
     var starttime;
     var endtime;
@@ -591,52 +646,78 @@ function drawDayVisibilityandGrid()
         starttime = suntimes.sunset - suntimes.sunset % interval;
         endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
     }
+    var prevaz = null;
+    var meridian_index = null;
 
     for (var d = starttime; d <= endtime; d = d + interval) {
         //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
-        var objectalt = object_altitude(d, ra, dec, lat, lng);
+        var altaz = object_altitude(d, ra, dec, lat, lng);
+        //console.log("target az=",altaz.az,",alt=",altaz.alt);
+        var objectalt = altaz.alt;
 
         var moonpos = moon_position(d);
-        var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng);
+        var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng).alt             ;
         moonalt = moon_topocentric_correction(moonalt);
         var UTCdate = new Date(d);
         //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
 
-        // When object is below 30 dgrees it is too low for proper imaging.
-        // we fraw a different line (different color) when object is below
-        // 30 degrees (objectlowalt).
-        var objecthighalt = objectalt;
-        var objectlowalt = null;
-        if (objectalt < 0) {
-            objecthighalt = null;
-        } else if (objectalt < 30) {
-            if (prevalt != null && prevalt >= 30) {
-                // close the gap, coming down
-                objectlowalt = objectalt;
-                //console.log("close the gap down", rowdata.length-1);
-            } else {
-                objectlowalt = objectalt;
-                objecthighalt = null;
-            }
-        } else {
-            if (prevalt != null && prevalt < 30) {
-                // close the gap
-                rowdata[rowdata.length-1][1] =  prevalt;
-                //console.log("close the gap up", rowdata.length-1);
+        var visiblealt = null;     // target visible
+        var softalt = null;        // target below soft horizon
+        var hardalt = null;        // target below hard horizon or meridian transit
+
+        var horizon_index = Math.round(altaz.az / 5);
+
+        if (prevaz != null) {
+            if ((prevaz > 180 && altaz.az < 180) || // from 360 to 0
+                (prevaz < 180 && altaz.az > 180))   // passed 180
+            {
+                // save meridian crossing
+                meridian_index = rowdata.length;
+                console.log("meridian_index",meridian_index);
             }
         }
-        prevalt = objectalt;
+        prevaz = altaz.az;
+        if (objectalt > 0) {
+            //console.log("objectalt",objectalt,"horizon_index",horizon_index);
+            //console.log("soft",horizonSoft[horizon_index],"hard",horizonHard[horizon_index]);
+            if (objectalt > horizonSoft[horizon_index]) {
+                visiblealt = objectalt;
+            } else if (objectalt > horizonHard[horizon_index]) {
+                softalt = objectalt;
+            } else {
+                hardalt = objectalt;
+            }
+        }
         if (moonalt < 0) {
             moonalt = null;
         }
         var row = [
                     toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
                     //UTCdate,
-                    objecthighalt,
-                    objectlowalt,
+                    visiblealt,
+                    softalt,
+                    hardalt,
                     moonalt];
         //console.log("row", row);
         rowdata[rowdata.length] = row;
+    }
+
+    if (meridian_index != null) {
+        // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
+        // Maybe it could be done some other way...
+        var timer = Math.round((30 * 60 * 1000) / interval);
+        var begin = Math.max(meridian_index - timer, 0);
+        var end = Math.min(meridian_index + timer, rowdata.length);
+        for (var i = begin; i < end; i++) {
+            if (rowdata[i][1] != null) {
+                rowdata[i][3] = rowdata[i][1];
+                rowdata[i][1] = null;
+            } else if (rowdata[i][2] != null) {
+                rowdata[i][3] = rowdata[i][2];
+                rowdata[i][2] = null;
+            }
+        }
+
     }
 
     //for (var i = 0; i < rowdata.length; i++) {
@@ -662,9 +743,10 @@ function drawDayVisibilityandGrid()
         },
         // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
         series: { 
-            0: { color: 'blue' },
-            1: { color: 'orange' },
-            2: { color: 'green', lineDashStyle: [4, 4] }
+            0: { color: 'green' },
+            1: { color: 'orange', lineDashStyle: [4, 2] },
+            2: { color: 'red', lineDashStyle: [2, 2] },
+            3: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
         }
     };
 
@@ -729,10 +811,10 @@ function drawYearVisibility()
         // get appriximate midnight
         var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
 
-        var objectalt = object_altitude(midnight, ra, dec, lat, lng);
+        var objectalt = object_altitude(midnight, ra, dec, lat, lng).alt;
 
         var moonpos = moon_position(midnight);
-        var moonalt = object_altitude(midnight, moonpos.ra, moonpos.dec, lat, lng);
+        var moonalt = object_altitude(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
         moonalt = moon_topocentric_correction(moonalt);
         if (objectalt < 0) {
             objectalt = null;
@@ -762,8 +844,8 @@ function drawYearVisibility()
         },
         // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
         series: { 
-            0: { color: 'blue' },
-            1: { color: 'green', lineDashStyle: [4, 4] }
+            0: { color: 'green' },
+            1: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
         }
     };
 
@@ -825,7 +907,7 @@ function find_coordinates(str)
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
-    document.getElementById("status_text").innerHTML = "RA/DEC<br>" + image_target;
+    document.getElementById("status_text").innerHTML = "RA/DEC " + image_target;
 
     resolved_coordinates = image_target;
 
@@ -839,7 +921,7 @@ function ViewImageByName()
 
     if (resolved_name == image_target && resolved_coordinates != null) {
         // same name already resolved, do not resolve again
-        document.getElementById("status_text").innerHTML = "RA/DEC<br>" + resolved_coordinates;
+        document.getElementById("status_text").innerHTML = "RA/DEC " + resolved_coordinates;
         image_target = resolved_coordinates;
         ViewImageByType();
         return;
@@ -862,7 +944,7 @@ function ViewImageByName()
             if (find_coordinates(xmlhttp.responseText)) {
                 ViewImageByType();
             } else {
-                document.getElementById("status_text").innerHTML = "<br>Failed to resolve name " + image_target;
+                document.getElementById("status_text").innerHTML = "Failed to resolve name " + image_target;
             }
         }
     }
@@ -934,7 +1016,7 @@ function ViewImage()
     var view_date = document.getElementById("view_date").value;
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById("status_text").innerHTML = "<br>Invalid ISO format date " + view_date;
+        document.getElementById("status_text").innerHTML = "Invalid ISO format date " + view_date;
         return;
     }
     //console.log("curdate", curdate);
@@ -961,21 +1043,28 @@ function ViewImage()
     // C1 FOV 0° 31' 18" x 0° 20' 51"
     // C1 ultra wide field FOV 1° 21' 49" x 1° 00' 22"
 
+    horizonSoft = teideSoft;
+
     if (telescope == "T1") {
         fov_x = 37.0*60.0/3600.0;
         fov_y = 37.0*60.0/3600.0;
+        horizonHard = teide1Hard;
     } else if (telescope == "T2") {
         fov_x = 43.0*60.0/3600.0;
         fov_y = 43.0*60.0/3600.0;
+        horizonHard = teide2Hard;
     } else if (telescope == "T2UWF") {
         fov_x = 1+(47.0*60.0+6.0)/3600.0;
         fov_y = 1+(12.0*60.0+12.0)/3600.0;
+        horizonHard = teide2Hard;
     } else if (telescope == "T3") {
         fov_x = 1.654;
         fov_y = 1.249;
+        horizonHard = teide3Hard;
     } else if (telescope == "T4") {
         fov_x = (15*60.0+57)/3600.0;
         fov_y = (12*60.0+3)/3600.0;
+        horizonHard = teide4Hard;
     } else if (telescope == "C1") {
         fov_x = (31*60.0+18)/3600.0; 
         fov_y = (20*60.0+51)/3600.0;
@@ -991,7 +1080,12 @@ function ViewImage()
         location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
         location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
         location_alt = 1450;
+        horizonHard = chile1Hard;
+        horizonSoft = chileSoft;
     }
+
+    console.log("chile1Hard[0]", chile1Hard[0]);
+    console.log("horizonHard[0]", horizonHard[0]);
 
     document.getElementById("status_text").innerHTML = "";
 
