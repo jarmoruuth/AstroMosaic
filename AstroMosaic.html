@@ -24,9 +24,9 @@
 
 <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
 
-<div class="flex-container">
+<div id="firstDiv" class="flex-container">
     <div>
-        <form action="javascript:ViewImage()">
+        <form action="javascript:ViewTarget()">
             Target:<br>
             <input type="text" id="target"><br>
         </form>
@@ -80,9 +80,31 @@
     </div>
 </div>
 
-<div class="flex-container">
+<div id="secondDiv" class="flex-container">
     <div>
-        <small id="status_text"></small>
+        Slooh 500:
+    </div>
+    <div id ="slooh500Div">
+    </div>
+    <div>
+        <form>
+            Filter:
+            <select id="slooh500filter" onchange="javascript:filterChanged()">
+                <option value="all">All</option>
+                <option value="0">0°</option>
+                <option value="15">15°</option>
+                <option value="30">30°</option>
+                <option value="45">45°</option>
+                <option value="60">60°</option>
+                <option value="75">75°</option>
+            </select>
+        </form>
+    </div>
+    <div>
+        <form action="javascript:filterTimeChanged()">
+            Time:
+            <input type="text" id="filter_time" size=5>
+        </form>    
     </div>
 </div>
 
@@ -105,8 +127,8 @@
     <br>
     <small id="panel_text_2"></small>
     </div>
-    </div>
-    <div class="flex-container">
+</div>
+<div class="flex-container">
     <div>
     <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
     <div id="aladin-lite-div-3" style="width:300px;height:300px;"></div>
@@ -125,8 +147,8 @@
     <br>
     <small id="panel_text_5"></small>
     </div>
-    </div>
-    <div class="flex-container">
+</div>
+<div class="flex-container">
     <div>
     <!-- insert this snippet where you want Aladin Lite viewer to appear and after the loading of jQuery -->
     <div id="aladin-lite-div-6" style="width:300px;height:300px;"></div>
@@ -145,6 +167,10 @@
     <br>
     <small id="panel_text_8"></small>
     </div>
+</div>    
+
+<div>
+    <small id="status_text"></small>
 </div>
 
 <footer>
@@ -154,6 +180,10 @@
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
+
+var panel_row_1 = '0';
+var panel_row_2 = '3';
+var panel_row_3 = '6';
 
 // size means number of panels on each side
 // 0.5 means 2 panels
@@ -208,6 +238,28 @@ var radToDeg = 180.0/Math.PI;
 var degToHours = 1/15;
 var hoursToDeg = 15;
 var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascript zero time
+
+var telescope_location = 'teide';
+
+var teide_location_lat = 28.29970;        // N28.29970 (N28° 17′ 58.92″)
+var teide_location_lng = -16.50826;       // W016.50826 (W016° 30′ 29.736″)
+var teide_location_alt = 2372;
+
+var chile_location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
+var chile_location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
+var chile_location_alt = 1450;
+
+var slooh500Teide = null;
+var slooh500Chile = null;
+
+var slooh500select = null;
+var slooh500text = null;
+var slooh500teidelist = null;
+var slooh500chilelist = null;
+var slooh500location = ''; // last telescope_location
+var slooh500date = null;
+var slooh500time = null;
+var slooh500filter = null;
 
 // Hard and soft limits for current telecope
 var horizonHard = [];
@@ -345,7 +397,7 @@ function getJ2000_2(d)
 //      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
 //      http://www.stjarnhimlen.se/comp/tutorial.html
 //      http://www.stargazing.net/kepler/altaz.html
-function object_altitude(date, ra, dec, lat, lng)
+function object_altaz(date, ra, dec, lat, lng)
 {
     // universal time in decimal hours
     var H = (date % day_ms) / hour_ms;
@@ -380,9 +432,47 @@ function object_altitude(date, ra, dec, lat, lng)
         AZ = 360 - A;
     }
 
-    //console.log("object_altitude, last=",LST*degToHours,",lha=",LHA*degToHours,",sinalt=",sin_altitude,",alt=",altitude,",H=",H);
+    //console.log("object_altaz, last=",LST*degToHours,",lha=",LHA*degToHours,",sinalt=",sin_altitude,",alt=",altitude,",H=",H);
 
     return {alt:altitude, az:AZ};
+}
+
+// Do calculations that are not based on RA/DEC
+function object_altitude_init(date, lat, lng)
+{
+    // universal time in decimal hours
+    var H = (date % day_ms) / hour_ms;
+
+    // Julian date including fraction - 2451545.0,
+    // that is days from J2000
+    var D = getJ2000_2(date);
+
+    // calculate local sidereal time in degrees
+    var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
+
+    // get hours
+    LST = LST % 360;
+
+
+    var aa =  {Lst: LST, Sinlat: sind(lat), Coslat: cosd(lat)}
+
+    console.log("object_altitude_init, aa", aa);
+
+    return aa;
+}
+
+// Calculate altidude on given RA/DEC
+function object_altitude_get(aa, ra, dec)
+{
+    // calculate local hour angle in degrees
+    var LHA = aa.Lst - ra;
+
+    // calculate sin(altitude) in radian
+    var sin_altitude = aa.Sinlat * sind(dec) + aa.Coslat * cosd(dec) * cosd(LHA);
+
+    var altitude = Math.asin(sin_altitude) * radToDeg;
+
+    return altitude;
 }
 
 // Simplified version of moon position at given time.
@@ -651,12 +741,12 @@ function drawDayVisibilityandGrid()
 
     for (var d = starttime; d <= endtime; d = d + interval) {
         //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
-        var altaz = object_altitude(d, ra, dec, lat, lng);
+        var altaz = object_altaz(d, ra, dec, lat, lng);
         //console.log("target az=",altaz.az,",alt=",altaz.alt);
         var objectalt = altaz.alt;
 
         var moonpos = moon_position(d);
-        var moonalt = object_altitude(d, moonpos.ra, moonpos.dec, lat, lng).alt             ;
+        var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt             ;
         moonalt = moon_topocentric_correction(moonalt);
         var UTCdate = new Date(d);
         //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
@@ -750,11 +840,13 @@ function drawDayVisibilityandGrid()
         }
     };
 
-    document.getElementById("aladin-lite-div-3").style.height = "400px";
-    document.getElementById("aladin-lite-div-3").style.width = "700px";
+    console.log("panel", "aladin-lite-div-"+panel_row_2);
 
-    // material var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
-    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-3'));
+    document.getElementById("aladin-lite-div-"+panel_row_2).style.height = "400px";
+    document.getElementById("aladin-lite-div-"+panel_row_2).style.width = "700px";
+
+    // material var chart = new google.charts.Line(document.getElementById('aladin-lite-div-'+panel_row_2));
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-'+panel_row_2));
 
     // material chart.draw(data, google.charts.Line.convertOptions(options));
     chart.draw(data, options);
@@ -811,10 +903,10 @@ function drawYearVisibility()
         // get appriximate midnight
         var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
 
-        var objectalt = object_altitude(midnight, ra, dec, lat, lng).alt;
+        var objectalt = object_altaz(midnight, ra, dec, lat, lng).alt;
 
         var moonpos = moon_position(midnight);
-        var moonalt = object_altitude(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
+        var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
         moonalt = moon_topocentric_correction(moonalt);
         if (objectalt < 0) {
             objectalt = null;
@@ -849,10 +941,10 @@ function drawYearVisibility()
         }
     };
 
-    document.getElementById("aladin-lite-div-6").style.height = "400px";
-    document.getElementById("aladin-lite-div-6").style.width = "700px";
+    document.getElementById("aladin-lite-div-"+panel_row_3).style.height = "400px";
+    document.getElementById("aladin-lite-div-"+panel_row_3).style.width = "700px";
 
-    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-6'));
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-'+panel_row_3));
 
     chart.draw(data, options);
 }
@@ -1004,6 +1096,14 @@ function reformat_coordinates(coord)
     return coord;
 }
 
+// target field action handler
+// we clear slooh 500 selection if target is changed
+function ViewTarget()
+{
+    slooh500select.value = '';
+    ViewImage();
+}
+
 // Main function to view image. Get parameters
 // and call correct view function
 function ViewImage()
@@ -1016,13 +1116,22 @@ function ViewImage()
     var view_date = document.getElementById("view_date").value;
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById("status_text").innerHTML = "Invalid ISO format date " + view_date;
+        document.getElementById("status_text").innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
         return;
     }
+    checkFilterChanged();
+    checkFilterTimeChanged();
+
     //console.log("curdate", curdate);
     UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
                           parseInt(view_date.substr(8, 2)));
 
+    if (slooh500date != UTCdate_ms) {
+        // time changed, reset slooh500 list
+        console.log("ViewImage, date changed, reset slooh500");
+        slooh500date = UTCdate_ms;
+        slooh500reset();
+    }
 
     img_fov = document.getElementById("overlap_percentage").value;
     img_fov = 1 - img_fov / 100;
@@ -1030,10 +1139,10 @@ function ViewImage()
     telescope = document.getElementById("telescope").value;
 
     // assume Teide, both in degrees
-    var location = 'teide';
-    location_lat = 28.29970;        // N28.29970 (N28° 17′ 58.92″)
-    location_lng = -16.50826;       // W016.50826 (W016° 30′ 29.736″)
-    location_alt = 2372;
+    telescope_location = 'teide';
+    location_lat = teide_location_lat;
+    location_lng = teide_location_lng;
+    location_alt = teide_location_alt
 
     // T1 FOV 37´
     // T2 wide field FOV 43'
@@ -1068,21 +1177,23 @@ function ViewImage()
     } else if (telescope == "C1") {
         fov_x = (31*60.0+18)/3600.0; 
         fov_y = (20*60.0+51)/3600.0;
-        location = 'chile';
+        telescope_location = 'chile';
     } else if (telescope == "C1UWF") {
         fov_x = 1+(21*60.0+49)/3600.0; 
         fov_y = 1+22/3600.0;
-        location = 'chile';
+        telescope_location = 'chile';
     }
 
-    if (location == 'chile') {
-        // Chile location in degrees
-        location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
-        location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
-        location_alt = 1450;
+    if (telescope_location == 'chile') {
+        // Chile telescope_location in degrees
+        location_lat = chile_location_lat;
+        location_lng = chile_location_lng;
+        location_alt = chile_location_alt;
         horizonHard = chile1Hard;
         horizonSoft = chileSoft;
     }
+
+    initslooh500();
 
     console.log("chile1Hard[0]", chile1Hard[0]);
     console.log("horizonHard[0]", horizonHard[0]);
@@ -1105,11 +1216,10 @@ function ViewImage()
 function ViewImageByType()
 {
     console.log('ViewImageByType');
+    get_target_ra_dec();
     if (document.getElementById("grid_type").value == 'panels') {
         ViewPanels();
     } else {
-        get_target_ra_dec();
-
         // material google.charts.load('current', {'packages':['line']});
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawDayVisibilityandGrid);
@@ -1137,8 +1247,8 @@ function ViewGrid()
 {
     console.log('ViewGrid');
 
-    document.getElementById("aladin-lite-div-0").style.height = "700px";
-    document.getElementById("aladin-lite-div-0").style.width = "700px";
+    document.getElementById("aladin-lite-div-"+panel_row_1).style.height = "700px";
+    document.getElementById("aladin-lite-div-"+panel_row_1).style.width = "700px";
 
     grid_type = document.getElementById("grid_type").value;
 
@@ -1169,7 +1279,7 @@ function ViewGrid()
     } else {
         aladin_fov = 1.2*fov_x;
     }
-    var aladin = A.aladin('#aladin-lite-div-0', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
+    var aladin = A.aladin('#aladin-lite-div-'+panel_row_1, {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
                            showReticle:false, showZoomControl:false, showFullscreenControl:false, 
                            showLayersControl:false, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
@@ -1259,41 +1369,35 @@ function ViewPanels()
 {
     console.log('ViewPanels');
 
-    // show only 3x3
-    size_x = 1;
-    size_y = 1;
-
-    document.getElementById("aladin-lite-div-0").style.height = "300px";
-    document.getElementById("aladin-lite-div-0").style.width = "300px";
-    document.getElementById("aladin-lite-div-3").style.height = "300px";
-    document.getElementById("aladin-lite-div-3").style.width = "300px";
-    document.getElementById("aladin-lite-div-6").style.height = "300px";
-    document.getElementById("aladin-lite-div-6").style.width = "300px";
-
-    // First show center panel and get coordinated from there to
-    // calculate other panels.
-    if (fov_x != fov_y) {
-        var height = 300 * fov_y / fov_x;
-        document.getElementById("aladin-lite-div-4").style.height = Math.floor(height).toString() + "px";
-    } else {
-        document.getElementById("aladin-lite-div-4").style.height = "300px";
+    var grid_size_x = parseInt(document.getElementById("size_x").value);
+    var grid_size_y = parseInt(document.getElementById("size_y").value);
+    if (grid_size_x == 1 && grid_size_y == 1) {
+        ViewGrid();
+        return;
     }
-    console.log("image_target=" + image_target);
-    var aladin = A.aladin('#aladin-lite-div-4', {survey: "P/DSS2/color", fov:fov_x, target:image_target,
-                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                           showLayersControl:false, showGotoControl:false,
-                           showControl: false, cooFrame: "J2000", showFrame: false});
-    var radec = aladin.getRaDec();
 
-    var ra = radec[0];
-    var dec = radec[1];
+    document.getElementById("aladin-lite-div-"+panel_row_1).style.height = "300px";
+    document.getElementById("aladin-lite-div-"+panel_row_1).style.width = "300px";
+    document.getElementById("aladin-lite-div-"+panel_row_2).style.height = "300px";
+    document.getElementById("aladin-lite-div-"+panel_row_2).style.width = "300px";
+    document.getElementById("aladin-lite-div-"+panel_row_3).style.height = "300px";
+    document.getElementById("aladin-lite-div-"+panel_row_3).style.width = "300px";
+
+    size_x = grid_size_x / 2 - 0.5;
+    size_y = grid_size_y / 2 - 0.5;
+
+    console.log("image_target=" + image_target);
+    var ra = target_ra;
+    var dec = target_dec;
 
     var i = 0;
     var row = size_y;
     var col;
+    var row_number = 0;
     while (row >= -size_y) {
         var row_dec = dec + row * img_fov * fov_y;
         col = size_x;
+        var panel_number = 3 * row_number;
         while (col >= -size_x) {
             var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
             // convert from degrees to hours
@@ -1312,26 +1416,744 @@ function ViewPanels()
             aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
             aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
 
-            if (i != 4) {
-                var panel_id = 'aladin-lite-div-'+i.toString();
-                if (fov_x != fov_y) {
-                    var height = 300 * fov_y / fov_x;
-                    document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
-                } else {
-                    document.getElementById(panel_id).style.height = "300px";
-                }
-                aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
-                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                                    showLayersControl:false, showGotoControl:false,
-                                    showControl: false, cooFrame: "J2000", showFrame: false});
+            var panel_id = 'aladin-lite-div-'+panel_number.toString();
+            if (fov_x != fov_y) {
+                var height = 300 * fov_y / fov_x;
+                document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
+            } else {
+                document.getElementById(panel_id).style.height = "300px";
             }
-            var panel_number = i + 1;
-            document.getElementById("panel_text_"+i.toString()).innerHTML = panel_number.toString() + " RA/DEC " + col_ra.toFixed(5) + "/" + row_dec.toFixed(5);
+            aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
+                                showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                                showLayersControl:false, showGotoControl:false,
+                                showControl: false, cooFrame: "J2000", showFrame: false});
+
+            document.getElementById("panel_text_"+panel_number.toString()).innerHTML = (i+1).toString() + " RA/DEC " + col_ra.toFixed(5) + "/" + row_dec.toFixed(5);
             col = col - 1;
             i = i + 1;
+            panel_number = panel_number + 1;
         }
         row = row - 1;
+        row_number = row_number + 1;
     }
+}
+
+function slooh500initlists()
+{
+slooh500Teide = [
+[ 1 , "STAR" , "Adhil" , "Xi Andromedae" , "01:22:20.41 +45:31:43.6" , 20.59 , 45.76 ],
+[ 2 , "STAR" , "Albali" , "Epsilon Aquarii" , "20:47:40.55 -09:29:44.7" , 311.92 , -8.85 ],
+[ 3 , "STAR" , "Almach" , "Gamma Andromedae" , "02:03:53.95 +42:19:47.0" , 30.97 , 42.71 ],
+[ 4 , "STAR" , "Alpheratz" , "Alpha Andromedae" , "00:08:23.25 +29:05:25.5" , 2.10 , 29.49 ],
+[ 5 , "STAR" , "Alshain" , "Beta Aquilae" , "19:55:18.79 +06:24:24.3" , 298.83 , 6.10 ],
+[ 6 , "STAR" , "Altair" , "Alpha Aquilae" , "19:50:46.99 +08:52:05.9" , 297.70 , 8.14 ],
+[ 7 , "STAR" , "Ancha" , "Theta Aquarii" , "22:16:50.03 -07:46:59.8" , 334.21 , -6.88 ],
+[ 8 , "STAR" , "Bharani" , "41 Arietis" , "02:49:59.03 +27:15:37.8" , 42.50 , 27.46 ],
+[ 9 , "STAR" , "Botein" , "Delta Arietis" , "03:11:37.76 +19:43:36.0" , 47.91 , 19.32 ],
+[ 10 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],
+[ 11 , "STAR" , "Hamal" , "Alpha Arietis" , "02:07:10.40 +23:27:44.7" , 31.79 , 23.39 ],
+[ 12 , "STAR" , "Keid - home of Vulcan" , "40 Eridani" , "04:15:16.3 -7:39:10.3" , 63.82 , -6.88 ],
+[ 13 , "STAR" , "Libertas" , "Xi Aquilae" , "19:54:14.88 +08:27:41.2" , 298.56 , 8.14 ],
+[ 14 , "STAR" , "Lilii Borea" , "39 Arietis" , "02:47:54.54 +29:14:49.6" , 41.98 , 29.49 ],
+[ 15 , "STAR" , "Mesarthim" , "Gamma Arietis" , "01:53:31.81 +19:17:37.8" , 28.38 , 19.32 ],
+[ 16 , "STAR" , "Mirach" , "Beta Andromedae" , "01:09:43.92 +35:37:14.0" , 17.43 , 35.59 ],
+[ 17 , "STAR" , "Nembus" , "51 Andromedae" , "01:37:59.55 +48:37:41.5" , 24.50 , 48.81 ],
+[ 18 , "STAR" , "Sadachbia" , "Gamma Aquarii" , "22:21:39.37 -01:23:14.4" , 335.41 , -0.98 ],
+[ 19 , "STAR" , "Sadalmelik" , "Alpha Aquarii" , "22:05:47.03 -00:19:11.4" , 331.45 , 0.00 ],
+[ 20 , "STAR" , "Sadalsuud" , "Beta Aquarii" , "21:31:33.53 -05:34:16.2" , 322.89 , -4.92 ],
+[ 21 , "STAR" , "Sheratan" , "Beta Arietis" , "01:54:38.41 +20:48:28.9" , 28.66 , 20.34 ],
+[ 22 , "STAR" , "Situla" , "Kappa Aquarii" , "22:37:45.38 -04:13:40.9" , 339.44 , -3.93 ],
+[ 23 , "STAR" , "Skat" , "Delta Aquarii" , "22:54:39.01 -15:49:14.8" , 343.66 , -14.75 ],
+[ 24 , "STAR" , "Tarazed" , "Gamma Aquilae" , "19:46:15.58 +10:36:47.7" , 296.56 , 10.17 ],
+[ 25 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],
+[ 26 , "STAR" , "Veritate" , "14 Andromedae" , "23:31:17.41 +39:14:10.3" , 352.82 , 39.66 ],
+[ 27 , "DOUBLE STARS" , "Albireo" , "Beta Cygni" , "19:30:43.28 +27:57:34.8" , 292.68 , 27.46 ],
+[ 28 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
+[ 29 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
+[ 30 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
+[ 31 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "East" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
+[ 32 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "West" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
+[ 33 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
+[ 34 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
+[ 35 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
+[ 36 , "OPEN CLUSTERS" , "Caroline's Star Cluster" , "M48" , "08:13:43.0 -05:45:00" , 123.43 , -4.92 ],
+[ 37 , "OPEN CLUSTERS" , "Double Cluster" , "NGC 869/884" , "02:19:00.0 +57:07:42" , 34.75 , 57.97 ],
+[ 38 , "OPEN CLUSTERS" , "E.T. Cluster" , "NGC 457" , "01:19:35.0 +58:17:12" , 19.90 , 58.98 ],
+[ 39 , "OPEN CLUSTERS" , "Ghost's Goblet" , "NGC 559" , "01:29:31.2 +63:18:07" , 22.38 , 64.07 ],
+[ 40 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
+[ 41 , "OPEN CLUSTERS" , "Golf Ball Cluster" , "NGC 752" , "01:57:41.0 +37:47:06" , 29.42 , 37.63 ],
+[ 42 , "OPEN CLUSTERS" , "Horseshoe Cluster" , "NGC 663" , "01:46:09.0 +61:14:06" , 26.54 , 62.03 ],
+[ 43 , "OPEN CLUSTERS" , "Hyades" , "Mel 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
+[ 44 , "OPEN CLUSTERS" , "Open Star Cluster" , "M103" , "01:33:23.0 +60:39:00" , 23.35 , 61.02 ],
+[ 45 , "OPEN CLUSTERS" , "Open Star Cluster" , "M18" , "18:19:58.0 -17:06:06" , 274.99 , -16.71 ],
+[ 46 , "OPEN CLUSTERS" , "Open Star Cluster" , "M21" , "18:04:13.0 -22:29:24" , 271.05 , -21.63 ],
+[ 47 , "OPEN CLUSTERS" , "Open Star Cluster" , "M23" , "17:57:04.0 -18:59:06" , 269.27 , -17.70 ],
+[ 48 , "OPEN CLUSTERS" , "Open Star Cluster" , "M25" , "18:31:47.0 -19:07:00" , 277.95 , -18.68 ],
+[ 49 , "OPEN CLUSTERS" , "Open Star Cluster" , "M26" , "18:45:18.0 -09:23:00" , 281.32 , -8.85 ],
+[ 50 , "OPEN CLUSTERS" , "Open Star Cluster" , "M29" , "20:23:56.0 +38:31:24" , 305.98 , 38.64 ],
+[ 51 , "OPEN CLUSTERS" , "Open Star Cluster" , "M35" , "06:08:54.0 +24:20:00" , 92.22 , 24.41 ],
+[ 52 , "OPEN CLUSTERS" , "Open Star Cluster" , "M36" , "05:36:18.0 +34:08:24" , 84.08 , 34.58 ],
+[ 53 , "OPEN CLUSTERS" , "Open Star Cluster" , "M47" , "07:36:35.0 -14:29:00" , 114.15 , -13.76 ],
+[ 54 , "OPEN CLUSTERS" , "Open Star Cluster" , "M50" , "07:02:47.50 -08:20:16.0" , 105.70 , -7.86 ],
+[ 55 , "OPEN CLUSTERS" , "Open Star Cluster" , "M73" , "20:59:00 -12:38:01" , 314.75 , -11.80 ],
+[ 56 , "OPEN CLUSTERS" , "Pleiades Star Cluster" , "M45" , "03:47:00.0 +24:07:00" , 56.75 , 24.41 ],
+[ 57 , "OPEN CLUSTERS" , "Salt and Pepper Cluster" , "M52" , "23:24:48.0 +61:35:36" , 351.20 , 62.03 ],
+[ 58 , "OPEN CLUSTERS" , "Starfish Star Cluster" , "M93" , "07:44:30.0 -23:51:24" , 116.12 , -22.61 ],
+[ 59 , "OPEN CLUSTERS" , "Velvet Star Cluster" , "M46" , "07:41:46.0 -14:48:36" , 115.44 , -13.76 ],
+[ 60 , "OPEN CLUSTERS" , "Wild Duck Star Cluster" , "M11" , "18:51:05.0 -06:16:12" , 282.77 , -5.90 ],
+[ 61 , "OPEN CLUSTERS" , "Winnecke 4 Star Cluster" , "M40" , "12:22:12.52 +58:04:58.5" , 185.55 , 58.98 ],
+[ 62 , "OPEN CLUSTERS" , "X Open Star Cluster" , "M34" , "02:42:05.0 +42:45:42" , 40.52 , 42.71 ],
+[ 63 , "GLOBULAR CLUSTERS" , "Baade's Window" , "NGC 6522" , "18:03:31 -30:01:15" , 270.88 , -29.49 ],
+[ 64 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M107" , "16:32:31.86 -13:03:13.6" , 248.13 , -12.78 ],
+[ 65 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M14" , "17:37:36.15 -03:14:45.3" , 264.40 , -2.95 ],
+[ 66 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M15" , "21:29:58.33 +12:10:01.2" , 322.49 , 12.20 ],
+[ 67 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M19" , "17:02:37.69 -26:16:04.5" , 255.66 , -25.56 ],
+[ 68 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M2" , "21:33:27.01 -00:49:23.7" , 323.36 , 0.00 ],
+[ 69 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M22" , "18:36:23.93 -23:54:17.1" , 279.10 , -22.61 ],
+[ 70 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M28" , "18:24:32.89 -24:52:11.3" , 276.14 , -23.59 ],
+[ 71 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M30" , "21:40:22.12 -23:10:47.4" , 325.09 , -22.61 ],
+[ 72 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M4" , "16:23:35.22 -26:31:32.7" , 245.90 , -25.56 ],
+[ 73 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M5" , "15:18:33.22 +02:04:51.7" , 229.64 , 2.03 ],
+[ 74 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M53" , "13:12:55.24 +18:10:05.4" , 198.23 , 18.30 ],
+[ 75 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M55" , "19:39:59.71 -30:57:53.1" , 295.00 , -29.49 ],
+[ 76 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M56" , "19:16:35.56 +30:11:00.4" , 289.15 , 30.51 ],
+[ 77 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M62" , "17:01:12.60 -30:06:44.4" , 255.30 , -29.49 ],
+[ 78 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M68" , "12:39:27.97 -26:44:38.6" , 189.87 , -25.56 ],
+[ 79 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M71" , "19:53:46.48 +18:46:45.0" , 298.44 , 18.30 ],
+[ 80 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M72" , "20:53:27.70 -12:32:14.3" , 313.37 , -11.80 ],
+[ 81 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M79" , "05:24:10.58 -24:31:27.3" , 81.04 , -23.59 ],
+[ 82 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M80" , "16:17:02.41 -22:58:33.8" , 244.26 , -21.63 ],
+[ 83 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M9" , "17:19:11.77 -18:30:58.5" , 259.80 , -17.70 ],
+[ 84 , "GLOBULAR CLUSTERS" , "Great Hercules Cluster" , "M13" , "16:41:41.63 +36:27:40.7" , 250.42 , 36.61 ],
+[ 85 , "GLOBULAR CLUSTERS" , "Intergalactic Wanderer" , "NGC 2419" , "07:38:08.50 +38:52:54.9" , 114.54 , 38.64 ],
+[ 86 , "GLOBULAR CLUSTERS" , "Mirror Ball Star Cluster" , "M10" , "16:57:09.04 -04:06:01.1" , 254.29 , -3.93 ],
+[ 87 , "GLOBULAR CLUSTERS" , "Orb Star Cluster" , "M92" , "17:17:07.39 +43:08:09.3" , 259.28 , 43.73 ],
+[ 88 , "GLOBULAR CLUSTERS" , "Rich Globular Star Cluster" , "M3" , "13:42:11.62 +28:22:38.2" , 205.55 , 28.47 ],
+[ 89 , "GLOBULAR CLUSTERS" , "Snowball Star Cluster" , "M12" , "16:47:14.17 -01:56:54.7" , 251.81 , -0.98 ],
+[ 90 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
+[ 91 , "EMISSION NEBULAE" , "Bubble Nebula" , "NGC 7635" , "23:20:48.30 +61:12:06.0" , 350.20 , 62.03 ],
+[ 92 , "EMISSION NEBULAE" , "Butterfly Nebula" , "IC 1318" , "17:05:37.95 -10:08:34.5" , 256.41 , -9.83 ],
+[ 93 , "EMISSION NEBULAE" , "California Nebula" , "NGC 1499" , "04:03:18.0 +36:25:18" , 60.82 , 36.61 ],
+[ 94 , "EMISSION NEBULAE" , "Cave Nebula" , "Sh 2-155" , "22:13:27.0 +70:15:18" , 333.36 , 71.19 ],
+[ 95 , "EMISSION NEBULAE" , "Cocoon Nebula" , "IC 5146" , "21:53:24.0 +47:16:00" , 328.35 , 47.80 ],
+[ 96 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
+[ 97 , "EMISSION NEBULAE" , "Crescent Nebula" , "NGC 6888" , "20:12:07.0 +38:21:18" , 303.03 , 38.64 ],
+[ 98 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
+[ 99 , "EMISSION NEBULAE" , "Flame Nebula" , "NGC 2024" , "05:41:42.70 -01:54:43.9" , 85.43 , -0.98 ],
+[ 100 , "EMISSION NEBULAE" , "Flaming Star Nebula" , "IC 405" , "05:17:24 +34:23:01" , 79.35 , 34.58 ],
+[ 101 , "EMISSION NEBULAE" , "Heart Nebula" , "IC 1805" , "02:32:42 +61:27:03" , 38.17 , 62.03 ],
+[ 102 , "EMISSION NEBULAE" , "Lagoon Nebula" , "M8" , "18:03:37.0 -24:23:12" , 270.90 , -23.59 ],
+[ 103 , "EMISSION NEBULAE" , "Monkey Head Nebula" , "NGC 2174" , "06:09:42 +20:30:03" , 92.43 , 20.34 ],
+[ 104 , "EMISSION NEBULAE" , "North America Nebula" , "NGC 7000" , "20:58:47.0 +44:19:48" , 314.70 , 44.75 ],
+[ 105 , "EMISSION NEBULAE" , "Orion Nebula" , "M42" , "05:35:17.29 -05:23:27.9" , 83.82 , -4.92 ],
+[ 106 , "EMISSION NEBULAE" , "Pacman Nebula" , "NGC 281" , "00:52:25.09 +56:33:54.0" , 13.10 , 56.95 ],
+[ 107 , "EMISSION NEBULAE" , "Pelican Nebula" , "IC 5070" , "20:51:00 +44:22:04" , 312.75 , 44.75 ],
+[ 108 , "EMISSION NEBULAE" , "Pink and Blue Nebula" , "IC 1284" , "18:17:42 -19:40:04" , 274.43 , -18.68 ],
+[ 109 , "EMISSION NEBULAE" , "Rosette Nebula" , "NGC 2244" , "06:31:40.0 +04:57:48" , 97.92 , 4.07 ],
+[ 110 , "EMISSION NEBULAE" , "Seagull Nebula" , "IC 2177" , "07:04:25.0 -10:27:18" , 106.10 , -9.83 ],
+[ 111 , "EMISSION NEBULAE" , "Stellar Nursery" , "NGC 2467" , "07:52:18.5 -26:25:41" , 118.08 , -25.56 ],
+[ 112 , "EMISSION NEBULAE" , "Strawberry Nebula" , "IC 417" , "05:28:06 +34:25:04" , 82.03 , 34.58 ],
+[ 113 , "EMISSION NEBULAE" , "Swan Nebula" , "M17" , "18:20:47.0 -16:10:18" , 275.20 , -15.73 ],
+[ 114 , "EMISSION NEBULAE" , "Trifid Nebula" , "M20" , "18:02:42.0 -22:58:18" , 270.68 , -21.63 ],
+[ 115 , "REFLECTION NEBULAE" , "Hubble's Variable Nebula" , "NGC 2261" , "06:39:09.51 +08:44:39.5" , 99.79 , 8.14 ],
+[ 116 , "REFLECTION NEBULAE" , "Iris Nebula" , "NGC 7023" , "21:01:35.59 +68:10:09.9" , 315.40 , 69.15 ],
+[ 117 , "REFLECTION NEBULAE" , "Northern Trifid" , "NGC 1579" , "04:30:11.0 +35:16:44" , 67.55 , 35.59 ],
+[ 118 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
+[ 119 , "REFLECTION NEBULAE" , "Rho Ophiuchi Region" , "IC 4603" , "16:26:00.0 -24:24:00" , 246.50 , -23.59 ],
+[ 120 , "REFLECTION NEBULAE" , "Running Man Nebula" , "Sharpless 279/NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
+[ 121 , "REFLECTION NEBULAE" , "Star Forming Region" , "NGC 1333" , "03:28:55.2 +31:22:12" , 52.23 , 31.53 ],
+[ 122 , "DARK NEBULAE" , "Dark Comet Nebula" , "Barnard 93" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
+[ 123 , "DARK NEBULAE" , "Horsehead Nebula" , "Barnard 33" , "05:40:58.99 -02:27:29.9" , 85.25 , -1.97 ],
+[ 124 , "DARK NEBULAE" , "Inkspot Nebula" , "Barnard 86" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
+[ 125 , "DARK NEBULAE" , "Molecular Cloud Nebula" , "Barnard 68" , "17:22:38.2 -23:49:34" , 260.66 , -22.61 ],
+[ 126 , "DARK NEBULAE" , "Snake Nebula" , "Barnard 72/Snake Nebula" , "17:23:30 -23:38:00" , 260.88 , -22.61 ],
+[ 127 , "DARK NEBULAE" , "Van den Bergh 142" , "vdB 142/Elephant Trunk Nebula/IC 1396" , "21:39:00.0 +57:29:24" , 324.75 , 57.97 ],
+[ 128 , "PLANETARY NEBULAE" , "Dumbbell Nebula" , "M27" , "19:59:36.36 +22:43:16.3" , 299.90 , 22.37 ],
+[ 129 , "PLANETARY NEBULAE" , "Eskimo Nebula" , "NGC 2392" , "07:29:10.76 +20:54:42.4" , 112.29 , 20.34 ],
+[ 130 , "PLANETARY NEBULAE" , "Helix Nebula" , "NGC 7293" , "22:29:38.54 -20:50:13.7" , 337.41 , -19.66 ],
+[ 131 , "PLANETARY NEBULAE" , "Owl Nebula" , "M97" , "11:14:47.71 +55:01:08.4" , 168.70 , 55.93 ],
+[ 132 , "SPIRAL GALAXIES" , "Andromeda Galaxy" , "M31" , "00:42:44.32 +41:16:07.5" , 10.68 , 41.69 ],
+[ 133 , "SPIRAL GALAXIES" , "Antennae Galaxies" , "NGC 4038" , "12:01:53.00 -18:52:03.3" , 180.47 , -17.70 ],
+[ 134 , "SPIRAL GALAXIES" , "Bennett 41B" , "NGC 2997" , "09:45:38.75 -31:11:27.3" , 146.41 , -30.47 ],
+[ 135 , "SPIRAL GALAXIES" , "Black-Eye Galaxy" , "M64" , "12:56:43.69 +21:40:57.5" , 194.18 , 21.36 ],
+[ 136 , "SPIRAL GALAXIES" , "Bode's Galaxy" , "M81" , "09:55:33.17 +69:03:55.0" , 148.89 , 70.17 ],
+[ 137 , "SPIRAL GALAXIES" , "Caldwell 23" , "NGC 891" , "02:22:32.90 +42:20:53.9" , 35.64 , 42.71 ],
+[ 138 , "SPIRAL GALAXIES" , "Caldwell 30" , "NGC 7331" , "22:37:04.10 +34:24:57.3" , 339.27 , 34.58 ],
+[ 139 , "SPIRAL GALAXIES" , "Caldwell 36" , "NGC 4559" , "12:35:57.63 +27:57:35.8" , 188.99 , 27.46 ],
+[ 140 , "SPIRAL GALAXIES" , "Caldwell 7" , "NGC 2403" , "07:36:51.39 +65:36:09.1" , 114.21 , 66.10 ],
+[ 141 , "SPIRAL GALAXIES" , "Denning's Galaxy" , "IC 342" , "03:46:48.51 +68:05:45.9" , 56.70 , 69.15 ],
+[ 142 , "SPIRAL GALAXIES" , "Edge-On Spiral Galaxy" , "NGC 4565" , "12:36:20.80 +25:59:14.6" , 189.09 , 25.42 ],
+[ 143 , "SPIRAL GALAXIES" , "Fireworks Galaxy" , "NGC 6946" , "20:34:52.33 +60:09:13.2" , 308.72 , 61.02 ],
+[ 144 , "SPIRAL GALAXIES" , "Flocculent Spiral Galaxy" , "NGC 4414" , "12:26:27.08 +31:13:24.7" , 186.61 , 31.53 ],
+[ 145 , "SPIRAL GALAXIES" , "Grand Design Galaxy" , "M74" , "01:36:41.77 +15:47:00.4" , 24.17 , 15.25 ],
+[ 146 , "SPIRAL GALAXIES" , "Hamburger Galaxy" , "NGC 3628" , "11:20:17.01 +13:35:22.1" , 170.07 , 13.22 ],
+[ 147 , "SPIRAL GALAXIES" , "Mechain's Galaxy" , "M106" , "12:18:57.61 +47:18:13.3" , 184.74 , 47.80 ],
+[ 148 , "SPIRAL GALAXIES" , "Oriani's Galaxy" , "M61" , "12:21:54.92 +04:28:25.5" , 185.48 , 4.07 ],
+[ 149 , "SPIRAL GALAXIES" , "Pinwheel Galaxy" , "M101" , "14:03:12.58 +54:20:55.5" , 210.80 , 54.91 ],
+[ 150 , "SPIRAL GALAXIES" , "S Galaxy" , "NGC 2903" , "09:32:10.11 +21:30:02.9" , 143.04 , 21.36 ],
+[ 151 , "SPIRAL GALAXIES" , "Silver Coin Galaxy" , "NGC 253" , "00:47:33.12 -25:17:17.5" , 11.89 , -24.58 ],
+[ 152 , "SPIRAL GALAXIES" , "Silver Needle Galaxy" , "NGC 4244" , "12:17:29.65 +37:48:25.5" , 184.37 , 37.63 ],
+[ 153 , "SPIRAL GALAXIES" , "Sombrero Galaxy" , "M104" , "12:39:59.43 -11:37:22.9" , 190.00 , -10.81 ],
+[ 154 , "SPIRAL GALAXIES" , "Southern Pinwheel Galaxy" , "M83" , "13:37:00.91 -29:51:56.7" , 204.25 , -28.51 ],
+[ 155 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M100" , "12:22:54.93 +15:49:20.2" , 185.73 , 15.25 ],
+[ 156 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M108" , "11:11:30.96 +55:40:26.8" , 167.88 , 55.93 ],
+[ 157 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M109" , "11:57:35.98 +53:22:28.2" , 179.40 , 53.90 ],
+[ 158 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M58" , "12:37:43.59 +11:49:05.1" , 189.43 , 11.19 ],
+[ 159 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M65" , "11:18:55.95 +13:05:31.9" , 169.73 , 13.22 ],
+[ 160 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M66" , "11:20:15.02 +12:59:28.6" , 170.06 , 12.20 ],
+[ 161 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M88" , "12:31:59.21 +14:25:13.4" , 188.00 , 14.24 ],
+[ 162 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M90" , "12:36:49.81 +13:09:46.3" , 189.21 , 13.22 ],
+[ 163 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M91" , "12:35:26.43 +14:29:46.7" , 188.86 , 14.24 ],
+[ 164 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M94" , "12:50:53.14 +41:07:12.5" , 192.72 , 41.69 ],
+[ 165 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M95" , "10:43:57.73 +11:42:12.9" , 160.99 , 11.19 ],
+[ 166 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M96" , "10:46:45.74 +11:49:11.7" , 161.69 , 11.19 ],
+[ 167 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M98" , "12:13:48.29 +14:54:01.6" , 183.45 , 14.24 ],
+[ 168 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M99" , "12:18:49.62 +14:24:59.3" , 184.71 , 14.24 ],
+[ 169 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2146" , "06:18:37.71 +78:21:25.2" , 94.66 , 79.32 ],
+[ 170 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 3938" , "11:52:49.45 +44:07:14.6" , 178.21 , 44.75 ],
+[ 171 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 691" , "01:50:41.70 +21:45:35.8" , 27.67 , 21.36 ],
+[ 172 , "SPIRAL GALAXIES" , "Sunflower Galaxy" , "M63" , "13:15:49.27 +42:01:45.7" , 198.96 , 42.71 ],
+[ 173 , "SPIRAL GALAXIES" , "Triangulum Galaxy" , "M33" , "01:33:50.90 +30:39:35.7" , 23.46 , 30.51 ],
+[ 174 , "SPIRAL GALAXIES" , "Whale Galaxy" , "NGC 4631" , "12:42:08.00 +32:32:29.4" , 190.53 , 32.54 ],
+[ 175 , "SPIRAL GALAXIES" , "Whirlpool Galaxy" , "M51" , "13:29:52.69 +47:11:42.9" , 202.47 , 47.80 ],
+[ 176 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M105" , "10:47:49.60 +12:34:53.8" , 161.96 , 12.20 ],
+[ 177 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M49" , "12:29:46.79 +08:00:01.4" , 187.44 , 8.14 ],
+[ 178 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M59" , "12:42:02.32 +11:38:48.9" , 190.51 , 11.19 ],
+[ 179 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M60" , "12:43:40.00 +11:33:09.3" , 190.92 , 11.19 ],
+[ 180 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M89" , "12:35:39.81 +12:33:22.6" , 188.92 , 12.20 ],
+[ 181 , "ELLIPTICAL GALAXIES" , "Giant Elliptical Galaxy" , "M87" , "12:30:49.42 +12:23:28.0" , 187.71 , 12.20 ],
+[ 182 , "ELLIPTICAL GALAXIES" , "Lenticular Galaxy" , "M86" , "12:26:11.81 +12:56:45.4" , 186.55 , 12.20 ],
+[ 183 , "ELLIPTICAL GALAXIES" , "Satellite Galaxy" , "M110" , "00:40:22.05 +41:41:07.4" , 10.09 , 41.69 ],
+[ 184 , "ELLIPTICAL GALAXIES" , "Satellite Galaxy" , "M32" , "00:42:41.82 +40:51:54.6" , 10.67 , 40.68 ],
+[ 185 , "ACTIVE GALAXIES" , "Cetus A Active Galaxy" , "M77" , "02:42:40.77 -00:00:47.8" , 40.67 , 0.00 ],
+[ 186 , "ACTIVE GALAXIES" , "Exploding Galaxy" , "M82" , "09:55:52.42 +69:40:46.9" , 148.97 , 70.17 ],
+[ 187 , "ACTIVE GALAXIES" , "Tao Galaxy" , "NGC 4535" , "12:34:20.31 +08:11:51.9" , 188.58 , 8.14 ],
+[ 188 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
+[ 189 , "GALAXY CLUSTERS" , "Leo Triplet" , "M66 Group" , "11:20:15.0 +12:59:30" , 170.06 , 12.20 ],
+[ 190 , "GALAXY CLUSTERS" , "Stephan's Quintet" , "NGC 7318" , "22:35:57.49 +33:57:36.0" , 338.99 , 33.56 ],
+[ 191 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
+[ 192 , "OTHER GALAXIES" , "Box Galaxy" , "NGC 4449" , "12:28:11.11 +44:05:36.8" , 187.05 , 44.75 ],
+[ 193 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M84" , "12:25:03.74 +12:53:13.1" , 186.27 , 12.20 ],
+[ 194 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M85" , "12:25:24.05 +18:11:27.8" , 186.35 , 18.30 ],
+[ 195 , "OTHER GALAXIES" , "Spindle Galaxy" , "M102" , "10:05:13.97 -07:43:06.8" , 151.31 , -6.88 ]
+];
+
+slooh500Chile = [
+[ 1 , "STAR" , "Acrux" , "Alpha Crucis" , "12:26:35.89 -63:05:56.7" , 186.65 , -61.93 ],
+[ 2 , "STAR" , "Adhil" , "Xi Andromedae" , "01:22:20.41 +45:31:43.6" , 20.59 , 45.76 ],
+[ 3 , "STAR" , "Al Gieba" , "Gamma Leonis" , "10:19:58.4 +19:50:29.3" , 154.99 , 19.32 ],
+[ 4 , "STAR" , "Al Phaulkah" , "Beta Gruis" , "22:42:40.1 -46:53:04.5" , 340.67 , -45.22 ],
+[ 5 , "STAR" , "Albali" , "Epsilon Aquarii" , "20:47:40.55 -09:29:44.7" , 311.92 , -8.85 ],
+[ 6 , "STAR" , "Aldebaran" , "Alpha Tauri" , "04:35:55.23 +16:30:33.4" , 68.98 , 16.27 ],
+[ 7 , "STAR" , "Almach" , "Gamma Andromedae" , "02:03:53.95 +42:19:47.0" , 30.97 , 42.71 ],
+[ 8 , "STAR" , "Alpheratz" , "Alpha Andromedae" , "00:08:23.25 +29:05:25.5" , 2.10 , 29.49 ],
+[ 9 , "STAR" , "Alshain" , "Beta Aquilae" , "19:55:18.79 +06:24:24.3" , 298.83 , 6.10 ],
+[ 10 , "STAR" , "Altair" , "Alpha Aquilae" , "19:50:46.99 +08:52:05.9" , 297.70 , 8.14 ],
+[ 11 , "STAR" , "Ancha" , "Theta Aquarii" , "22:16:50.03 -07:46:59.8" , 334.21 , -6.88 ],
+[ 12 , "STAR" , "Antares" , "Alpha Scorpii" , "16:29:24.45 -26:25:55.2" , 247.35 , -25.56 ],
+[ 13 , "STAR" , "Arcturus" , "Alpha Bootis" , "14:15:39.67 +19:10:56.6" , 213.92 , 19.32 ],
+[ 14 , "STAR" , "Beta Tucanae" , "SAO 248201" , "00:31:32.7 -62:57:29" , 7.89 , -60.95 ],
+[ 15 , "STAR" , "Betelgeuse" , "Alpha Orionis" , "05:55:10.30 +07:24:25.4" , 88.79 , 7.12 ],
+[ 16 , "STAR" , "Bharani" , "41 Arietis" , "02:49:59.03 +27:15:37.8" , 42.50 , 27.46 ],
+[ 17 , "STAR" , "Botein" , "Delta Arietis" , "03:11:37.76 +19:43:36.0" , 47.91 , 19.32 ],
+[ 18 , "STAR" , "Canopus" , "Alpha Carinae" , "06:23:57.10 -52:41:44.3" , 95.99 , -51.12 ],
+[ 19 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],
+[ 20 , "STAR" , "Ginan" , "Epsilon Crucis" , "12:21:21.60 -60:24:04.1" , 185.34 , -58.98 ],
+[ 21 , "STAR" , "Hamal" , "Alpha Arietis" , "02:07:10.40 +23:27:44.7" , 31.79 , 23.39 ],
+[ 22 , "STAR" , "Kapteyn's Star" , "TYC 8078-01749-1" , "05:11:40.58 -45:01:06.3" , 77.92 , -44.24 ],
+[ 23 , "STAR" , "Keid - home of Vulcan" , "40 Eridani" , "04:15:16.3 -07:39:10.3" , 63.82 , -6.88 ],
+[ 24 , "STAR" , "Libertas" , "Xi Aquilae" , "19:54:14.88 +08:27:41.2" , 298.56 , 8.14 ],
+[ 25 , "STAR" , "Lilii Borea" , "39 Arietis" , "02:47:54.54 +29:14:49.6" , 41.98 , 29.49 ],
+[ 26 , "STAR" , "Mesarthim" , "Gamma Arietis" , "01:53:31.81 +19:17:37.8" , 28.38 , 19.32 ],
+[ 27 , "STAR" , "Mirach" , "Beta Andromedae" , "01:09:43.92 +35:37:14.0" , 17.43 , 35.59 ],
+[ 28 , "STAR" , "Nembus" , "51 Andromedae" , "01:37:59.55 +48:37:41.5" , 24.50 , 48.81 ],
+[ 29 , "STAR" , "Proxima Centauri" , "Alpha Centauri C" , "14:29:42.94 -62:40:46.1" , 217.43 , -60.95 ],
+[ 30 , "STAR" , "Rigil Kentaurus" , "Alpha Centauri" , "14:39:36.5 -60:50:02.4" , 219.90 , -58.98 ],
+[ 31 , "STAR" , "Sadachbia" , "Gamma Aquarii" , "22:21:39.37 -01:23:14.4" , 335.41 , -0.98 ],
+[ 32 , "STAR" , "Sadalmelik" , "Alpha Aquarii" , "22:05:47.03 -00:19:11.4" , 331.45 , 0.00 ],
+[ 33 , "STAR" , "Sadalsuud" , "Beta Aquarii" , "21:31:33.53 -05:34:16.2" , 322.89 , -4.92 ],
+[ 34 , "STAR" , "Sheratan" , "Beta Arietis" , "01:54:38.41 +20:48:28.9" , 28.66 , 20.34 ],
+[ 35 , "STAR" , "Situla" , "Kappa Aquarii" , "22:37:45.38 -04:13:40.9" , 339.44 , -3.93 ],
+[ 36 , "STAR" , "Skat" , "Delta Aquarii" , "22:54:39.01 -15:49:14.8" , 343.66 , -14.75 ],
+[ 37 , "STAR" , "Spica" , "Alpha Virginis" , "13:25:11.57 -11:09:40.7" , 201.30 , -10.81 ],
+[ 38 , "STAR" , "Tarazed" , "Gamma Aquilae" , "19:46:15.58 +10:36:47.7" , 296.56 , 10.17 ],
+[ 39 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],
+[ 40 , "STAR" , "Veritate" , "14 Andromedae" , "23:31:17.41 +39:14:10.3" , 352.82 , 39.66 ],
+[ 41 , "STAR CLOUDS" , "Galactic Center" , "Sagittarius A" , "17:45:40.03 -29:00:28.1" , 266.42 , -28.51 ],
+[ 42 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
+[ 43 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
+[ 44 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
+[ 45 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "East" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
+[ 46 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
+[ 47 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
+[ 48 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
+[ 49 , "OPEN CLUSTERS" , "Bennett 40a" , "NGC 2671" , "08:46:12.7 -41:52:01" , 131.55 , -40.31 ],
+[ 50 , "OPEN CLUSTERS" , "Bennett 41a" , "NGC 2972" , "09:40:13.9 -50:19:30" , 145.06 , -49.15 ],
+[ 51 , "OPEN CLUSTERS" , "Bennett 47" , "Mel 105" , "11:19:42.0 -63:29:00" , 169.93 , -61.93 ],
+[ 52 , "OPEN CLUSTERS" , "Bennett 72" , "NGC 6005" , "15:55:58.8 -57:26:24" , 239.00 , -56.03 ],
+[ 53 , "OPEN CLUSTERS" , "Bennett 76" , "NGC 6134" , "16:27:46.0 -49:09:06" , 246.94 , -48.17 ],
+[ 54 , "OPEN CLUSTERS" , "Bennett 79b" , "NGC 6192" , "16:40:23.0 -43:22:00" , 250.10 , -42.27 ],
+[ 55 , "OPEN CLUSTERS" , "Butterfly Star Cluster" , "M6" , "17:40:20.0 -32:15:12" , 265.08 , -31.46 ],
+[ 56 , "OPEN CLUSTERS" , "Butterfly Star Cluster" , "M6" , "17:40:20.0 -32:15:12" , 265.08 , -31.46 ],
+[ 57 , "OPEN CLUSTERS" , "Caldwell 75" , "NGC 6124" , "16:25:20.0 -40:39:12" , 246.33 , -39.32 ],
+[ 58 , "OPEN CLUSTERS" , "Caldwell 75" , "NGC 6124" , "16:25:20.0 -40:39:12" , 246.33 , -39.32 ],
+[ 59 , "OPEN CLUSTERS" , "Caldwell 89" , "NGC 6067" , "16:13:11.0 -54:13:06" , 243.30 , -53.09 ],
+[ 60 , "OPEN CLUSTERS" , "Caroline's Star Cluster" , "M48" , "08:13:43.0 -05:45:00" , 123.43 , -4.92 ],
+[ 61 , "OPEN CLUSTERS" , "Coalsack Cluster" , "NGC 4609" , "12:42:18.0 -62:59:42" , 190.57 , -60.95 ],
+[ 62 , "OPEN CLUSTERS" , "Dunlop 282" , "NGC 5316" , "13:53:57.0 -61:52:06" , 208.49 , -59.97 ],
+[ 63 , "OPEN CLUSTERS" , "Dunlop 291" , "NGC 4103" , "12:06:39.6 -61:15:00" , 181.67 , -59.97 ],
+[ 64 , "OPEN CLUSTERS" , "Dunlop 302" , "NGC 5617" , "14:29:44.0 -60:42:42" , 217.43 , -58.98 ],
+[ 65 , "OPEN CLUSTERS" , "Dunlop 333" , "NGC 5715" , "14:43:30.0 -57:34:01" , 220.88 , -56.03 ],
+[ 66 , "OPEN CLUSTERS" , "Dunlop 357" , "NGC 5593" , "14:25:37.2 -54:48:00" , 216.41 , -53.09 ],
+[ 67 , "OPEN CLUSTERS" , "Dunlop 386" , "NGC 3228" , "10:21:22.0 -51:43:42" , 155.34 , -50.14 ],
+[ 68 , "OPEN CLUSTERS" , "Dunlop 400" , "NGC 6167" , "16:34:34.0 -49:46:18" , 248.64 , -48.17 ],
+[ 69 , "OPEN CLUSTERS" , "Dunlop 410" , "NGC 2547" , "08:09:54.7 -49:12:18" , 122.48 , -48.17 ],
+[ 70 , "OPEN CLUSTERS" , "Dunlop 454" , "NGC 6216" , "16:49:21.1 -44:43:12" , 252.34 , -43.25 ],
+[ 71 , "OPEN CLUSTERS" , "Dunlop 499" , "NGC 6231" , "16:54:08.50 -41:49:36.0" , 253.54 , -40.31 ],
+[ 72 , "OPEN CLUSTERS" , "Dunlop 499" , "NGC 6231" , "16:54:08.50 -41:49:36.0" , 253.54 , -40.31 ],
+[ 73 , "OPEN CLUSTERS" , "Gliese 581" , "HO Librae" , "15:19:26.82 -07:43:20.1" , 229.86 , -6.88 ],
+[ 74 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
+[ 75 , "OPEN CLUSTERS" , "Hyades" , "Mel 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
+[ 76 , "OPEN CLUSTERS" , "Jewel Box" , "NGC 4755" , "12:53:39.0 -60:21:42" , 193.41 , -58.98 ],
+[ 77 , "OPEN CLUSTERS" , "LMC Cluster Bennett 30" , "NGC 1818" , "05:04:13.30 -66:26:05.4" , 76.06 , -64.88 ],
+[ 78 , "OPEN CLUSTERS" , "LMC Cluster Bennett 33" , "NGC 1866" , "05:13:38.92 -65:27:52.7" , 78.41 , -63.90 ],
+[ 79 , "OPEN CLUSTERS" , "LMC Cluster Bennett 36" , "NGC 2214" , "06:12:57.0 -68:15:36" , 93.24 , -66.85 ],
+[ 80 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 106" , "NGC 2122" , "05:48:55.0 -70:04:06" , 87.23 , -68.81 ],
+[ 81 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 211" , "NGC 1955" , "05:26:12.0 -67:29:54" , 81.55 , -65.86 ],
+[ 82 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 90" , "NGC 1943" , "05:22:30.31 -70:09:18.7" , 80.63 , -68.81 ],
+[ 83 , "OPEN CLUSTERS" , "LMC Cluster" , "NGC 1850" , "05:08:45.79 -68:45:38.5" , 77.19 , -66.85 ],
+[ 84 , "OPEN CLUSTERS" , "LMC Cluster" , "NGC 1962" , "05:27:00.0 -68:51:00" , 81.75 , -66.85 ],
+[ 85 , "OPEN CLUSTERS" , "Melotte 156" , "NGC 6253" , "16:59:04.8 -52:42:00" , 254.77 , -51.12 ],
+[ 86 , "OPEN CLUSTERS" , "Melotte 91" , "NGC 2659" , "08:42:36 -44:59:01" , 130.65 , -43.25 ],
+[ 87 , "OPEN CLUSTERS" , "Melotte 93" , "NGC 2670" , "08:45:30.0 -48:48:00" , 131.38 , -47.19 ],
+[ 88 , "OPEN CLUSTERS" , "Melotte 97" , "IC 2488" , "09:27:38.0 -57:00:00" , 141.91 , -56.03 ],
+[ 89 , "OPEN CLUSTERS" , "Omicron Vela Cluster" , "IC 2391" , "08:40:32.0 -53:02:00" , 130.13 , -52.10 ],
+[ 90 , "OPEN CLUSTERS" , "Open Cluster Harvard 3" , "NGC 2669" , "08:46:22.0 -52:56:54" , 131.59 , -51.12 ],
+[ 91 , "OPEN CLUSTERS" , "Open Cluster Harvard 7" , "Trumpler 20" , "12:39:34 60:37:00" , 189.89 , 61.02 ],
+[ 92 , "OPEN CLUSTERS" , "Open Cluster" , "IC 2581" , "10:27:29.0 -57:37:00" , 156.87 , -56.03 ],
+[ 93 , "OPEN CLUSTERS" , "Open Cluster" , "IC 4651" , "17:24:49.0 -49:56:00" , 261.20 , -48.17 ],
+[ 94 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 2477" , "07:52:10.0 -38:31:48" , 118.04 , -37.36 ],
+[ 95 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 2910" , "09:30:30 -52:55:04" , 142.62 , -51.12 ],
+[ 96 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 3572" , "11:10:23.0 -60:14:54" , 167.60 , -58.98 ],
+[ 97 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4337" , "12:24:00.0 -58:07:01" , 186.00 , -57.02 ],
+[ 98 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4463" , "12:29:56.0 -64:47:24" , 187.48 , -62.92 ],
+[ 99 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4815" , "12:58:01.2 -64:57:36" , 194.50 , -62.92 ],
+[ 100 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 5281" , "13:46:35.0 -62:55:00" , 206.65 , -60.95 ],
+[ 101 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 6250" , "16:57:58.0 -45:56:36" , 254.49 , -44.24 ],
+[ 102 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 796" , "01:56:44.0 -74:13:12" , 29.18 , -72.75 ],
+[ 103 , "OPEN CLUSTERS" , "Open Star Cluster" , "M18" , "18:19:58.0 -17:06:06" , 274.99 , -16.71 ],
+[ 104 , "OPEN CLUSTERS" , "Open Star Cluster" , "M21" , "18:04:13.0 -22:29:24" , 271.05 , -21.63 ],
+[ 105 , "OPEN CLUSTERS" , "Open Star Cluster" , "M23" , "17:57:04.0 -18:59:06" , 269.27 , -17.70 ],
+[ 106 , "OPEN CLUSTERS" , "Open Star Cluster" , "M25" , "18:31:47.0 -19:07:00" , 277.95 , -18.68 ],
+[ 107 , "OPEN CLUSTERS" , "Open Star Cluster" , "M26" , "18:45:18.0 -09:23:00" , 281.32 , -8.85 ],
+[ 108 , "OPEN CLUSTERS" , "Open Star Cluster" , "M35" , "06:08:54.0 +24:20:00" , 92.22 , 24.41 ],
+[ 109 , "OPEN CLUSTERS" , "Open Star Cluster" , "M47" , "07:36:35.0 -14:29:00" , 114.15 , -13.76 ],
+[ 110 , "OPEN CLUSTERS" , "Open Star Cluster" , "M50" , "07:02:47.50 -08:20:16.0" , 105.70 , -7.86 ],
+[ 111 , "OPEN CLUSTERS" , "Open Star Cluster" , "M73" , "20:59:00 -12:38:01" , 314.75 , -11.80 ],
+[ 112 , "OPEN CLUSTERS" , "Pearl Cluster" , "NGC 3766" , "11:36:18.0 -61:36:54" , 174.08 , -59.97 ],
+[ 113 , "OPEN CLUSTERS" , "Pleiades Star Cluster" , "M45" , "03:47:00.0 +24:07:00" , 56.75 , 24.41 ],
+[ 114 , "OPEN CLUSTERS" , "Ptolemy's Star Cluster" , "M7" , "17:53:51.0 -34:47:36" , 268.46 , -33.42 ],
+[ 115 , "OPEN CLUSTERS" , "Running Man Cluster" , "NGC 1545" , "04:20:57.0 +50:15:12" , 65.24 , 50.85 ],
+[ 116 , "OPEN CLUSTERS" , "S Normae Cluster" , "NGC 6087" , "16:18:50.0 -57:56:06" , 244.71 , -56.03 ],
+[ 117 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 23" , "NGC 330" , "00:56:20.59 -72:27:12.4" , 14.09 , -70.78 ],
+[ 118 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 25" , "NGC 346" , "00:59:05.08 -72:10:33.2" , 14.77 , -70.78 ],
+[ 119 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 31" , "NGC 371" , "01:03:25.0 -72:04:24" , 15.85 , -70.78 ],
+[ 120 , "OPEN CLUSTERS" , "SMC Cluster" , "NGC 602" , "01:29:32.13 -73:33:38.1" , 22.38 , -71.76 ],
+[ 121 , "OPEN CLUSTERS" , "Southern Pleiades" , "IC 2602" , "10:42:58.0 -64:24:00" , 160.74 , -62.92 ],
+[ 122 , "OPEN CLUSTERS" , "Starfish Star Cluster" , "M93" , "07:44:30.0 -23:51:24" , 116.12 , -22.61 ],
+[ 123 , "OPEN CLUSTERS" , "The Gem Cluster" , "NGC 3293" , "10:35:49.2 -58:13:48" , 158.95 , -57.02 ],
+[ 124 , "OPEN CLUSTERS" , "Velvet Star Cluster" , "M46" , "07:41:46.0 -14:48:36" , 115.44 , -13.76 ],
+[ 125 , "OPEN CLUSTERS" , "Westerlund 2" , "NGC 3247" , "10:23:58.09 -57:45:48.9" , 155.99 , -56.03 ],
+[ 126 , "OPEN CLUSTERS" , "Wild Duck Star Cluster" , "M11" , "18:51:05.0 -06:16:12" , 282.77 , -5.90 ],
+[ 127 , "OPEN CLUSTERS" , "Wishing Well Cluster" , "NGC 3532" , "11:05:39.0 -58:45:12" , 166.41 , -57.02 ],
+[ 128 , "OPEN CLUSTERS" , "vdB-Hagen 47" , "IC 2395" , "08:42:31.00 -48:06:00.0" , 130.63 , -47.19 ],
+[ 129 , "GLOBULAR CLUSTERS" , "47 Tucanae" , "NGC 104" , "00:24:05.35 -72:04:53.1" , 6.02 , -70.78 ],
+[ 130 , "GLOBULAR CLUSTERS" , "Baade's Window" , "NGC 6522" , "18:03:31 -30:01:15" , 270.88 , -29.49 ],
+[ 131 , "GLOBULAR CLUSTERS" , "Bennett 32" , "NGC 1851" , "05:14:06.76 -40:02:47.6" , 78.53 , -39.32 ],
+[ 132 , "GLOBULAR CLUSTERS" , "Bennett 41" , "NGC 2808" , "09:12:03.10 -64:51:48.6" , 138.01 , -62.92 ],
+[ 133 , "GLOBULAR CLUSTERS" , "Bennett 44" , "NGC 3201" , "10:17:36.82 -46:24:44.8" , 154.40 , -45.22 ],
+[ 134 , "GLOBULAR CLUSTERS" , "Bennett 74" , "NGC 6101" , "16:25:48.12 -72:12:07.8" , 246.45 , -70.78 ],
+[ 135 , "GLOBULAR CLUSTERS" , "Caldwell 104" , "NGC 362" , "01:03:14.26 -70:50:55.6" , 15.81 , -68.81 ],
+[ 136 , "GLOBULAR CLUSTERS" , "Caldwell 84" , "NGC 5286" , "13:46:26.80 -51:22:27.3" , 206.61 , -50.14 ],
+[ 137 , "GLOBULAR CLUSTERS" , "Caldwell 87" , "NGC 1261" , "03:12:16.21 -55:12:58.3" , 48.07 , -54.07 ],
+[ 138 , "GLOBULAR CLUSTERS" , "Dunlop 164" , "NGC 4833" , "12:59:33.91 -70:52:35.3" , 194.89 , -68.81 ],
+[ 139 , "GLOBULAR CLUSTERS" , "Dunlop 225" , "NGC 6362" , "17:31:54.99 -67:02:53.9" , 262.98 , -65.86 ],
+[ 140 , "GLOBULAR CLUSTERS" , "Dunlop 366" , "NGC 6397" , "17:40:42.08 -53:40:27.5" , 265.18 , -52.10 ],
+[ 141 , "GLOBULAR CLUSTERS" , "Dunlop 376" , "NGC 6584" , "18:18:37.60 -52:12:56.8" , 274.66 , -51.12 ],
+[ 142 , "GLOBULAR CLUSTERS" , "Dunlop 389" , "NGC 5927" , "15:28:00.69 -50:40:22.9" , 232.00 , -49.15 ],
+[ 143 , "GLOBULAR CLUSTERS" , "Dunlop 417" , "NGC 6352" , "17:25:29.11 -48:25:19.8" , 261.37 , -47.19 ],
+[ 144 , "GLOBULAR CLUSTERS" , "Dunlop 457" , "NGC 6388" , "17:36:17.46 -44:44:08.3" , 264.07 , -43.25 ],
+[ 145 , "GLOBULAR CLUSTERS" , "Dunlop 473" , "NGC 6541" , "18:08:02.35 -43:42:53.6" , 272.01 , -42.27 ],
+[ 146 , "GLOBULAR CLUSTERS" , "Dunlop 67" , "NGC 4372" , "12:25:45.43 -72:39:32.6" , 186.44 , -70.78 ],
+[ 147 , "GLOBULAR CLUSTERS" , "Globular Cluster" , "NGC 5946" , "15:35:28.57 -50:39:34.9" , 233.87 , -49.15 ],
+[ 148 , "GLOBULAR CLUSTERS" , "Globular Cluster" , "NGC 6496" , "17:59:03.67 -44:15:57.3" , 269.77 , -43.25 ],
+[ 149 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M107" , "16:32:31.86 -13:03:13.6" , 248.13 , -12.78 ],
+[ 150 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M14" , "17:37:36.15 -03:14:45.3" , 264.40 , -2.95 ],
+[ 151 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M15" , "21:29:58.33 +12:10:01.2" , 322.49 , 12.20 ],
+[ 152 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M19" , "17:02:37.69 -26:16:04.5" , 255.66 , -25.56 ],
+[ 153 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M2" , "21:33:27.01 -00:49:23.7" , 323.36 , 0.00 ],
+[ 154 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M22" , "18:36:23.93 -23:54:17.1" , 279.10 , -22.61 ],
+[ 155 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M28" , "18:24:32.89 -24:52:11.3" , 276.14 , -23.59 ],
+[ 156 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M30" , "21:40:22.12 -23:10:47.4" , 325.09 , -22.61 ],
+[ 157 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M4" , "16:23:35.22 -26:31:32.7" , 245.90 , -25.56 ],
+[ 158 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M5" , "15:18:33.22 +02:04:51.7" , 229.64 , 2.03 ],
+[ 159 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M53" , "13:12:55.24 +18:10:05.4" , 198.23 , 18.30 ],
+[ 160 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M54" , "18:55:03.33 -30:28:47.4" , 283.76 , -29.49 ],
+[ 161 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M55" , "19:39:59.71 -30:57:53.1" , 295.00 , -29.49 ],
+[ 162 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M62" , "17:01:12.60 -30:06:44.4" , 255.30 , -29.49 ],
+[ 163 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M68" , "12:39:27.97 -26:44:38.6" , 189.87 , -25.56 ],
+[ 164 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M69" , "18:31:23.10 -32:20:53.0" , 277.85 , -31.46 ],
+[ 165 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M70" , "18:43:12.76 -32:17:31.5" , 280.80 , -31.46 ],
+[ 166 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M71" , "19:53:46.48 +18:46:45.0" , 298.44 , 18.30 ],
+[ 167 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M72" , "20:53:27.70 -12:32:14.3" , 313.37 , -11.80 ],
+[ 168 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M75" , "20:06:04.84 -21:55:20.1" , 301.52 , -20.64 ],
+[ 169 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M79" , "05:24:10.58 -24:31:27.3" , 81.04 , -23.59 ],
+[ 170 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M80" , "16:17:02.41 -22:58:33.8" , 244.26 , -21.63 ],
+[ 171 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M9" , "17:19:11.77 -18:30:58.5" , 259.80 , -17.70 ],
+[ 172 , "GLOBULAR CLUSTERS" , "LMC Cluster Bennett 28" , "NGC 1783" , "04:59:08.59 -65:59:15.8" , 74.79 , -63.90 ],
+[ 173 , "GLOBULAR CLUSTERS" , "LMC Cluster" , "NGC 1466" , "03:44:33.0 -71:40:18" , 56.14 , -69.80 ],
+[ 174 , "GLOBULAR CLUSTERS" , "Mirror Ball Star Cluster" , "M10" , "16:57:09.04 -04:06:01.1" , 254.29 , -3.93 ],
+[ 175 , "GLOBULAR CLUSTERS" , "Omega Centauri" , "NGC 5139" , "13:26:47.28 -47:28:46.0" , 201.70 , -46.20 ],
+[ 176 , "GLOBULAR CLUSTERS" , "Pavo Globular" , "NGC 6752" , "19:10:52.11 -59:59:04.4" , 287.72 , -58.00 ],
+[ 177 , "GLOBULAR CLUSTERS" , "SMC Cluster" , "NGC 419" , "01:08:17.78 -72:53:02.7" , 17.07 , -70.78 ],
+[ 178 , "GLOBULAR CLUSTERS" , "Snowball Star Cluster" , "M12" , "16:47:14.17 -01:56:54.7" , 251.81 , -0.98 ],
+[ 179 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
+[ 180 , "EMISSION NEBULAE" , "Cat's Paw Nebula" , "NGC 6334" , "17:20:50.9 -36:06:54" , 260.21 , -35.39 ],
+[ 181 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
+[ 182 , "EMISSION NEBULAE" , "De" , "Mairan's Nebula" , "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
+[ 183 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
+[ 184 , "EMISSION NEBULAE" , "Emission Nebula" , "NGC 3199" , "10:16:32.80 -57:56:02.0" , 154.14 , -56.03 ],
+[ 185 , "EMISSION NEBULAE" , "Eta Carinae Nebula" , "NGC 3372" , "10:44:19.00 -59:53:21.0" , 161.08 , -58.00 ],
+[ 186 , "EMISSION NEBULAE" , "Flame Nebula" , "NGC 2024" , "05:41:42.70 -01:54:43.9" , 85.43 , -0.98 ],
+[ 187 , "EMISSION NEBULAE" , "Flaming Star Nebula" , "IC 405" , "05:17:24 +34:23:01" , 79.35 , 34.58 ],
+[ 188 , "EMISSION NEBULAE" , "Gabriela Mistral Nebula" , "NGC 3324" , "10:37:20 -58:38:30" , 159.33 , -57.02 ],
+[ 189 , "EMISSION NEBULAE" , "LMC Nebula Bennett 27" , "NGC 1763" , "04:56:51.49 -66:24:24.9" , 74.21 , -64.88 ],
+[ 190 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2018" , "05:31:23.99 -71:04:23.9" , 82.85 , -69.80 ],
+[ 191 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2074" , "05:39:03.0 -69:29:54" , 84.76 , -67.83 ],
+[ 192 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2075" , "05:38:21.25 -70:41:06.1" , 84.59 , -68.81 ],
+[ 193 , "EMISSION NEBULAE" , "Lagoon Nebula" , "M8" , "18:03:37.0 -24:23:12" , 270.90 , -23.59 ],
+[ 194 , "EMISSION NEBULAE" , "Lambda Centauri Nebula" , "IC 2944" , "11:38:19.99 -63:22:22.0" , 174.58 , -61.93 ],
+[ 195 , "EMISSION NEBULAE" , "Monkey Head Nebula" , "NGC 2174" , "06:09:42 +20:30:03" , 92.43 , 20.34 ],
+[ 196 , "EMISSION NEBULAE" , "Nebulae Complex RCW 57" , "NGC 3576" , "11:11:49.80 -61:18:14.0" , 167.96 , -59.97 ],
+[ 197 , "EMISSION NEBULAE" , "Orion Nebula" , "M42" , "05:35:17.29 -05:23:27.9" , 83.82 , -4.92 ],
+[ 198 , "EMISSION NEBULAE" , "Prawn Nebula" , "IC 4628" , "16:56:54.67 -40:30:44.4" , 254.23 , -39.32 ],
+[ 199 , "EMISSION NEBULAE" , "Rim Nebula" , "NGC 6188" , "16:40:00.0 -48:30:00" , 250.00 , -47.19 ],
+[ 200 , "EMISSION NEBULAE" , "Swan Nebula" , "M17" , "18:20:47.0 -16:10:18" , 275.20 , -15.73 ],
+[ 201 , "EMISSION NEBULAE" , "Tarantula Nebula" , "NGC 2070" , "05:38:36.00 -69:05:11.0" , 84.65 , -67.83 ],
+[ 202 , "EMISSION NEBULAE" , "Trifid Nebula" , "M20" , "18:02:42.0 -22:58:18" , 270.68 , -21.63 ],
+[ 203 , "EMISSION NEBULAE" , "Unusual Nebula" , "NGC 6164" , "16:33:52.38 -48:06:40.4" , 248.47 , -47.19 ],
+[ 204 , "REFLECTION NEBULAE" , "Embedded Reflection Nebula" , "NGC 2626" , "08:35:32.0 -40:40:18" , 128.88 , -39.32 ],
+[ 205 , "REFLECTION NEBULAE" , "Hubble's Variable Nebula" , "NGC 2261" , "06:39:09.95 +08:44:09.5" , 99.79 , 8.14 ],
+[ 206 , "REFLECTION NEBULAE" , "Reflection Nebula" , "IC 2966" , "11:50:12.60 -64:52:18.9" , 177.55 , -62.92 ],
+[ 207 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
+[ 208 , "REFLECTION NEBULAE" , "Reflection Nebula" , "NGC 5367" , "13:57:44.0 -39:58:48" , 209.43 , -38.34 ],
+[ 209 , "REFLECTION NEBULAE" , "Running Man Nebula" , "Sharpless 279/NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
+[ 210 , "REFLECTION NEBULAE" , "Toby Jug Nebula" , "IC 2220" , "07:56:51.30 -59:07:31.0" , 119.21 , -58.00 ],
+[ 211 , "DARK NEBULAE" , "Coal Sack Nebula" , "Caldwell 99" , "12:52:19 -62:25:28" , 193.08 , -60.95 ],
+[ 212 , "DARK NEBULAE" , "Dark Doodad" , "DCLD 301.0-08.6" , "12:27:31 -71:25:12" , 186.88 , -69.80 ],
+[ 213 , "DARK NEBULAE" , "Horsehead Nebula" , "Barnard 33" , "05:40:58.99 -02:27:29.9" , 85.25 , -1.97 ],
+[ 214 , "DARK NEBULAE" , "Inkspot Nebula" , "Barnard 86" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
+[ 215 , "DARK NEBULAE" , "Molecular Cloud Nebula" , "Barnard 68" , "17:22:38.2 -23:49:34" , 260.66 , -22.61 ],
+[ 216 , "PLANETARY NEBULAE" , "Blue Planetary" , "NGC 3918" , "11:50:17.77 -57:10:57.0" , 177.57 , -56.03 ],
+[ 217 , "PLANETARY NEBULAE" , "Bug Nebula" , "NGC 6302" , "17:13:44.33 -37:06:10.9" , 258.43 , -36.37 ],
+[ 218 , "PLANETARY NEBULAE" , "Caldwell 109" , "NGC 3195" , "10:09:20.90 -80:51:30.7" , 152.34 , -78.64 ],
+[ 219 , "PLANETARY NEBULAE" , "Cetus Bubble Nebula" , "NGC 246" , "00:47:03.33 -11:52:18.9" , 11.76 , -10.81 ],
+[ 220 , "PLANETARY NEBULAE" , "Cleopatra's Eye" , "NGC 1535" , "04:14:15.76 -12:44:21.9" , 63.57 , -11.80 ],
+[ 221 , "PLANETARY NEBULAE" , "Dumbbell Nebula" , "M27" , "19:59:36.36 +22:43:16.3" , 299.90 , 22.37 ],
+[ 222 , "PLANETARY NEBULAE" , "Dunlop 447" , "NGC 5882" , "15:16:49.95 -45:38:58.6" , 229.21 , -44.24 ],
+[ 223 , "PLANETARY NEBULAE" , "Dunlop 564A" , "NGC 2818" , "09:16:01.48 -36:37:37.5" , 139.01 , -35.39 ],
+[ 224 , "PLANETARY NEBULAE" , "Eight-Burst Nebula" , "NGC 3132" , "10:07:01.76 -40:26:11.1" , 151.76 , -39.32 ],
+[ 225 , "PLANETARY NEBULAE" , "Eskimo Nebula" , "NGC 2392" , "07:29:10.76 +20:54:42.4" , 112.29 , 20.34 ],
+[ 226 , "PLANETARY NEBULAE" , "Fleming 96" , "IC 4642" , "17:11:45.20 -55:24:01.6" , 257.94 , -54.07 ],
+[ 227 , "PLANETARY NEBULAE" , "Fleming 98" , "IC 4699" , "18:18:32.04 -45:59:01.7" , 274.63 , -44.24 ],
+[ 228 , "PLANETARY NEBULAE" , "Ghost of Jupiter" , "NGC 3242" , "10:24:46.13 -18:38:32.2" , 156.19 , -17.70 ],
+[ 229 , "PLANETARY NEBULAE" , "Helix Nebula" , "NGC 7293" , "22:29:38.54 -20:50:13.7" , 337.41 , -19.66 ],
+[ 230 , "PLANETARY NEBULAE" , "Little Gem Nebula" , "NGC 6818" , "19:43:58.02 -14:09:13.4" , 295.99 , -13.76 ],
+[ 231 , "PLANETARY NEBULAE" , "Planetary Nebula" , "NGC 2792" , "09:12:26.56 -42:25:38.9" , 138.11 , -41.29 ],
+[ 232 , "PLANETARY NEBULAE" , "Planetary Nebula" , "NGC 6326" , "17:20:46.25 -51:45:15.1" , 260.19 , -50.14 ],
+[ 233 , "PLANETARY NEBULAE" , "Powder Blue Nebula" , "NGC 5979" , "15:47:41.16 -61:13:05.5" , 236.92 , -59.97 ],
+[ 234 , "PLANETARY NEBULAE" , "Retina Nebula" , "IC 4406" , "14:22:26.14 -44:09:02.2" , 215.61 , -43.25 ],
+[ 235 , "PLANETARY NEBULAE" , "Saturn Nebula" , "NGC 7009" , "21:04:10.81 -11:21:48.5" , 316.05 , -10.81 ],
+[ 236 , "PLANETARY NEBULAE" , "Spare Tyre Nebula" , "IC 5148" , "21:59:35.20 -39:23:08.0" , 329.90 , -38.34 ],
+[ 237 , "PLANETARY NEBULAE" , "Spiral Nebula" , "NGC 5189" , "13:33:32.87 -65:58:27.0" , 203.39 , -63.90 ],
+[ 238 , "PLANETARY NEBULAE" , "Thumbprint Nebula" , "NGC 4071" , "12:44:55.60 -78:48:15.9" , 191.23 , -76.68 ],
+[ 239 , "PLANETARY NEBULAE" , "Vela Planetary Nebula" , "NGC 2899" , "09:27:03.01 -56:06:21.0" , 141.76 , -55.05 ],
+[ 240 , "SPIRAL GALAXIES" , "Antennae Galaxies" , "NGC 4038" , "12:01:53.00 -18:52:03.3" , 180.47 , -17.70 ],
+[ 241 , "SPIRAL GALAXIES" , "Bennett 1" , "NGC 55" , "00:14:53.60 -39:11:47.8" , 3.72 , -38.34 ],
+[ 242 , "SPIRAL GALAXIES" , "Bennett 12" , "NGC 1291" , "03:17:18.60 -41:06:29.0" , 49.33 , -40.31 ],
+[ 243 , "SPIRAL GALAXIES" , "Bennett 21" , "NGC 1433" , "03:42:01.55 -47:13:19.4" , 55.51 , -46.20 ],
+[ 244 , "SPIRAL GALAXIES" , "Bennett 21a" , "NGC 1512" , "04:03:54.28 -43:20:55.8" , 60.98 , -42.27 ],
+[ 245 , "SPIRAL GALAXIES" , "Bennett 25" , "NGC 1566" , "04:20:00.40 -54:56:16.5" , 65.00 , -53.09 ],
+[ 246 , "SPIRAL GALAXIES" , "Bennett 25a" , "NGC 1617" , "04:31:39.53 -54:36:08.1" , 67.91 , -53.09 ],
+[ 247 , "SPIRAL GALAXIES" , "Bennett 26" , "NGC 1672" , "04:45:42.55 -59:14:50.6" , 71.43 , -58.00 ],
+[ 248 , "SPIRAL GALAXIES" , "Bennett 41B" , "NGC 2997" , "09:45:38.75 -31:11:27.3" , 146.41 , -30.47 ],
+[ 249 , "SPIRAL GALAXIES" , "Black-Eye Galaxy" , "M64" , "12:56:43.69 +21:40:57.5" , 194.18 , 21.36 ],
+[ 250 , "SPIRAL GALAXIES" , "Blue Spiral Galaxy" , "NGC 1232" , "03:09:45.51 -20:34:45.4" , 47.44 , -19.66 ],
+[ 251 , "SPIRAL GALAXIES" , "Butterfly Galaxies" , "NGC 4568/4567" , "12:36:34.3 +11:14:19.1" , 189.14 , 11.19 ],
+[ 252 , "SPIRAL GALAXIES" , "Caldwell 36" , "NGC 4559" , "12:35:57.63 +27:57:35.8" , 188.99 , 27.46 ],
+[ 253 , "SPIRAL GALAXIES" , "Caldwell 83" , "NGC 4945" , "13:05:27.27 -49:28:04.4" , 196.36 , -48.17 ],
+[ 254 , "SPIRAL GALAXIES" , "Discus Galaxy" , "NGC 4216" , "12:15:54.44 +13:08:57.8" , 183.98 , 13.22 ],
+[ 255 , "SPIRAL GALAXIES" , "Dunlop 262" , "NGC 6744" , "19:09:46.09 -63:51:27.1" , 287.44 , -61.93 ],
+[ 256 , "SPIRAL GALAXIES" , "Dunlop 469" , "NGC 5643" , "14:32:40.77 -44:10:28.5" , 218.17 , -43.25 ],
+[ 257 , "SPIRAL GALAXIES" , "Dunlop 475" , "NGC 7552" , "23:16:10.76 -42:35:05.3" , 349.04 , -41.29 ],
+[ 258 , "SPIRAL GALAXIES" , "Edge-On Spiral Galaxy" , "NGC 4565" , "12:36:20.80 +25:59:14.6" , 189.09 , 25.42 ],
+[ 259 , "SPIRAL GALAXIES" , "Flocculent Spiral Galaxy" , "NGC 4414" , "12:26:27.08 +31:13:24.7" , 186.61 , 31.53 ],
+[ 260 , "SPIRAL GALAXIES" , "Grand Design Galaxy" , "M74" , "01:36:41.77 +15:47:00.4" , 24.17 , 15.25 ],
+[ 261 , "SPIRAL GALAXIES" , "Great Barred Spiral Galaxy" , "NGC 1365" , "03:33:36.45 -36:08:26.3" , 53.40 , -35.39 ],
+[ 262 , "SPIRAL GALAXIES" , "Grus Quartet" , "NGC 7582" , "23:16:10.80 -42:35:04.9" , 349.04 , -41.29 ],
+[ 263 , "SPIRAL GALAXIES" , "Meathook Galaxy" , "NGC 2442" , "07:36:23.84 -69:31:50.9" , 114.10 , -67.83 ],
+[ 264 , "SPIRAL GALAXIES" , "Oriani's Galaxy" , "M61" , "12:21:54.92 +04:28:25.5" , 185.48 , 4.07 ],
+[ 265 , "SPIRAL GALAXIES" , "S Galaxy" , "NGC 2903" , "09:32:10.11 +21:30:02.9" , 143.04 , 21.36 ],
+[ 266 , "SPIRAL GALAXIES" , "Sculptor Spiral Galaxy" , "NGC 300" , "00:54:53.44 -37:41:03.1" , 13.72 , -36.37 ],
+[ 267 , "SPIRAL GALAXIES" , "Silver Coin Galaxy" , "NGC 253" , "00:47:33.13 -25:17:19.6" , 11.89 , -24.58 ],
+[ 268 , "SPIRAL GALAXIES" , "Sombrero Galaxy" , "M104" , "12:39:59.43 -11:37:22.9" , 190.00 , -10.81 ],
+[ 269 , "SPIRAL GALAXIES" , "Southern Pinwheel Galaxy" , "M83" , "13:37:00.91 -29:51:56.7" , 204.25 , -28.51 ],
+[ 270 , "SPIRAL GALAXIES" , "Spider Web Galaxy" , "NGC 3521" , "11:05:48.56 -00:02:09.2" , 166.45 , 0.00 ],
+[ 271 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "IC 5052" , "20:52:01.63 -69:11:35.9" , 313.01 , -67.83 ],
+[ 272 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M100" , "12:22:54.93 +15:49:20.2" , 185.73 , 15.25 ],
+[ 273 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M58" , "12:37:43.59 +11:49:05.1" , 189.43 , 11.19 ],
+[ 274 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M65" , "11:18:55.95 +13:05:31.9" , 169.73 , 13.22 ],
+[ 275 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M66" , "11:20:15.02 +12:59:28.6" , 170.06 , 12.20 ],
+[ 276 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M88" , "12:31:59.21 +14:25:13.4" , 188.00 , 14.24 ],
+[ 277 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M90" , "12:36:49.81 +13:09:46.3" , 189.21 , 13.22 ],
+[ 278 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M91" , "12:35:26.43 +14:29:46.7" , 188.86 , 14.24 ],
+[ 279 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M95" , "10:43:57.73 +11:42:12.9" , 160.99 , 11.19 ],
+[ 280 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M96" , "10:46:45.74 +11:49:11.7" , 161.69 , 11.19 ],
+[ 281 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M98" , "12:13:48.29 +14:54:01.6" , 183.45 , 14.24 ],
+[ 282 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M99" , "12:18:49.62 +14:24:59.3" , 184.71 , 14.24 ],
+[ 283 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1249" , "03:10:01.21 -53:20:09.0" , 47.51 , -52.10 ],
+[ 284 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1448" , "03:44:31.91 -44:38:41.3" , 56.13 , -43.25 ],
+[ 285 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1515" , "04:04:02.67 -54:06:00.5" , 61.01 , -53.09 ],
+[ 286 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1559" , "04:17:35.75 -62:47:01.2" , 64.40 , -60.95 ],
+[ 287 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2310" , "06:53:53.98 -40:51:45.7" , 103.47 , -39.32 ],
+[ 288 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2397" , "07:21:19.89 -69:00:05.0" , 110.33 , -67.83 ],
+[ 289 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 5833" , "15:11:53.76 -72:51:33.6" , 227.97 , -70.78 ],
+[ 290 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 5967" , "15:48:15.85 -75:40:22.4" , 237.07 , -73.73 ],
+[ 291 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 691" , "01:50:41.70 +21:45:35.8" , 27.67 , 21.36 ],
+[ 292 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 7090" , "21:36:28.86 -54:33:26.3" , 324.12 , -53.09 ],
+[ 293 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 7205" , "22:08:34.27 -57:26:33.1" , 332.14 , -56.03 ],
+[ 294 , "SPIRAL GALAXIES" , "Topsy-Turvy Galaxy" , "NGC 1313" , "03:18:16.04 -66:29:53.7" , 49.57 , -64.88 ],
+[ 295 , "SPIRAL GALAXIES" , "UFO Galaxy" , "NGC 2683" , "08:52:41.34 +33:25:18.4" , 133.17 , 33.56 ],
+[ 296 , "SPIRAL GALAXIES" , "Whale Galaxy" , "NGC 4631" , "12:42:08.00 +32:32:29.4" , 190.53 , 32.54 ],
+[ 297 , "ELLIPTICAL GALAXIES" , "Bennett 23" , "NGC 1549" , "04:15:45.22 -55:35:32.4" , 63.94 , -54.07 ],
+[ 298 , "ELLIPTICAL GALAXIES" , "Bennett 24" , "NGC 1553" , "04:16:10.47 -55:46:48.1" , 64.04 , -54.07 ],
+[ 299 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M105" , "10:47:49.60 +12:34:53.8" , 161.96 , 12.20 ],
+[ 300 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M49" , "12:29:46.79 +08:00:01.4" , 187.44 , 8.14 ],
+[ 301 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M59" , "12:42:02.32 +11:38:48.9" , 190.51 , 11.19 ],
+[ 302 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M60" , "12:43:40.00 +11:33:09.3" , 190.92 , 11.19 ],
+[ 303 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M89" , "12:35:39.81 +12:33:22.6" , 188.92 , 12.20 ],
+[ 304 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "NGC 4976" , "13:08:37.52 -49:30:23.0" , 197.16 , -48.17 ],
+[ 305 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "NGC 5102" , "13:21:57.60 -36:37:48.3" , 200.49 , -35.39 ],
+[ 306 , "ELLIPTICAL GALAXIES" , "Giant Elliptical Galaxy" , "M87" , "12:30:49.42 +12:23:28.0" , 187.71 , 12.20 ],
+[ 307 , "ELLIPTICAL GALAXIES" , "Lenticular Galaxy" , "M86" , "12:26:11.81 +12:56:45.4" , 186.55 , 12.20 ],
+[ 308 , "ACTIVE GALAXIES" , "Centaurus A" , "NGC 5128" , "13:25:27.61 -43:01:08.8" , 201.37 , -42.27 ],
+[ 309 , "ACTIVE GALAXIES" , "Cetus A Active Galaxy" , "M77" , "02:42:40.77 -00:00:47.8" , 40.67 , 0.00 ],
+[ 310 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
+[ 311 , "Galaxy Cluster Abell 3925" , "IC 1633 Cluster" , "Abell 2877" , "01:09:49.3 -45:54:02" , 17.46 , -44.24 ],
+[ 312 , "Galaxy Cluster Abell 3925" , "Leo I Galaxy Group" , "M96 Group" , "10:48:00 +13:18:00" , 162.00 , 13.22 ],
+[ 313 , "Galaxy Cluster Abell 3925" , "Leo Triplet" , "M66 Group" , "10:48:00.0 +13:18:00" , 162.00 , 13.22 ],
+[ 314 , "Galaxy Cluster Abell 3925" , "NGC 2230 Cluster" , "Abell 3389" , "06:21:27.6 -64:59:34.10" , 95.37 , -62.92 ],
+[ 315 , "NGC 6769 Trio" , "Robert's Quartet" , "NGC 88" , "00:21:22.13 -48:38:24.2" , 5.34 , -47.19 ],
+[ 316 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
+[ 317 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M84" , "12:25:03.74 +12:53:13.1" , 186.27 , 12.20 ],
+[ 318 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M85" , "12:25:24.05 +18:11:27.8" , 186.35 , 18.30 ],
+[ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
+];
+}
+
+// create select object
+function createslooh500select(name, list)
+{
+    console.log("createslooh500select");
+    
+    var x = document.createElement("SELECT");
+    x.setAttribute("id", name);
+
+    for (var i = 0; i < list.length; i++) {
+        if (i < 10) {
+            console.log("list[i]", list[i]);
+        }
+        var y = document.createElement("option");
+        y.setAttribute("value", list[i][0]);
+        var t = document.createTextNode(list[i][1]);
+        y.appendChild(t);
+        x.appendChild(y);
+    }
+    return x;
+}
+
+// create list filtered by visibility during the night
+function filtervisibleslooh500(list, lat, lng)
+{
+    var midnight;
+    var aa1;
+    var aa2;
+    var aa3;
+
+    if (slooh500time == null) {
+        console.log("filtervisibleslooh500:use whole night");
+        var midday = UTCdate_ms + day_ms/2;
+        var suntimes = sun_rise_set(midday, lat, lng, 0);
+        midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
+    } else {
+        console.log("filtervisibleslooh500:use specific time");
+        midnight = UTCdate_ms + slooh500time;
+    }
+    var fl = [];
+    fl[fl.length] = ['', ''];
+    // if object altitude is above slooh500filter degrees in any of the following
+    // points during the night we add it to list
+    aa1 = object_altitude_init(midnight, lat, lng);
+    var thisfilterdate = new Date(midnight);
+    console.log("slooh500 filter date 1:", thisfilterdate.toUTCString());
+    if (slooh500time == null) {
+        aa2 = object_altitude_init(midnight+2*hour_ms, lat, lng);
+        thisfilterdate = new Date(midnight+2*hour_ms);
+        console.log("slooh500 filter date 2:", thisfilterdate.toUTCString());
+        aa3 = object_altitude_init(midnight-2*hour_ms, lat, lng);
+        thisfilterdate = new Date(midnight-2*hour_ms);
+        console.log("slooh500 filter date 3:", thisfilterdate.toUTCString());
+    }
+    for (var i = 0; i < list.length; i++) {
+        if (slooh500filter != null) {
+            var ra = list[i][5];
+            var dec = list[i][6];
+            var alt = object_altitude_get(aa1, ra, dec);
+            if (slooh500time == null) {
+                if (alt < slooh500filter) {
+                    alt = object_altitude_get(aa2, ra, dec);
+                }
+                if (alt < slooh500filter) {
+                    alt = object_altitude_get(aa3, ra, dec);
+                }
+            }
+        }
+        if (slooh500filter == null || alt >= slooh500filter) {
+            var item = [ list[i][4], list[i][1] + ' ' + list[i][2] + ' ' + list[i][3] ];
+            fl[fl.length] = item;
+        }
+    }
+    return fl;
+}
+
+function initslooh500()
+{
+    var totalcount;
+
+    console.log("initslooh500", telescope_location, slooh500location);
+
+    if (telescope_location == slooh500location) {
+        // no change
+        console.log("initslooh500:no change");
+        return;
+    }
+
+    slooh500location = telescope_location;
+
+    if (slooh500Teide == null) {
+        console.log("initslooh500:not initialized");
+        slooh500initlists();
+    }
+
+    if (slooh500select != null) {
+        // remove old list
+        console.log("initslooh500:remove old select list");
+        document.getElementById("slooh500Div").removeChild(slooh500select);
+        document.getElementById("slooh500Div").removeChild(slooh500text);
+    }
+
+    var list;
+    if (slooh500location == 'teide') {
+        console.log("initslooh500:teide");
+        if (slooh500teidelist == null) {
+            slooh500teidelist = filtervisibleslooh500(slooh500Teide, teide_location_lat, teide_location_lng);
+        }
+        list = slooh500teidelist;
+        totalcount = slooh500Teide.length;
+    } else {
+        console.log("initslooh500:chile");
+        if (slooh500chilelist == null) {
+            slooh500chilelist = filtervisibleslooh500(slooh500Chile, chile_location_lat, chile_location_lng);
+        }
+        list = slooh500chilelist;
+        totalcount = slooh500Chile.length;
+    }
+
+    slooh500select = createslooh500select('slooh500_select', list);
+    slooh500select.onchange = function() { 
+                                document.getElementById("target").value = slooh500select.value;
+                                ViewImage();
+                            };
+
+    document.getElementById("slooh500Div").appendChild(slooh500select);
+
+    slooh500text = document.createTextNode(' ' + (list.length-1).toString() + '/' + totalcount.toString());
+    document.getElementById("slooh500Div").appendChild(slooh500text);
+}
+
+function checkFilterChanged()
+{
+    var newvalue = document.getElementById("slooh500filter").value;
+    var newfilter;
+    if (newvalue == 'all') {
+        newfilter = null;
+    } else {
+        newfilter = parseInt(newvalue);
+    }
+    if (slooh500filter != newfilter) {
+        slooh500reset();
+        slooh500filter = newfilter;
+        console.log("filterChanged:slooh500filter", slooh500filter);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function filterChanged()
+{
+    if (checkFilterChanged()) {
+        ViewImage();
+    }
+}
+function checkFilterTimeChanged()
+{
+    var newvalue = document.getElementById("filter_time").value;
+    var UTCtime_ms;
+    console.log("ViewImage, time value", newvalue);
+    if (newvalue == '') {
+        UTCtime_ms = null;
+    } else {
+        var hhmm = newvalue.split(':');
+        if (hhmm.length != 2) {
+            document.getElementById("status_text").innerHTML = "Invalid ISO format time (HH:MM) " + view_date;
+            return;
+        }
+        UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
+    }
+    if (slooh500time != UTCtime_ms) {
+        // time changed, reset slooh500 list
+        console.log("ViewImage, time changed, reset slooh500");
+        slooh500time = UTCtime_ms;
+        slooh500reset();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function filterTimeChanged()
+{
+    if (checkFilterTimeChanged()) {
+        ViewImage();
+    }
+}
+
+function slooh500reset()
+{
+    slooh500location = '';
+    slooh500teidelist = null;
+    slooh500chilelist = null;
 }
 
 </script>
