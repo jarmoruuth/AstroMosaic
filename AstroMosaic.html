@@ -106,6 +106,11 @@
             <input type="text" id="filter_time" size=5>
         </form>    
     </div>
+    <div>
+        <form>
+            <input type="checkbox" id="wikiCheckbox">Wiki
+        </form>    
+    </div>
 </div>
 
 <div class="flex-container">
@@ -180,10 +185,6 @@
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-
-var panel_row_1 = '0';
-var panel_row_2 = '3';
-var panel_row_3 = '6';
 
 // size means number of panels on each side
 // 0.5 means 2 panels
@@ -260,6 +261,9 @@ var slooh500location = ''; // last telescope_location
 var slooh500date = null;
 var slooh500time = null;
 var slooh500filter = null;
+var slooh500_index = null;
+
+var wikiChecked = false;
 
 // Hard and soft limits for current telecope
 var horizonHard = [];
@@ -840,13 +844,11 @@ function drawDayVisibilityandGrid()
         }
     };
 
-    console.log("panel", "aladin-lite-div-"+panel_row_2);
+    document.getElementById("aladin-lite-div-3").style.height = "400px";
+    document.getElementById("aladin-lite-div-3").style.width = "700px";
 
-    document.getElementById("aladin-lite-div-"+panel_row_2).style.height = "400px";
-    document.getElementById("aladin-lite-div-"+panel_row_2).style.width = "700px";
-
-    // material var chart = new google.charts.Line(document.getElementById('aladin-lite-div-'+panel_row_2));
-    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-'+panel_row_2));
+    // material var chart = new google.charts.Line(document.getElementById('aladin-lite-div-3'));
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-3'));
 
     // material chart.draw(data, google.charts.Line.convertOptions(options));
     chart.draw(data, options);
@@ -941,10 +943,10 @@ function drawYearVisibility()
         }
     };
 
-    document.getElementById("aladin-lite-div-"+panel_row_3).style.height = "400px";
-    document.getElementById("aladin-lite-div-"+panel_row_3).style.width = "700px";
+    document.getElementById("aladin-lite-div-6").style.height = "400px";
+    document.getElementById("aladin-lite-div-6").style.width = "700px";
 
-    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-'+panel_row_3));
+    var chart = new google.visualization.LineChart(document.getElementById('aladin-lite-div-6'));
 
     chart.draw(data, options);
 }
@@ -1193,6 +1195,8 @@ function ViewImage()
         horizonSoft = chileSoft;
     }
 
+    var target_name;
+
     initslooh500();
 
     console.log("chile1Hard[0]", chile1Hard[0]);
@@ -1203,6 +1207,9 @@ function ViewImage()
     image_target = document.getElementById("target").value;
     image_target = trim_spaces(image_target);
     console.log('target=', image_target);
+
+    showWiki();
+
     var c = image_target.substr(0,1);
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
         image_target = reformat_coordinates(image_target);
@@ -1247,8 +1254,8 @@ function ViewGrid()
 {
     console.log('ViewGrid');
 
-    document.getElementById("aladin-lite-div-"+panel_row_1).style.height = "700px";
-    document.getElementById("aladin-lite-div-"+panel_row_1).style.width = "700px";
+    document.getElementById("aladin-lite-div-0").style.height = "700px";
+    document.getElementById("aladin-lite-div-0").style.width = "700px";
 
     grid_type = document.getElementById("grid_type").value;
 
@@ -1279,7 +1286,7 @@ function ViewGrid()
     } else {
         aladin_fov = 1.2*fov_x;
     }
-    var aladin = A.aladin('#aladin-lite-div-'+panel_row_1, {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
+    var aladin = A.aladin('#aladin-lite-div-0', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
                            showReticle:false, showZoomControl:false, showFullscreenControl:false, 
                            showLayersControl:false, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
@@ -1376,12 +1383,19 @@ function ViewPanels()
         return;
     }
 
-    document.getElementById("aladin-lite-div-"+panel_row_1).style.height = "300px";
-    document.getElementById("aladin-lite-div-"+panel_row_1).style.width = "300px";
-    document.getElementById("aladin-lite-div-"+panel_row_2).style.height = "300px";
-    document.getElementById("aladin-lite-div-"+panel_row_2).style.width = "300px";
-    document.getElementById("aladin-lite-div-"+panel_row_3).style.height = "300px";
-    document.getElementById("aladin-lite-div-"+panel_row_3).style.width = "300px";
+    if (wikiIframe != null && wikiIframe.parentNode) {
+        wikiIframe.parentNode.removeChild(wikiIframe);
+    }
+    wikiIframe = null;
+
+    document.getElementById("aladin-lite-div-0").style.height = "300px";
+    document.getElementById("aladin-lite-div-0").style.width = "300px";
+    document.getElementById("aladin-lite-div-1").style.height = "300px";
+    document.getElementById("aladin-lite-div-1").style.width = "300px";
+    document.getElementById("aladin-lite-div-3").style.height = "300px";
+    document.getElementById("aladin-lite-div-3").style.width = "300px";
+    document.getElementById("aladin-lite-div-6").style.height = "300px";
+    document.getElementById("aladin-lite-div-6").style.width = "300px";
 
     size_x = grid_size_x / 2 - 0.5;
     size_y = grid_size_y / 2 - 0.5;
@@ -1450,7 +1464,7 @@ slooh500Teide = [
 [ 7 , "STAR" , "Ancha" , "Theta Aquarii" , "22:16:50.03 -07:46:59.8" , 334.21 , -6.88 ],
 [ 8 , "STAR" , "Bharani" , "41 Arietis" , "02:49:59.03 +27:15:37.8" , 42.50 , 27.46 ],
 [ 9 , "STAR" , "Botein" , "Delta Arietis" , "03:11:37.76 +19:43:36.0" , 47.91 , 19.32 ],
-[ 10 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],
+[ 10 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],    // NO WIKI
 [ 11 , "STAR" , "Hamal" , "Alpha Arietis" , "02:07:10.40 +23:27:44.7" , 31.79 , 23.39 ],
 [ 12 , "STAR" , "Keid - home of Vulcan" , "40 Eridani" , "04:15:16.3 -7:39:10.3" , 63.82 , -6.88 ],
 [ 13 , "STAR" , "Libertas" , "Xi Aquilae" , "19:54:14.88 +08:27:41.2" , 298.56 , 8.14 ],
@@ -1465,25 +1479,25 @@ slooh500Teide = [
 [ 22 , "STAR" , "Situla" , "Kappa Aquarii" , "22:37:45.38 -04:13:40.9" , 339.44 , -3.93 ],
 [ 23 , "STAR" , "Skat" , "Delta Aquarii" , "22:54:39.01 -15:49:14.8" , 343.66 , -14.75 ],
 [ 24 , "STAR" , "Tarazed" , "Gamma Aquilae" , "19:46:15.58 +10:36:47.7" , 296.56 , 10.17 ],
-[ 25 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],
+[ 25 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],   // NO WIKI
 [ 26 , "STAR" , "Veritate" , "14 Andromedae" , "23:31:17.41 +39:14:10.3" , 352.82 , 39.66 ],
 [ 27 , "DOUBLE STARS" , "Albireo" , "Beta Cygni" , "19:30:43.28 +27:57:34.8" , 292.68 , 27.46 ],
 [ 28 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
 [ 29 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
 [ 30 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
-[ 31 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "East" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
-[ 32 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "West" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
+[ 31 , "SUPERNOVA REMNANTS" , "Veil Nebula East" , "NGC 6992" , "20:56:19.0 +31:44:36" , 314.08 , 31.53 ],
+[ 32 , "SUPERNOVA REMNANTS" , "Veil Nebula West" , "NGC 6960" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
 [ 33 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
 [ 34 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
 [ 35 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
 [ 36 , "OPEN CLUSTERS" , "Caroline's Star Cluster" , "M48" , "08:13:43.0 -05:45:00" , 123.43 , -4.92 ],
-[ 37 , "OPEN CLUSTERS" , "Double Cluster" , "NGC 869/884" , "02:19:00.0 +57:07:42" , 34.75 , 57.97 ],
+[ 37 , "OPEN CLUSTERS" , "Double Cluster" , "NGC 869" , "02:19:00.0 +57:07:42" , 34.75 , 57.97 ],
 [ 38 , "OPEN CLUSTERS" , "E.T. Cluster" , "NGC 457" , "01:19:35.0 +58:17:12" , 19.90 , 58.98 ],
 [ 39 , "OPEN CLUSTERS" , "Ghost's Goblet" , "NGC 559" , "01:29:31.2 +63:18:07" , 22.38 , 64.07 ],
 [ 40 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
 [ 41 , "OPEN CLUSTERS" , "Golf Ball Cluster" , "NGC 752" , "01:57:41.0 +37:47:06" , 29.42 , 37.63 ],
 [ 42 , "OPEN CLUSTERS" , "Horseshoe Cluster" , "NGC 663" , "01:46:09.0 +61:14:06" , 26.54 , 62.03 ],
-[ 43 , "OPEN CLUSTERS" , "Hyades" , "Mel 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
+[ 43 , "OPEN CLUSTERS" , "Hyades" , "Melotte 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
 [ 44 , "OPEN CLUSTERS" , "Open Star Cluster" , "M103" , "01:33:23.0 +60:39:00" , 23.35 , 61.02 ],
 [ 45 , "OPEN CLUSTERS" , "Open Star Cluster" , "M18" , "18:19:58.0 -17:06:06" , 274.99 , -16.71 ],
 [ 46 , "OPEN CLUSTERS" , "Open Star Cluster" , "M21" , "18:04:13.0 -22:29:24" , 271.05 , -21.63 ],
@@ -1534,7 +1548,7 @@ slooh500Teide = [
 [ 91 , "EMISSION NEBULAE" , "Bubble Nebula" , "NGC 7635" , "23:20:48.30 +61:12:06.0" , 350.20 , 62.03 ],
 [ 92 , "EMISSION NEBULAE" , "Butterfly Nebula" , "IC 1318" , "17:05:37.95 -10:08:34.5" , 256.41 , -9.83 ],
 [ 93 , "EMISSION NEBULAE" , "California Nebula" , "NGC 1499" , "04:03:18.0 +36:25:18" , 60.82 , 36.61 ],
-[ 94 , "EMISSION NEBULAE" , "Cave Nebula" , "Sh 2-155" , "22:13:27.0 +70:15:18" , 333.36 , 71.19 ],
+[ 94 , "EMISSION NEBULAE" , "Cave Nebula" , "Sh2-155" , "22:13:27.0 +70:15:18" , 333.36 , 71.19 ],
 [ 95 , "EMISSION NEBULAE" , "Cocoon Nebula" , "IC 5146" , "21:53:24.0 +47:16:00" , 328.35 , 47.80 ],
 [ 96 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
 [ 97 , "EMISSION NEBULAE" , "Crescent Nebula" , "NGC 6888" , "20:12:07.0 +38:21:18" , 303.03 , 38.64 ],
@@ -1560,14 +1574,14 @@ slooh500Teide = [
 [ 117 , "REFLECTION NEBULAE" , "Northern Trifid" , "NGC 1579" , "04:30:11.0 +35:16:44" , 67.55 , 35.59 ],
 [ 118 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
 [ 119 , "REFLECTION NEBULAE" , "Rho Ophiuchi Region" , "IC 4603" , "16:26:00.0 -24:24:00" , 246.50 , -23.59 ],
-[ 120 , "REFLECTION NEBULAE" , "Running Man Nebula" , "Sharpless 279/NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
+[ 120 , "REFLECTION NEBULAE" , "Running Man Nebula" , "NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
 [ 121 , "REFLECTION NEBULAE" , "Star Forming Region" , "NGC 1333" , "03:28:55.2 +31:22:12" , 52.23 , 31.53 ],
 [ 122 , "DARK NEBULAE" , "Dark Comet Nebula" , "Barnard 93" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
 [ 123 , "DARK NEBULAE" , "Horsehead Nebula" , "Barnard 33" , "05:40:58.99 -02:27:29.9" , 85.25 , -1.97 ],
 [ 124 , "DARK NEBULAE" , "Inkspot Nebula" , "Barnard 86" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
 [ 125 , "DARK NEBULAE" , "Molecular Cloud Nebula" , "Barnard 68" , "17:22:38.2 -23:49:34" , 260.66 , -22.61 ],
-[ 126 , "DARK NEBULAE" , "Snake Nebula" , "Barnard 72/Snake Nebula" , "17:23:30 -23:38:00" , 260.88 , -22.61 ],
-[ 127 , "DARK NEBULAE" , "Van den Bergh 142" , "vdB 142/Elephant Trunk Nebula/IC 1396" , "21:39:00.0 +57:29:24" , 324.75 , 57.97 ],
+[ 126 , "DARK NEBULAE" , "Snake Nebula" , "Barnard 72" , "17:23:30 -23:38:00" , 260.88 , -22.61 ],
+[ 127 , "DARK NEBULAE" , "Van den Bergh 142" , "IC 1396" , "21:39:00.0 +57:29:24" , 324.75 , 57.97 ],
 [ 128 , "PLANETARY NEBULAE" , "Dumbbell Nebula" , "M27" , "19:59:36.36 +22:43:16.3" , 299.90 , 22.37 ],
 [ 129 , "PLANETARY NEBULAE" , "Eskimo Nebula" , "NGC 2392" , "07:29:10.76 +20:54:42.4" , 112.29 , 20.34 ],
 [ 130 , "PLANETARY NEBULAE" , "Helix Nebula" , "NGC 7293" , "22:29:38.54 -20:50:13.7" , 337.41 , -19.66 ],
@@ -1629,7 +1643,7 @@ slooh500Teide = [
 [ 186 , "ACTIVE GALAXIES" , "Exploding Galaxy" , "M82" , "09:55:52.42 +69:40:46.9" , 148.97 , 70.17 ],
 [ 187 , "ACTIVE GALAXIES" , "Tao Galaxy" , "NGC 4535" , "12:34:20.31 +08:11:51.9" , 188.58 , 8.14 ],
 [ 188 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
-[ 189 , "GALAXY CLUSTERS" , "Leo Triplet" , "M66 Group" , "11:20:15.0 +12:59:30" , 170.06 , 12.20 ],
+[ 189 , "GALAXY CLUSTERS" , "Leo Triplet" , "M66" , "11:20:15.0 +12:59:30" , 170.06 , 12.20 ],
 [ 190 , "GALAXY CLUSTERS" , "Stephan's Quintet" , "NGC 7318" , "22:35:57.49 +33:57:36.0" , 338.99 , 33.56 ],
 [ 191 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
 [ 192 , "OTHER GALAXIES" , "Box Galaxy" , "NGC 4449" , "12:28:11.11 +44:05:36.8" , 187.05 , 44.75 ],
@@ -1683,13 +1697,13 @@ slooh500Chile = [
 [ 42 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
 [ 43 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
 [ 44 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
-[ 45 , "SUPERNOVA REMNANTS" , "Veil Nebula" , "East" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
+[ 45 , "SUPERNOVA REMNANTS" , "Veil Nebula East" , "NGC 6992" , "20:45:37.99 +30:42:29.9" , 314.08 , 31.53 ],
 [ 46 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
 [ 47 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
 [ 48 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
 [ 49 , "OPEN CLUSTERS" , "Bennett 40a" , "NGC 2671" , "08:46:12.7 -41:52:01" , 131.55 , -40.31 ],
 [ 50 , "OPEN CLUSTERS" , "Bennett 41a" , "NGC 2972" , "09:40:13.9 -50:19:30" , 145.06 , -49.15 ],
-[ 51 , "OPEN CLUSTERS" , "Bennett 47" , "Mel 105" , "11:19:42.0 -63:29:00" , 169.93 , -61.93 ],
+[ 51 , "OPEN CLUSTERS" , "Bennett 47" , "Melotte 105" , "11:19:42.0 -63:29:00" , 169.93 , -61.93 ],
 [ 52 , "OPEN CLUSTERS" , "Bennett 72" , "NGC 6005" , "15:55:58.8 -57:26:24" , 239.00 , -56.03 ],
 [ 53 , "OPEN CLUSTERS" , "Bennett 76" , "NGC 6134" , "16:27:46.0 -49:09:06" , 246.94 , -48.17 ],
 [ 54 , "OPEN CLUSTERS" , "Bennett 79b" , "NGC 6192" , "16:40:23.0 -43:22:00" , 250.10 , -42.27 ],
@@ -1713,7 +1727,7 @@ slooh500Chile = [
 [ 72 , "OPEN CLUSTERS" , "Dunlop 499" , "NGC 6231" , "16:54:08.50 -41:49:36.0" , 253.54 , -40.31 ],
 [ 73 , "OPEN CLUSTERS" , "Gliese 581" , "HO Librae" , "15:19:26.82 -07:43:20.1" , 229.86 , -6.88 ],
 [ 74 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
-[ 75 , "OPEN CLUSTERS" , "Hyades" , "Mel 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
+[ 75 , "OPEN CLUSTERS" , "Hyades" , "Melotte 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
 [ 76 , "OPEN CLUSTERS" , "Jewel Box" , "NGC 4755" , "12:53:39.0 -60:21:42" , 193.41 , -58.98 ],
 [ 77 , "OPEN CLUSTERS" , "LMC Cluster Bennett 30" , "NGC 1818" , "05:04:13.30 -66:26:05.4" , 76.06 , -64.88 ],
 [ 78 , "OPEN CLUSTERS" , "LMC Cluster Bennett 33" , "NGC 1866" , "05:13:38.92 -65:27:52.7" , 78.41 , -63.90 ],
@@ -1820,7 +1834,7 @@ slooh500Chile = [
 [ 179 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
 [ 180 , "EMISSION NEBULAE" , "Cat's Paw Nebula" , "NGC 6334" , "17:20:50.9 -36:06:54" , 260.21 , -35.39 ],
 [ 181 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
-[ 182 , "EMISSION NEBULAE" , "De" , "Mairan's Nebula" , "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
+[ 182 , "EMISSION NEBULAE" , "De Mairan's Nebula", "M43", , "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
 [ 183 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
 [ 184 , "EMISSION NEBULAE" , "Emission Nebula" , "NGC 3199" , "10:16:32.80 -57:56:02.0" , 154.14 , -56.03 ],
 [ 185 , "EMISSION NEBULAE" , "Eta Carinae Nebula" , "NGC 3372" , "10:44:19.00 -59:53:21.0" , 161.08 , -58.00 ],
@@ -1847,7 +1861,7 @@ slooh500Chile = [
 [ 206 , "REFLECTION NEBULAE" , "Reflection Nebula" , "IC 2966" , "11:50:12.60 -64:52:18.9" , 177.55 , -62.92 ],
 [ 207 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
 [ 208 , "REFLECTION NEBULAE" , "Reflection Nebula" , "NGC 5367" , "13:57:44.0 -39:58:48" , 209.43 , -38.34 ],
-[ 209 , "REFLECTION NEBULAE" , "Running Man Nebula" , "Sharpless 279/NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
+[ 209 , "REFLECTION NEBULAE" , "Running Man Nebula" , "NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
 [ 210 , "REFLECTION NEBULAE" , "Toby Jug Nebula" , "IC 2220" , "07:56:51.30 -59:07:31.0" , 119.21 , -58.00 ],
 [ 211 , "DARK NEBULAE" , "Coal Sack Nebula" , "Caldwell 99" , "12:52:19 -62:25:28" , 193.08 , -60.95 ],
 [ 212 , "DARK NEBULAE" , "Dark Doodad" , "DCLD 301.0-08.6" , "12:27:31 -71:25:12" , 186.88 , -69.80 ],
@@ -1889,7 +1903,7 @@ slooh500Chile = [
 [ 248 , "SPIRAL GALAXIES" , "Bennett 41B" , "NGC 2997" , "09:45:38.75 -31:11:27.3" , 146.41 , -30.47 ],
 [ 249 , "SPIRAL GALAXIES" , "Black-Eye Galaxy" , "M64" , "12:56:43.69 +21:40:57.5" , 194.18 , 21.36 ],
 [ 250 , "SPIRAL GALAXIES" , "Blue Spiral Galaxy" , "NGC 1232" , "03:09:45.51 -20:34:45.4" , 47.44 , -19.66 ],
-[ 251 , "SPIRAL GALAXIES" , "Butterfly Galaxies" , "NGC 4568/4567" , "12:36:34.3 +11:14:19.1" , 189.14 , 11.19 ],
+[ 251 , "SPIRAL GALAXIES" , "Butterfly Galaxies" , "NGC 4568" , "12:36:34.3 +11:14:19.1" , 189.14 , 11.19 ],
 [ 252 , "SPIRAL GALAXIES" , "Caldwell 36" , "NGC 4559" , "12:35:57.63 +27:57:35.8" , 188.99 , 27.46 ],
 [ 253 , "SPIRAL GALAXIES" , "Caldwell 83" , "NGC 4945" , "13:05:27.27 -49:28:04.4" , 196.36 , -48.17 ],
 [ 254 , "SPIRAL GALAXIES" , "Discus Galaxy" , "NGC 4216" , "12:15:54.44 +13:08:57.8" , 183.98 , 13.22 ],
@@ -1949,10 +1963,10 @@ slooh500Chile = [
 [ 308 , "ACTIVE GALAXIES" , "Centaurus A" , "NGC 5128" , "13:25:27.61 -43:01:08.8" , 201.37 , -42.27 ],
 [ 309 , "ACTIVE GALAXIES" , "Cetus A Active Galaxy" , "M77" , "02:42:40.77 -00:00:47.8" , 40.67 , 0.00 ],
 [ 310 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
-[ 311 , "Galaxy Cluster Abell 3925" , "IC 1633 Cluster" , "Abell 2877" , "01:09:49.3 -45:54:02" , 17.46 , -44.24 ],
-[ 312 , "Galaxy Cluster Abell 3925" , "Leo I Galaxy Group" , "M96 Group" , "10:48:00 +13:18:00" , 162.00 , 13.22 ],
-[ 313 , "Galaxy Cluster Abell 3925" , "Leo Triplet" , "M66 Group" , "10:48:00.0 +13:18:00" , 162.00 , 13.22 ],
-[ 314 , "Galaxy Cluster Abell 3925" , "NGC 2230 Cluster" , "Abell 3389" , "06:21:27.6 -64:59:34.10" , 95.37 , -62.92 ],
+[ 311 , "Galaxy Cluster Abell 3925" , "Abell 2877 Cluster" , "IC 1633" , "01:09:49.3 -45:54:02" , 17.46 , -44.24 ],
+[ 312 , "Galaxy Cluster Abell 3925" , "Leo I Galaxy Group" , "M96" , "10:48:00 +13:18:00" , 162.00 , 13.22 ],
+[ 313 , "Galaxy Cluster Abell 3925" , "Leo Triplet" , "M66" , "10:48:00.0 +13:18:00" , 162.00 , 13.22 ],
+[ 314 , "Galaxy Cluster Abell 3925" , "Abell 3389 Cluster" , "NGC 2230" , "06:21:27.6 -64:59:34.10" , 95.37 , -62.92 ],
 [ 315 , "NGC 6769 Trio" , "Robert's Quartet" , "NGC 88" , "00:21:22.13 -48:38:24.2" , 5.34 , -47.19 ],
 [ 316 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
 [ 317 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M84" , "12:25:03.74 +12:53:13.1" , 186.27 , 12.20 ],
@@ -2000,6 +2014,7 @@ function filtervisibleslooh500(list, lat, lng)
         midnight = UTCdate_ms + slooh500time;
     }
     var fl = [];
+    var idx = [];
     fl[fl.length] = ['', ''];
     // if object altitude is above slooh500filter degrees in any of the following
     // points during the night we add it to list
@@ -2031,9 +2046,10 @@ function filtervisibleslooh500(list, lat, lng)
         if (slooh500filter == null || alt >= slooh500filter) {
             var item = [ list[i][4], list[i][1] + ' ' + list[i][2] + ' ' + list[i][3] ];
             fl[fl.length] = item;
+            idx[idx.length] = i;
         }
     }
-    return fl;
+    return { list: fl, index: idx};
 }
 
 function initslooh500()
@@ -2047,6 +2063,9 @@ function initslooh500()
         console.log("initslooh500:no change");
         return;
     }
+
+    wikiReset();
+    slooh500_index = null;
 
     slooh500location = telescope_location;
 
@@ -2068,20 +2087,26 @@ function initslooh500()
         if (slooh500teidelist == null) {
             slooh500teidelist = filtervisibleslooh500(slooh500Teide, teide_location_lat, teide_location_lng);
         }
-        list = slooh500teidelist;
+        list = slooh500teidelist.list;
         totalcount = slooh500Teide.length;
     } else {
         console.log("initslooh500:chile");
         if (slooh500chilelist == null) {
             slooh500chilelist = filtervisibleslooh500(slooh500Chile, chile_location_lat, chile_location_lng);
         }
-        list = slooh500chilelist;
+        list = slooh500chilelist.list;
         totalcount = slooh500Chile.length;
     }
 
     slooh500select = createslooh500select('slooh500_select', list);
     slooh500select.onchange = function() { 
                                 document.getElementById("target").value = slooh500select.value;
+                                slooh500_index = slooh500select.selectedIndex;
+                                if (slooh500_index == 0) {
+                                    slooh500_index = null;
+                                } else {
+                                    slooh500_index = slooh500_index - 1;
+                                }
                                 ViewImage();
                             };
 
@@ -2154,6 +2179,137 @@ function slooh500reset()
     slooh500location = '';
     slooh500teidelist = null;
     slooh500chilelist = null;
+    slooh500_index = null;
+
+    wikiReset();
+}
+
+var wikiIframe = null;
+
+function wikiReset()
+{
+    if (wikiIframe != null) {
+        //document.getElementById("aladin-lite-div-1").removeChild(wikiIframe);
+        if (wikiIframe.parentNode) {
+            wikiIframe.parentNode.removeChild(wikiIframe);
+        }
+    }
+    wikiIframe = null;
+}
+
+function getWikiContent(pageid)
+{
+    var url = "https://en.wikipedia.org/w/api.php?action=parse&origin=*&format=json&pageid=" + pageid;
+
+    console.log("getWikiContent, pageid", pageid);
+
+    document.getElementById("aladin-lite-div-1").style.height = "700px";
+    document.getElementById("aladin-lite-div-1").style.width = "500px";
+
+    if (1) {
+        // use IFRAME and mobile wiki page
+        wikiReset();
+
+        console.log("getWikiContent, create new IFRAME");
+        wikiIframe = document.createElement("IFRAME");
+        wikiIframe.width = 500;
+        wikiIframe.height = 700;
+        console.log("getWikiContent, set IFRAME src", "https://en.m.wikipedia.org/?curid="+pageid);
+        wikiIframe.setAttribute("src", "https://en.m.wikipedia.org/?curid="+pageid);
+        document.getElementById("aladin-lite-div-1").appendChild(wikiIframe);
+        return;
+    } else {
+        // load wiki html data
+        xmlhttp=new XMLHttpRequest();
+        xmlhttp.onreadystatechange=function()
+        {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+                console.log('getWikiContent, get page content, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
+                var json = JSON.parse(xmlhttp.responseText);
+                var pagecontent = json.parse.text["*"];
+                if (pagecontent) {
+                    //document.getElementById("aladin-lite-div-1").innerHTML = pagecontent;
+                    var x = document.createElement("P");
+                    x.innerHTML = pagecontent;
+                    document.getElementById("aladin-lite-div-1").appendChild(x);
+                } else {
+                    document.getElementById("status_text").innerHTML = "Failed to get Wiki page content from json";
+                }
+            }
+        }
+        console.log('getWikiContent, send HTTP GET(' + url + ')');
+        xmlhttp.open("GET", url, false);
+        xmlhttp.send(); 
+    }
+}
+
+function showWiki()
+{
+    var url = "https://en.wikipedia.org/w/api.php?action=query&redirects&" +
+              "format=json&formatversion=2&prop=revisions&origin=*&titles=";
+
+    if (!document.getElementById("wikiCheckbox").checked) {
+        console.log("showWiki:do not show");
+        wikiReset();
+        return;
+    }
+    console.log("showWiki");
+
+    var wiki_target;
+    var c = image_target.substr(0,1);
+    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+        // numeric target, check if we haveslooh target selected
+        console.log("showWiki, numeric, try slooh500");
+        if (slooh500_index != null) {
+            var item;
+            if (slooh500location == 'teide') {
+                list = slooh500Teide[slooh500teidelist.index[slooh500_index]];
+            } else {
+                list = slooh500Chile[slooh500chilelist.index[slooh500_index]];
+            }
+            c = list[3].substr(0,1);
+            if (c == 'M') {
+                wiki_target = list[3].replace(/M/g, "Messier ");
+                console.log("showWiki, M", wiki_target);
+            } else if (c == 'N' || c == 'I') {
+                wiki_target = list[3];
+                console.log("showWiki, N or I", wiki_target);
+            } else {
+                wiki_target = list[3];
+                console.log("showWiki, construct name", wiki_target);
+            }
+        } else {
+            console.log("showWiki, no sloh500 target, remove wiki");
+            if (wikiIframe != null) {
+                document.getElementById("aladin-lite-div-1").removeChild(wikiIframe);
+                wikiIframe = null;
+            }
+            return;
+        }
+    } else {
+        console.log("showWiki, use image_target", image_target);
+        wiki_target = image_target;
+    }
+
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.onreadystatechange=function()
+    {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+            console.log('showWiki, get page id, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
+            var json = JSON.parse(xmlhttp.responseText);
+            var pageid = json.query.pages[0].pageid;
+            if (pageid) {
+                getWikiContent(pageid);
+            } else {
+                console.log("Failed to get Wiki page id from json");
+                document.getElementById("status_text").innerHTML = "Failed to get Wiki page id from json";
+            }
+        }
+    }
+    var resolver_url = url + wiki_target.replace(/ /g, "%20");
+    console.log('showWiki, send HTTP GET(' + resolver_url + ')');
+    xmlhttp.open("GET", resolver_url, false);
+    xmlhttp.send(); 
 }
 
 </script>
