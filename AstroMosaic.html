@@ -64,8 +64,8 @@
     <div>
         <form action="javascript:ViewImage()">
             Grid size (x,y):<br>
-            <input type="number" id="size_x" min="1" max="5">
-            <input type="number" id="size_y" min="1" max="5">
+            <input type="number" id="size_x" min="1" max="10">
+            <input type="number" id="size_y" min="1" max="10">
         </form>    
     </div>
     <div>
@@ -1509,6 +1509,14 @@ function ViewPanels()
     if (grid_size_x == 1 && grid_size_y == 1) {
         ViewGrid();
         return;
+    }
+    if (grid_size_x > 5) {
+        document.getElementById("status_text").innerHTML = "Max size in panels view is 5x5";
+        grid_size_x = 5;
+    }
+    if (grid_size_y > 5) {
+        document.getElementById("status_text").innerHTML = "Max size in panels view is 5x5";
+        grid_size_y = 5;
     }
 
     if (wikiIframe != null && wikiIframe.parentNode) {
