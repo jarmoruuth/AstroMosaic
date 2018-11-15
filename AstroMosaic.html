@@ -261,6 +261,19 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
+var version_text = 
+    "Version 1.11<br>"+
+    "- mosaic grid max size increased to 10x10<br>"+
+    "- target coordinates can be given also in RA.ddd DEC.ddd format<br>"+
+    "- mosaic grid coordinates are shown as a table<br>"+
+    "Version 1.10<br>"+
+    "- added Slooh 500 list with altitude and time filtering<br>"+
+    "- added embedded Wikipedia page if Wiki checkbox is checked<br>"+
+    "- mosaic panel view shows actual panels up to size 5x5<br>"+
+    "Version 1.00<br>"+
+    "- basic FoV, mosaic grid and panels views<br>"+
+    "- target visibility during one night and next 12 months";
+
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
 var wiki_panel = "aladin-lite-div-01";
@@ -268,6 +281,7 @@ var dayvisibility_panel = "aladin-lite-div-10";
 var dayvisibility_panel_text = "panel-text-10";
 var yearvisibility_panel = "aladin-lite-div-20";
 var yearvisibility_panel_text = "panel-text-20";
+var version_text_panel = "panel-text-01";
 
 // size means number of panels on each side
 // 0.5 means 2 panels
@@ -1498,6 +1512,10 @@ function ViewGrid()
     } else {
         document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
     }
+    if (version_text) {
+        document.getElementById(version_text_panel).innerHTML = version_text;
+        version_text = null;
+    }
 }
 
 function ViewPanels()
@@ -2381,6 +2399,46 @@ function getWikiContent(pageid)
     }
 }
 
+function charIsNumber(c)
+{
+    return c >= '0' && c <= '9';
+}
+
+function reformatCheckName(target, prefix, name)
+{
+    var c = target.substr(0, prefix.length).toUpperCase();
+    var cn = target.substr(prefix.length, 1);
+    if (c == prefix.toUpperCase() && (cn == ' ' || charIsNumber(cn))) {
+        return name + ' ' + target.substr(prefix.length);
+    } else {
+        return null;
+    }
+
+}
+
+// reformat target name so it is more likely found from Wikipedia
+function reformatTargetName(name)
+{
+    var newname = reformatCheckName(name, 'M', 'Messier');
+    if (newname == null) {
+        // ensure correct case
+        newname = reformatCheckName(name, 'Messier', 'Messier');
+    }
+    if (newname == null) {
+        newname = reformatCheckName(name, 'NGC', 'NGC');
+    }
+    if (newname == null) {
+        newname = reformatCheckName(name, 'IC', 'IC');
+    }
+    if (newname == null) {
+        newname = name;
+    }
+    newname = trim_spaces(newname);
+    console.log("reformatTargetName", name, newname);
+
+    return newname;
+}
+
 function showWiki()
 {
     var url = "https://en.wikipedia.org/w/api.php?action=query&redirects&" +
@@ -2405,19 +2463,10 @@ function showWiki()
             } else {
                 list = slooh500Chile[slooh500chilelist.index[slooh500_index]];
             }
-            c = list[3].substr(0,1);
-            if (c == 'M') {
-                wiki_target = list[3].replace(/M/g, "Messier ");
-                console.log("showWiki, M", wiki_target);
-            } else if (c == 'N' || c == 'I') {
-                wiki_target = list[3];
-                console.log("showWiki, N or I", wiki_target);
-            } else {
-                wiki_target = list[3];
-                console.log("showWiki, construct name", wiki_target);
-            }
+            console.log("showWiki, use Slooh 500", list[3]);
+            wiki_target = reformatTargetName(list[3]);
         } else {
-            console.log("showWiki, no sloh500 target, remove wiki");
+            console.log("showWiki, no slooh500 target, remove wiki");
             if (wikiIframe != null) {
                 document.getElementById(wiki_panel).removeChild(wikiIframe);
                 wikiIframe = null;
@@ -2426,7 +2475,7 @@ function showWiki()
         }
     } else {
         console.log("showWiki, use image_target", image_target);
-        wiki_target = image_target;
+        wiki_target = reformatTargetName(image_target);
     }
 
     xmlhttp=new XMLHttpRequest();
