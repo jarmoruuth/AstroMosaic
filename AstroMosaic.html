@@ -83,6 +83,10 @@ p {
         <br>
         <button onclick="ViewImage()">View image</button>
     </div>
+    <div>
+        <br>
+        <p id="error_text"></p>
+    </div>
 </div>
 
 <div id="secondDiv" class="flex-container">
@@ -111,6 +115,17 @@ p {
     </div>
     <div>
         <form>
+            Moon:
+            <select id="slooh500moonFilter" onchange="javascript:filterChanged()">
+                <option value="all">All</option>
+                <option value="45">45°</option>
+                <option value="90">90°</option>
+                <option value="135">145°</option>
+            </select>
+        </form>
+    </div>
+    <div>
+        <form action="javascript:ViewImage()">
             <input type="checkbox" id="wikiCheckbox">Wiki
         </form>    
     </div>
@@ -263,6 +278,9 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.13<br>"+
+    "- moon distance filter for Slooh 500 list<br>"+
+    "- separate field for error text<br>"+
     "Version 1.12<br>"+
     "- changes to work better on mobile devices<br>"+
     "Version 1.11<br>"+
@@ -369,6 +387,7 @@ var slooh500location = ''; // last telescope_location
 var slooh500date = null;
 var slooh500time = null;
 var slooh500filter = null;
+var slooh500moonFilter = null;
 var slooh500_index = null;
 
 var wikiChecked = false;
@@ -409,7 +428,7 @@ var teideSoft = [
 ];
 
 if (!url_target) {
-    url_target = "M33";
+    url_target = "51 Andromedae";
 }
 
 //url_target = "Tarantula nebula";
@@ -1144,7 +1163,7 @@ function ViewImageByName()
             if (find_coordinates(xmlhttp.responseText)) {
                 ViewImageByType();
             } else {
-                document.getElementById("status_text").innerHTML = "Failed to resolve name " + image_target;
+                document.getElementById("error_text").innerHTML = "Failed to resolve name " + image_target;
             }
         }
     }
@@ -1251,13 +1270,16 @@ function ViewImage()
 {
     console.log('ViewImage');
 
+    document.getElementById("status_text").innerHTML = "";
+    document.getElementById("error_text").innerHTML = "";
+
     clearOldImage();
 
     // get current date
     var view_date = document.getElementById("view_date").value;
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById("status_text").innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
+        document.getElementById("error_text").innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
         return;
     }
     checkFilterChanged();
@@ -1340,8 +1362,6 @@ function ViewImage()
 
     console.log("chile1Hard[0]", chile1Hard[0]);
     console.log("horizonHard[0]", horizonHard[0]);
-
-    document.getElementById("status_text").innerHTML = "";
 
     image_target = document.getElementById("target").value;
     image_target = trim_spaces(image_target);
@@ -1542,11 +1562,11 @@ function ViewPanels()
         return;
     }
     if (grid_size_x > 5) {
-        document.getElementById("status_text").innerHTML = "Max size in panels view is 5x5";
+        document.getElementById("error_text").innerHTML = "Max size in panels view is 5x5";
         grid_size_x = 5;
     }
     if (grid_size_y > 5) {
-        document.getElementById("status_text").innerHTML = "Max size in panels view is 5x5";
+        document.getElementById("error_text").innerHTML = "Max size in panels view is 5x5";
         grid_size_y = 5;
     }
 
@@ -2193,6 +2213,7 @@ function filtervisibleslooh500(list, lat, lng)
     var thisfilterdate = new Date(midnight);
     console.log("slooh500 filter date 1:", thisfilterdate.toUTCString());
     if (slooh500time == null) {
+        // no time filter, use also times 2 hours before and after midnight
         aa2 = object_altitude_init(midnight+2*hour_ms, lat, lng);
         thisfilterdate = new Date(midnight+2*hour_ms);
         console.log("slooh500 filter date 2:", thisfilterdate.toUTCString());
@@ -2200,12 +2221,16 @@ function filtervisibleslooh500(list, lat, lng)
         thisfilterdate = new Date(midnight-2*hour_ms);
         console.log("slooh500 filter date 3:", thisfilterdate.toUTCString());
     }
+    var moonpos = moon_position(midnight);
     for (var i = 0; i < list.length; i++) {
+        var ra = list[i][5];
+        var dec = list[i][6];
+        var alt;
+        var addToList = false;
         if (slooh500filter != null) {
-            var ra = list[i][5];
-            var dec = list[i][6];
-            var alt = object_altitude_get(aa1, ra, dec);
+            alt = object_altitude_get(aa1, ra, dec);
             if (slooh500time == null) {
+                // no time filter, use also times 2 hours before and after midnight
                 if (alt < slooh500filter) {
                     alt = object_altitude_get(aa2, ra, dec);
                 }
@@ -2215,6 +2240,17 @@ function filtervisibleslooh500(list, lat, lng)
             }
         }
         if (slooh500filter == null || alt >= slooh500filter) {
+            // we passed altitude filter
+            addToList = true;
+            if (slooh500moonFilter != null) {
+                // check for distance from moon
+                var moon_angle = moon_distance(ra, dec, moonpos.ra, moonpos.dec);
+                if (moon_angle < slooh500moonFilter) {
+                    addToList = false;
+                }
+            }
+        }
+        if (addToList) {
             var item = [ list[i][4], list[i][1] + ' ' + list[i][2] + ' ' + list[i][3] ];
             fl[fl.length] = item;
             idx[idx.length] = i;
@@ -2289,6 +2325,7 @@ function initslooh500()
 
 function checkFilterChanged()
 {
+    var ret = false;
     var newvalue = document.getElementById("slooh500filter").value;
     var newfilter;
     if (newvalue == 'all') {
@@ -2300,10 +2337,21 @@ function checkFilterChanged()
         slooh500reset();
         slooh500filter = newfilter;
         console.log("filterChanged:slooh500filter", slooh500filter);
-        return true;
-    } else {
-        return false;
+        ret = true;
     }
+    newvalue = document.getElementById("slooh500moonFilter").value;
+    if (newvalue == 'all') {
+        newfilter = null;
+    } else {
+        newfilter = parseInt(newvalue);
+    }
+    if (slooh500moonFilter != newfilter) {
+        slooh500reset();
+        slooh500moonFilter = newfilter;
+        console.log("filterChanged:slooh500moonFilter", slooh500moonFilter);
+        ret = true;
+    }
+    return ret;
 }
 
 function filterChanged()
@@ -2312,24 +2360,31 @@ function filterChanged()
         ViewImage();
     }
 }
+
 function checkFilterTimeChanged()
 {
     var newvalue = document.getElementById("filter_time").value;
     var UTCtime_ms;
-    console.log("ViewImage, time value", newvalue);
+    console.log("checkFilterTimeChanged, time value", newvalue);
     if (newvalue == '') {
         UTCtime_ms = null;
+        console.log("checkFilterTimeChanged, no time given");
     } else {
         var hhmm = newvalue.split(':');
         if (hhmm.length != 2) {
-            document.getElementById("status_text").innerHTML = "Invalid ISO format time (HH:MM) " + view_date;
+            document.getElementById("error_text").innerHTML = "Invalid ISO format time (HH:MM)";
             return;
         }
         UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
+        if (UTCtime_ms == null) {
+            document.getElementById("error_text").innerHTML = "Invalid ISO format time (HH:MM)";
+            return;
+        }
+        console.log("checkFilterTimeChanged, time ", UTCtime_ms);
     }
     if (slooh500time != UTCtime_ms) {
         // time changed, reset slooh500 list
-        console.log("ViewImage, time changed, reset slooh500");
+        console.log("checkFilterTimeChanged, time changed, reset slooh500");
         slooh500time = UTCtime_ms;
         slooh500reset();
         return true;
