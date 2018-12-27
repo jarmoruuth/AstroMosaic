@@ -280,6 +280,7 @@ p {
 var version_text = 
     "Version 1.13<br>"+
     "- moon distance filter for Slooh 500 list<br>"+
+    "- more Slooh 500 list filter points<br>"+
     "- separate field for error text<br>"+
     "Version 1.12<br>"+
     "- changes to work better on mobile devices<br>"+
@@ -294,6 +295,8 @@ var version_text =
     "Version 1.00<br>"+
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
+
+var startup_image = "M44";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -428,7 +431,7 @@ var teideSoft = [
 ];
 
 if (!url_target) {
-    url_target = "51 Andromedae";
+    url_target = startup_image;
 }
 
 //url_target = "Tarantula nebula";
@@ -875,7 +878,7 @@ function drawDayVisibilityandGrid()
         var objectalt = altaz.alt;
 
         var moonpos = moon_position(d);
-        var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt             ;
+        var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
         moonalt = moon_topocentric_correction(moonalt);
         var UTCdate = new Date(d);
         //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
@@ -2194,6 +2197,9 @@ function filtervisibleslooh500(list, lat, lng)
     var aa1;
     var aa2;
     var aa3;
+    var aa4;
+    var aa5;
+    var moonFilter = slooh500moonFilter;
 
     if (slooh500time == null) {
         console.log("filtervisibleslooh500:use whole night");
@@ -2212,16 +2218,53 @@ function filtervisibleslooh500(list, lat, lng)
     aa1 = object_altitude_init(midnight, lat, lng);
     var thisfilterdate = new Date(midnight);
     console.log("slooh500 filter date 1:", thisfilterdate.toUTCString());
-    if (slooh500time == null) {
-        // no time filter, use also times 2 hours before and after midnight
-        aa2 = object_altitude_init(midnight+2*hour_ms, lat, lng);
-        thisfilterdate = new Date(midnight+2*hour_ms);
-        console.log("slooh500 filter date 2:", thisfilterdate.toUTCString());
-        aa3 = object_altitude_init(midnight-2*hour_ms, lat, lng);
-        thisfilterdate = new Date(midnight-2*hour_ms);
-        console.log("slooh500 filter date 3:", thisfilterdate.toUTCString());
-    }
     var moonpos = moon_position(midnight);
+    // Check moon altitude at given time. If it is below horizon we do not filter with moon.
+    var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
+    moonalt = moon_topocentric_correction(moonalt);
+    if (moonalt < 0) {
+        moonFilter = null;
+    }
+    if (slooh500time == null) {
+        // no time filter, use also times 2 and 4 hours before and after midnight
+        var d = midnight+2*hour_ms;
+        aa2 = object_altitude_init(d, lat, lng);
+        thisfilterdate = new Date(d);
+        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = moon_topocentric_correction(moonalt);
+        if (moonalt < 0) {
+            moonFilter = null;
+        }
+        console.log("slooh500 filter date 2:", thisfilterdate.toUTCString());
+        d = midnight-2*hour_ms;
+        aa3 = object_altitude_init(d, lat, lng);
+        thisfilterdate = new Date(d);
+        // check moon altitude at this time
+        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = moon_topocentric_correction(moonalt);
+        if (moonalt < 0) {
+            moonFilter = null;
+        }
+        console.log("slooh500 filter date 3:", thisfilterdate.toUTCString());
+        var d = midnight+4*hour_ms;
+        aa4 = object_altitude_init(d, lat, lng);
+        thisfilterdate = new Date(d);
+        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = moon_topocentric_correction(moonalt);
+        if (moonalt < 0) {
+            moonFilter = null;
+        }
+        console.log("slooh500 filter date 4:", thisfilterdate.toUTCString());
+        d = midnight-4*hour_ms;
+        aa5 = object_altitude_init(d, lat, lng);
+        thisfilterdate = new Date(d);
+        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = moon_topocentric_correction(moonalt);
+        if (moonalt < 0) {
+            moonFilter = null;
+        }
+        console.log("slooh500 filter date 5:", thisfilterdate.toUTCString());
+    }
     for (var i = 0; i < list.length; i++) {
         var ra = list[i][5];
         var dec = list[i][6];
@@ -2230,22 +2273,28 @@ function filtervisibleslooh500(list, lat, lng)
         if (slooh500filter != null) {
             alt = object_altitude_get(aa1, ra, dec);
             if (slooh500time == null) {
-                // no time filter, use also times 2 hours before and after midnight
+                // no time filter, use also times 2 and 4 hours before and after midnight
                 if (alt < slooh500filter) {
                     alt = object_altitude_get(aa2, ra, dec);
                 }
                 if (alt < slooh500filter) {
                     alt = object_altitude_get(aa3, ra, dec);
                 }
+                if (alt < slooh500filter) {
+                    alt = object_altitude_get(aa4, ra, dec);
+                }
+                if (alt < slooh500filter) {
+                    alt = object_altitude_get(aa5, ra, dec);
+                }
             }
         }
         if (slooh500filter == null || alt >= slooh500filter) {
             // we passed altitude filter
             addToList = true;
-            if (slooh500moonFilter != null) {
+            if (moonFilter != null) {
                 // check for distance from moon
                 var moon_angle = moon_distance(ra, dec, moonpos.ra, moonpos.dec);
-                if (moon_angle < slooh500moonFilter) {
+                if (moon_angle < moonFilter) {
                     addToList = false;
                 }
             }
