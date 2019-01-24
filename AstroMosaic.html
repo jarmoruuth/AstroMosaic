@@ -278,6 +278,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.14<br>"+
+    "- Fixed ra/dec parsing with missing seconds part<br>"+
     "Version 1.13<br>"+
     "- moon distance filter for Slooh 500 list<br>"+
     "- more Slooh 500 list filter points<br>"+
@@ -296,7 +298,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "M44";
+var startup_image = "M86";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -476,15 +478,30 @@ function get_target_ra_dec()
     var decparts = radec[1].split(':');
 
     target_ra = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60 + parseFloat(raparts[2])) / 3600;
+    if (isNaN(target_ra)) {
+        // assume seconds are missing
+        target_ra = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60) / 3600;
+    }
+    if (isNaN(target_ra)) {
+        return false;
+    }
     // convert from hours to degrees
     target_ra = target_ra * hoursToDeg;
     if (parseFloat(raparts[0]) < 0) {
         target_ra = -target_ra;
     }
     target_dec = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60 + parseFloat(decparts[2])) / 3600;
+    if (isNaN(target_dec)) {
+        // assume seconds are missing
+        target_dec = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60) / 3600;
+    }
+    if (isNaN(target_dec)) {
+        return false;
+    }
     if (parseFloat(decparts[0]) < 0) {
         target_dec = -target_dec;
     }
+    return true;
 }
 
 // scale degrees to 0-360
@@ -849,6 +866,8 @@ function drawDayVisibilityandGrid()
     var lat = location_lat;
     var lng = location_lng;
 
+    console.log(ra, dec, lat, lng);
+
     var rowdata = [];
 
     var draw_full_day = 0;  // if 0 draw only during astronomical twilight
@@ -881,7 +900,7 @@ function drawDayVisibilityandGrid()
         var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
         moonalt = moon_topocentric_correction(moonalt);
         var UTCdate = new Date(d);
-        //console.log("i=",i,",d=",d,",alt=", altdata, ",moonalt=",moonalt);
+        //console.log("d=",d,",altaz=", altaz, ",moonalt=",moonalt);
 
         var visiblealt = null;     // target visible
         var softalt = null;        // target below soft horizon
@@ -920,7 +939,7 @@ function drawDayVisibilityandGrid()
                     softalt,
                     hardalt,
                     moonalt];
-        //console.log("row", row);
+        console.log("row", row);
         rowdata[rowdata.length] = row;
     }
 
@@ -1385,7 +1404,10 @@ function ViewImage()
 function ViewImageByType()
 {
     console.log('ViewImageByType');
-    get_target_ra_dec();
+    if (!get_target_ra_dec()) {
+        document.getElementById("error_text").innerHTML = "Failed to parse target RA/DEC";
+        return;
+    }
     if (document.getElementById("grid_type").value == 'panels') {
         ViewPanels();
     } else {
