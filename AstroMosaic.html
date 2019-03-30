@@ -1,4 +1,4 @@
-<!-- Tool to visualize Slooh telescope FoV and mosaic grid. Jarmo Ruuth, 2018 -->
+<!-- Tool to visualize Slooh telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2019 -->
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
@@ -278,6 +278,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.16<br>"+
+    "- Added visible/not visible line type to year visibility<br>"+
     "Version 1.15<br>"+
     "- Fixed a few Slooh 500 list coordinates<br>"+
     "Version 1.14<br>"+
@@ -300,7 +302,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "California nebula";
+var startup_image = "M51";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -1032,7 +1034,8 @@ function drawYearVisibility()
 
     //data.addColumn('datetime', 'Time'); Can't get this working...
     data.addColumn('date', 'Date');
-    data.addColumn('number', 'Target alt');         // object altitude
+    data.addColumn('number', 'Visible');            // object altitude
+    data.addColumn('number', 'Not visible');        // moon altitude
     data.addColumn('number', 'Moon alt');           // moon altitude
 
     var interval = day_ms; // day
@@ -1059,15 +1062,22 @@ function drawYearVisibility()
         var moonpos = moon_position(midnight);
         var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
         moonalt = moon_topocentric_correction(moonalt);
-        if (objectalt < 0) {
-            objectalt = null;
+
+        var visiblealt = null;     // target visible
+        var hardalt = null;        // target below 30 degrees
+
+        if (objectalt >= 30) {
+            visiblealt = objectalt;
+        } else if (objectalt > 0) {
+            hardalt = objectalt;
         }
         if (moonalt < 0) {
             moonalt = null;
         }
         var row = [
                 new Date(d),
-                    objectalt,
+                    visiblealt,
+                    hardalt,
                     moonalt];
         rowdata[rowdata.length] = row;
     }
@@ -1088,7 +1098,8 @@ function drawYearVisibility()
         // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
         series: { 
             0: { color: 'green' },
-            1: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
+            1: { color: 'red', lineDashStyle: [2, 2] },
+            2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
         }
     };
 
