@@ -1,5 +1,16 @@
 # AstroMosaic
 
+Tools to calculate coordinates for astro image mosaics using Slooh
+telescopes. There are both HTML and Python versions.
+
+HTML version AstroMosaic.html is a more advanced version that includes 
+object visibility during the night, moon position, Slooh 500 list, Wiki
+interface to show target information and mosaics up to 10x10.
+
+AstroMosaic.html can be found at https://www.ruuth.xyz/AstroMosaic.html.
+
+Below is a description of the older standalone Python version.
+
 Python tool to calculate coordinates for astro image mosaics. When given 
 a mosaic center position in command line the program calculates positions
 for 3x3 tiles to create a mosaic image.
