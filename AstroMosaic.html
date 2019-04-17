@@ -278,6 +278,9 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.17<br>"+
+    "- Multiple target coordinates can be listed in target field separated by comma<br>"+
+    "- Coordinate Format HHMMSS DDMMSS is also accepted<br>"+
     "Version 1.16<br>"+
     "- Added visible/not visible line type to year visibility<br>"+
     "Version 1.15<br>"+
@@ -302,7 +305,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "M51";
+var startup_image = "Cone Nebula";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -334,6 +337,7 @@ var fov_y;
 var img_fov = 0.8;  // field of view for single image considering the overlap
 var img_size = 300;
 var image_target;
+var image_target_list = [];
 
 var UTCdate_ms;
 
@@ -473,38 +477,53 @@ document.getElementById("size_x").value = 3;
 document.getElementById("size_y").value = 3;
 
 // convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
-function get_target_ra_dec()
+function get_ra_dec(target)
 {
+    var radec = [];
+
     // assume format HH:MM:SS DEG:HH:MM
-    var radec = image_target.split(' ');
+    var radec = target.split(' ');
     
     var raparts = radec[0].split(':');
     var decparts = radec[1].split(':');
 
-    target_ra = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60 + parseFloat(raparts[2])) / 3600;
-    if (isNaN(target_ra)) {
+    radec[0] = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60 + parseFloat(raparts[2])) / 3600;
+    if (isNaN(radec[0])) {
         // assume seconds are missing
-        target_ra = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60) / 3600;
+        radec[0] = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60) / 3600;
     }
-    if (isNaN(target_ra)) {
-        return false;
+    if (isNaN(radec[0])) {
+        return [];
     }
     // convert from hours to degrees
-    target_ra = target_ra * hoursToDeg;
+    radec[0] = radec[0] * hoursToDeg;
     if (parseFloat(raparts[0]) < 0) {
-        target_ra = -target_ra;
+        radec[0] = -radec[0];
     }
-    target_dec = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60 + parseFloat(decparts[2])) / 3600;
-    if (isNaN(target_dec)) {
+    radec[1] = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60 + parseFloat(decparts[2])) / 3600;
+    if (isNaN(radec[1])) {
         // assume seconds are missing
-        target_dec = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60) / 3600;
+        radec[1] = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60) / 3600;
     }
-    if (isNaN(target_dec)) {
-        return false;
+    if (isNaN(radec[1])) {
+        return [];
     }
     if (parseFloat(decparts[0]) < 0) {
-        target_dec = -target_dec;
+        radec[1] = -radec[1];
     }
+    return radec;
+}
+
+// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
+function get_image_target_ra_dec()
+{
+    var radec = get_ra_dec(image_target);
+    if (radec.length != 2) {
+        return false;
+    }
+    target_ra = radec[0];
+    target_dec = radec[1];
+
     return true;
 }
 
@@ -845,9 +864,13 @@ function toDateString(num)
 
 function drawDayVisibilityandGrid() 
 {
-    console.log("drawDayVisibilityandGrid");
+    console.log("drawDayVisibilityandGrid, image_target_list.length", image_target_list.length);
 
-    ViewGrid();
+    if (image_target_list.length > 1) {
+        ViewGridFromList(image_target_list);
+    } else {
+        ViewGrid();
+    }
 
     var data = new google.visualization.DataTable();
     // get midday in UTC time in ms
@@ -943,7 +966,7 @@ function drawDayVisibilityandGrid()
                     softalt,
                     hardalt,
                     moonalt];
-        console.log("row", row);
+        //console.log("row", row);
         rowdata[rowdata.length] = row;
     }
 
@@ -1246,10 +1269,23 @@ function decimal_to_mmss(v)
     return ret;
 }
 
+// split [-]XXYYZZ to [-]XX:YY:ZZ
+function split_coord(coord)
+{
+        if (coord.length == 7) {
+            return coord.substring(0, 1) + split_coord(coord.substring(1));
+        } else {
+            return coord.substring(0, 2) + ':' +
+                   coord.substring(2, 4) + ':' +
+                   coord.substring(4); 
+        }
+}
+
 // Reformat coordinates to a format HH:MM:SS DD:MM:SS
 // Input can be: 
 // HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
 // HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
+// HHMMSS DDMMSS
 // HH.dec DD.dec
 function reformat_coordinates(coord)
 {
@@ -1265,11 +1301,17 @@ function reformat_coordinates(coord)
     console.log('reformat_coordinates, numbers.length=', numbers.length);
     if (numbers.length == 2) {
         var ra = numbers[0];
+        var dec = numbers[1];
         if (ra.split(':').length == 1) {
-            // assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS
-            var dec = numbers[1];
-            coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
-            console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
+            if (ra.indexOf('.') == -1 && dec.indexOf('.') == -1) {
+                // no dots, assume HHMMSS DDMMSS
+                coord = split_coord(ra) + ' ' + split_coord(dec);
+                console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
+            } else {
+                // assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS
+                coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
+                console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
+            }
         } else {
             // assume already correct format HH:MM:SS DD:MM:SS
             console.log('reformat_coordinates, length 2, assume correct format HH:MM:SS DD:MM:SS', coord);
@@ -1400,15 +1442,23 @@ function ViewImage()
 
     image_target = document.getElementById("target").value;
     image_target = trim_spaces(image_target);
-    console.log('target=', image_target);
+    console.log('image_target=', image_target);
+    image_target_list = [];
 
     showWiki();
 
     var c = image_target.substr(0,1);
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-        image_target = reformat_coordinates(image_target);
+        console.log('image_target is number');
+        image_target_list = image_target.split(',');
+        for (var i = 0; i < image_target_list.length; i++) {
+            image_target_list[i] = reformat_coordinates(image_target_list[i]);
+        }
+        console.log('image_target_list', image_target_list);
+        image_target = image_target_list[0];
         ViewImageByType();
     } else {
+        console.log('image_target is name');
         // try to resolve target as a name
         ViewImageByName();
     }
@@ -1417,7 +1467,7 @@ function ViewImage()
 function ViewImageByType()
 {
     console.log('ViewImageByType');
-    if (!get_target_ra_dec()) {
+    if (!get_image_target_ra_dec()) {
         document.getElementById("error_text").innerHTML = "Failed to parse target RA/DEC";
         return;
     }
@@ -1580,12 +1630,70 @@ function ViewGrid()
         document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
     }
     if (version_text) {
-        // use wiki oanel to show version info
+        // use wiki panel to show version info
         document.getElementById(wiki_panel).style.height = "300px";
         document.getElementById(wiki_panel).style.width = wiki_panel_width;
         document.getElementById(wiki_panel).innerHTML = version_text;
         // show only once, next time it is not shown
         version_text = null;    
+    }
+}
+
+function ViewGridFromList(coordinates)
+{
+    console.log('ViewGridFromList');
+
+    document.getElementById(image_panel).style.height = "700px";
+    document.getElementById(image_panel).style.width = "700px";
+
+    var grid_size_x = coordinates.length;
+    var grid_size_y = coordinates.length;
+    size_x = grid_size_x / 2 - 0.5;
+    size_y = grid_size_y / 2 - 0.5;
+
+    // Show image and get coordinates from there to
+    // calculate grid boxes.
+    var aladin_fov;
+    if (grid_size_x > grid_size_y) {
+        aladin_fov = (grid_size_x+0.2)*fov_x;
+    } else {
+        aladin_fov = (grid_size_y+0.2)*fov_x;
+    }
+    var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:coordinates[0],
+                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                           showLayersControl:false, showGotoControl:false, 
+                           showControl: false, cooFrame: "J2000", showFrame: false});
+    var radec = aladin.getRaDec();
+
+    console.log("center RaDec = ", radec);
+
+    for (var i = 0; i < coordinates.length; i++) {
+        radec = get_ra_dec(coordinates[i]);
+        var col_ra = radec[0];
+        var row_dec = radec[1];
+
+        console.log("panel "+i+" ra/dec=", col_ra, "/", row_dec);
+
+        // calculate corners
+        var row_dec1 = row_dec + fov_y/2;
+        var row_dec2 = row_dec - fov_y/2;
+        var col_ra1 = col_ra;
+        var col_ra2 = col_ra;
+        var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+        var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+
+        var panel = [
+            [col_ra1-col_ra1_delta, row_dec1], 
+            [col_ra1+col_ra1_delta, row_dec1], 
+            [col_ra2+col_ra2_delta, row_dec2], 
+            [col_ra2-col_ra2_delta, row_dec2], 
+            [col_ra1-col_ra1_delta, row_dec1]
+        ];
+
+        var line_color = '#ee2345';
+        var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+        aladin.addOverlay(overlay);
+        overlay.add(A.polyline(panel));
     }
 }
 
@@ -2608,7 +2716,7 @@ function showWiki()
     var wiki_target;
     var c = image_target.substr(0,1);
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-        // numeric target, check if we haveslooh target selected
+        // numeric target, check if we have slooh target selected
         console.log("showWiki, numeric, try slooh500");
         if (slooh500_index != null) {
             var item;
