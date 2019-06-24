@@ -18,6 +18,10 @@ p {
     margin: 0px;
     padding: 0px;
 }
+.footer {
+  padding: 10px;
+  background: whitesmoke;
+}
 </style>
     <title>AstroMosaic</title>
     <meta charset = "UTF-8" />
@@ -269,15 +273,20 @@ p {
 
 <p id="status_text"></p>
 
-<footer>
+<div class="footer">
     <p>Author: Jarmo Ruuth. Send feedback to: <a href="mailto:astromosaicxyz@gmail.com">
         astromosaicxyz@gmail.com</a></p>
-</footer>
+    <p>Check also my other Slooh tools at 
+        <a href="https://ruuth.xyz/SloohResources.html">https://ruuth.xyz/SloohResources.html</a>
+    </p>
+</div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.18<br>"+
+    "- Added link to my other Slooh tools at https://ruuth.xyz/SloohResources.html<br>"+
     "Version 1.17<br>"+
     "- Multiple target coordinates can be listed in target field separated by comma<br>"+
     "- Coordinate Format HHMMSS DDMMSS is also accepted<br>"+
@@ -305,7 +314,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "Cone Nebula";
+var startup_image = "NGC 6960";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
