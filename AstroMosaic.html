@@ -6,18 +6,39 @@
 <link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+
+.header {
+  padding: 20px;
+  background: white;
+}
+
+.flex-container-top {
+  display: flex;
+  flex-direction: row;
+  background: white;
+}
+
+.flex-container-top > div {
+  margin: 2px;
+  padding: 2px;
+}
+
 .flex-container {
   display: flex;
   flex-direction: row;
+  background: white;
 }
+
 .flex-container > div {
   margin: 2px;
   padding: 2px;
 }
+
 p {
     margin: 0px;
     padding: 0px;
 }
+
 .footer {
   padding: 10px;
   background: whitesmoke;
@@ -31,9 +52,11 @@ p {
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
 
-<h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
+<div class="header">
+        <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
+</div>
 
-<div id="firstDiv" class="flex-container">
+<div id="firstDiv" class="flex-container-top">
     <div>
         <form action="javascript:ViewTarget()">
             Target:<br>
@@ -325,6 +348,8 @@ var yearvisibility_panel = "aladin-lite-div-20";
 var yearvisibility_panel_text = "panel-text-20";
 var wiki_panel_width = "500px";
 var wiki_frame_width = 500;
+var status_text = "error_text";
+var error_text = "error_text";
 
 if (screen.height > screen.width) {
     // screen is taller than it is wide
@@ -1193,7 +1218,7 @@ function find_coordinates(str)
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
-    document.getElementById("status_text").innerHTML = "RA/DEC " + image_target;
+    document.getElementById(status_text).innerHTML = "RA/DEC " + image_target;
 
     resolved_coordinates = image_target;
 
@@ -1207,7 +1232,7 @@ function ViewImageByName()
 
     if (resolved_name == image_target && resolved_coordinates != null) {
         // same name already resolved, do not resolve again
-        document.getElementById("status_text").innerHTML = "RA/DEC " + resolved_coordinates;
+        document.getElementById(status_text).innerHTML = "RA/DEC " + resolved_coordinates;
         image_target = resolved_coordinates;
         ViewImageByType();
         return;
@@ -1230,7 +1255,7 @@ function ViewImageByName()
             if (find_coordinates(xmlhttp.responseText)) {
                 ViewImageByType();
             } else {
-                document.getElementById("error_text").innerHTML = "Failed to resolve name " + image_target;
+                document.getElementById(error_text).innerHTML = "Failed to resolve name " + image_target;
             }
         }
     }
@@ -1356,8 +1381,8 @@ function ViewImage()
 {
     console.log('ViewImage');
 
-    document.getElementById("status_text").innerHTML = "";
-    document.getElementById("error_text").innerHTML = "";
+    document.getElementById(status_text).innerHTML = "";
+    document.getElementById(error_text).innerHTML = "";
 
     clearOldImage();
 
@@ -1365,7 +1390,7 @@ function ViewImage()
     var view_date = document.getElementById("view_date").value;
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById("error_text").innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
+        document.getElementById(error_text).innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
         return;
     }
     checkFilterChanged();
@@ -1477,7 +1502,7 @@ function ViewImageByType()
 {
     console.log('ViewImageByType');
     if (!get_image_target_ra_dec()) {
-        document.getElementById("error_text").innerHTML = "Failed to parse target RA/DEC";
+        document.getElementById(error_text).innerHTML = "Failed to parse target RA/DEC";
         return;
     }
     if (document.getElementById("grid_type").value == 'panels') {
@@ -1717,11 +1742,11 @@ function ViewPanels()
         return;
     }
     if (grid_size_x > 5) {
-        document.getElementById("error_text").innerHTML = "Max size in panels view is 5x5";
+        document.getElementById(error_text).innerHTML = "Max size in panels view is 5x5";
         grid_size_x = 5;
     }
     if (grid_size_y > 5) {
-        document.getElementById("error_text").innerHTML = "Max size in panels view is 5x5";
+        document.getElementById(error_text).innerHTML = "Max size in panels view is 5x5";
         grid_size_y = 5;
     }
 
@@ -2573,12 +2598,12 @@ function checkFilterTimeChanged()
     } else {
         var hhmm = newvalue.split(':');
         if (hhmm.length != 2) {
-            document.getElementById("error_text").innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(error_text).innerHTML = "Invalid ISO format time (HH:MM)";
             return;
         }
         UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
         if (UTCtime_ms == null) {
-            document.getElementById("error_text").innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(error_text).innerHTML = "Invalid ISO format time (HH:MM)";
             return;
         }
         console.log("checkFilterTimeChanged, time ", UTCtime_ms);
@@ -2658,7 +2683,7 @@ function getWikiContent(pageid)
                     x.innerHTML = pagecontent;
                     document.getElementById(wiki_panel).appendChild(x);
                 } else {
-                    document.getElementById("status_text").innerHTML = "Failed to get Wiki page content from json";
+                    document.getElementById(status_text).innerHTML = "Failed to get Wiki page content from json";
                 }
             }
         }
@@ -2760,7 +2785,7 @@ function showWiki()
                 getWikiContent(pageid);
             } else {
                 console.log("Failed to get Wiki page id from json");
-                document.getElementById("status_text").innerHTML = "Failed to get Wiki page id from json";
+                document.getElementById(status_text).innerHTML = "Failed to get Wiki page id from json";
             }
         }
     }

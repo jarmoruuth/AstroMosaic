@@ -1,11 +1,22 @@
 # AstroMosaic
 
 Tools to calculate coordinates for astro image mosaics using Slooh
-telescopes. There are both HTML and Python versions.
+telescopes. There are both HTML and Python versions. Python version is 
+old and not maintaioed any more.
 
-HTML version AstroMosaic.html is a more advanced version that includes 
-object visibility during the night, moon position, Slooh 500 list, Wiki
-interface to show target information and mosaics up to 10x10.
+HTML version AstroMosaic.html includes 
+- Visual view of target using Aladin Sky Atlas
+- Target name resolution using Sesame interface
+- Field of View (FoV) view of target with a chosen Slooh telescope
+- Optionally calculate mosaic coordinates up to 10x10 size
+- Object visibility during the night
+- Moon altitude and distance from the target
+- Object and moon altitude over next 12 months
+- Slooh 500 list for selecting the target
+- Filtering of Slooh 500 list based on altitude, time and distance from the moon
+- Wiki interface to show target information
+- Multiple target coordinate formats are supported, incuding a comma separated list
+  of coordinates
 
 AstroMosaic.html can be found at https://www.ruuth.xyz/AstroMosaic.html.
 
