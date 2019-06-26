@@ -2,6 +2,7 @@
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
+<link rel="icon" type="image/png" sizes="16x16" href="AM-favicon.png">
 <!-- include Aladin Lite CSS file in the head section of your page -->
 <link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
 
 .header {
   padding: 20px;
-  background: white;
+  margin: 5px;
+  background: lightgray;
 }
 
 .flex-container-top {
@@ -19,6 +21,17 @@
 }
 
 .flex-container-top > div {
+  margin: 2px;
+  padding: 2px;
+}
+
+.flex-container-top2 {
+  display: flex;
+  flex-direction: row;
+  background: white;
+}
+
+.flex-container-top2 > div {
   margin: 2px;
   padding: 2px;
 }
@@ -116,7 +129,7 @@ p {
     </div>
 </div>
 
-<div id="secondDiv" class="flex-container">
+<div id="secondDiv" class="flex-container-top2">
     <div><p id="slooh500txt">Slooh 500:</p></div>
     <div id ="slooh500Div">
     </div>
@@ -159,7 +172,7 @@ p {
 </div>
 
 <div class="flex-container">
-    <div>
+    <div id="target-image-div">
     <div id="aladin-lite-div-00" style="width:300px;height:300px;"></div>
     <br>
     <p id="panel-text-00"></p>
@@ -186,7 +199,7 @@ p {
     </div>
 </div>
 <div class="flex-container">
-    <div>
+    <div  id="day-visibility-div">
     <div id="aladin-lite-div-10" style="width:300px;height:300px;"></div>
     <br>
     <p id="panel-text-10"></p>
@@ -213,7 +226,7 @@ p {
     </div>
 </div>
 <div class="flex-container">
-    <div>
+    <div id="year-visibility-div">
     <div id="aladin-lite-div-20" style="width:300px;height:300px;"></div>
     <br>
     <p id="panel-text-20"></p>
@@ -293,8 +306,6 @@ p {
     <p id="panel-text-44"></p>
     </div>
 </div>
-
-<p id="status_text"></p>
 
 <div class="footer">
     <p>Author: Jarmo Ruuth. Send feedback to: <a href="mailto:astromosaicxyz@gmail.com">
@@ -896,6 +907,27 @@ function toDateString(num)
     }
 }
 
+function setGridBackgroundStyle(panel)
+{
+    document.getElementById(panel).style.background = "white";
+    document.getElementById(panel).style.padding = "10px";
+    document.getElementById(panel).style.margin = "10px";
+}
+
+function setHiddenBackgroundStyle(panel)
+{
+    document.getElementById(panel).style.background = "white";
+    document.getElementById(panel).style.padding = "0px";
+    document.getElementById(panel).style.margin = "0px";
+}
+
+function setPanelBackgroundStyle(panel)
+{
+    document.getElementById(panel).style.background = "white";
+    document.getElementById(panel).style.padding = "2px";
+    document.getElementById(panel).style.margin = "2px";
+}
+
 function drawDayVisibilityandGrid() 
 {
     console.log("drawDayVisibilityandGrid, image_target_list.length", image_target_list.length);
@@ -1054,6 +1086,7 @@ function drawDayVisibilityandGrid()
 
     document.getElementById(dayvisibility_panel).style.height = "400px";
     document.getElementById(dayvisibility_panel).style.width = "700px";
+    setGridBackgroundStyle("day-visibility-div");
 
     // material var chart = new google.charts.Line(document.getElementById(dayvisibility_panel));
     var chart = new google.visualization.LineChart(document.getElementById(dayvisibility_panel));
@@ -1162,6 +1195,7 @@ function drawYearVisibility()
 
     document.getElementById(yearvisibility_panel).style.height = "400px";
     document.getElementById(yearvisibility_panel).style.width = "700px";
+    setGridBackgroundStyle("year-visibility-div");
 
     var chart = new google.visualization.LineChart(document.getElementById(yearvisibility_panel));
 
@@ -1532,6 +1566,7 @@ function clearOldImage()
             document.getElementById(aladinpanel).style.height = "0px";
             document.getElementById(aladinpanel).style.width = "0px";
             document.getElementById("panel-text-"+panelid).innerHTML = "";
+            setHiddenBackgroundStyle(aladinpanel);
         }
     }
 }
@@ -1542,6 +1577,7 @@ function ViewGrid()
 
     document.getElementById(image_panel).style.height = "700px";
     document.getElementById(image_panel).style.width = "700px";
+    setGridBackgroundStyle("target-image-div");
 
     grid_type = document.getElementById("grid_type").value;
 
@@ -1679,6 +1715,7 @@ function ViewGridFromList(coordinates)
 
     document.getElementById(image_panel).style.height = "700px";
     document.getElementById(image_panel).style.width = "700px";
+    setGridBackgroundStyle("target-image-div");
 
     var grid_size_x = coordinates.length;
     var grid_size_y = coordinates.length;
@@ -1761,7 +1798,11 @@ function ViewPanels()
             var aladinpanel = "aladin-lite-div-"+panelid;
             document.getElementById(aladinpanel).style.height = "300px";
             document.getElementById(aladinpanel).style.width = "300px";
+            setPanelBackgroundStyle(aladinpanel);
         }
+        setPanelBackgroundStyle("day-visibility-div");
+        setPanelBackgroundStyle("year-visibility-div");
+        setPanelBackgroundStyle("target-image-div");
     }
 
     size_x = grid_size_x / 2 - 0.5;
