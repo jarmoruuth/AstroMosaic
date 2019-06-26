@@ -8,15 +8,15 @@ HTML version AstroMosaic.html includes
 - Visual view of target using Aladin Sky Atlas
 - Target name resolution using Sesame interface
 - Field of View (FoV) view of target with a chosen Slooh telescope
-- Optionally calculate mosaic coordinates up to 10x10 size
-- Object visibility during the night
+- View and calculate mosaic coordinates up to 10x10 size
+- Target visibility during the night
 - Moon altitude and distance from the target
-- Object and moon altitude over next 12 months
+- Target and moon altitude over next 12 months
 - Slooh 500 list for selecting the target
 - Filtering of Slooh 500 list based on altitude, time and distance from the moon
-- Wiki interface to show target information
 - Multiple target coordinate formats are supported, incuding a comma separated list
-  of coordinates
+  for multiple targets
+- Wiki interface to show target information
 
 AstroMosaic.html can be found at https://www.ruuth.xyz/AstroMosaic.html.
 
