@@ -14,8 +14,11 @@ HTML version AstroMosaic.html includes
 - Target and moon altitude over next 12 months
 - Slooh 500 list for selecting the target
 - Filtering of Slooh 500 list based on altitude, time and distance from the moon
-- Multiple target coordinate formats are supported, incuding a comma separated list
-  for multiple targets
+- Multiple target coordinate formats are supported:
+    HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
+    HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
+    HHMMSS DDMMSS, HH.dec DD.dec
+- A comma separated list can be given to show multiple targets
 - Wiki interface to show target information
 
 AstroMosaic.html can be found at https://www.ruuth.xyz/AstroMosaic.html.
