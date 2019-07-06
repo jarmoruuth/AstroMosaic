@@ -10,7 +10,7 @@ from glob import iglob
 from astropy.io import fits
 
 if len(sys.argv) < 2:
-    print ("Usage: python fitspy.py {list|move|header|coordinates} [file]")
+    print ("Usage: python FitsPy.py {list|move|header|coordinates} [file]")
     print ("  list - list some interesting FITS header info")
     print ("  move - move files to XRESxYRES directory, directory is created automatically")
     print ("  header - print all FITS heeader values")
