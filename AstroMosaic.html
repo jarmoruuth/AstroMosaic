@@ -14,6 +14,13 @@
   background: lightgray;
 }
 
+.banner {
+  padding: 5px;
+  margin: 5px;
+  background: whitesmoke;
+  color: darkred;
+}
+
 .flex-container-top {
   display: flex;
   flex-direction: row;
@@ -68,7 +75,10 @@ p {
 <div class="header">
         <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
 </div>
-
+<div class="banner">
+        <p>Check new Astro Image Tools discussion forums at <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a></p> 
+</div>
+    
 <div id="firstDiv" class="flex-container-top">
     <div>
         <form action="javascript:ViewTarget()">
@@ -308,10 +318,10 @@ p {
 </div>
 
 <div class="footer">
-    <p>Author: Jarmo Ruuth. Send feedback to: <a href="mailto:astromosaicxyz@gmail.com">
-        astromosaicxyz@gmail.com</a></p>
-    <p>Check also my other Slooh tools at 
-        <a href="https://ruuth.xyz/SloohResources.html">https://ruuth.xyz/SloohResources.html</a>
+    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a></p>
+
+    <p>Check also my other Astro Image Tools at 
+        <a href="https://ruuth.xyz/AstroImageTools.html">https://ruuth.xyz/AstroImageTools.html</a>
     </p>
 </div>
 
@@ -320,7 +330,7 @@ p {
 
 var version_text = 
     "Version 1.18<br>"+
-    "- Added link to my other Slooh tools at https://ruuth.xyz/SloohResources.html<br>"+
+    "- Added link to my other Astro Image Tools at https://ruuth.xyz/AstroImageTools.html<br>"+
     "Version 1.17<br>"+
     "- Multiple target coordinates can be listed in target field separated by comma<br>"+
     "- Coordinate Format HHMMSS DDMMSS is also accepted<br>"+
