@@ -826,16 +826,19 @@ function getFilterTime(filter_name)
 
 function getLocation() {
     if (navigator.geolocation) {
+        console.log("call navigator.geolocation.getCurrentPosition");
         navigator.geolocation.getCurrentPosition(showPosition);
     } else {
+        console.log("Geolocation is not supported by this browser");
         document.getElementById(error_text).innerHTML = "Geolocation is not supported by this browser.";
     }
 }
 
 function showPosition(position) 
 {
-    document.getElementById("lat").innerHTML = position.coords.latitude;
-    document.getElementById("lng").innerHTML = position.coords.longitude; 
+    console.log("showPosition", position.coords.latitude.toString(), position.coords.longitude.toString());
+    document.getElementById("lat").value = position.coords.latitude.toString();
+    document.getElementById("lng").value = position.coords.longitude.toString(); 
 }
 
 showMoonRiseAndSetDates();
