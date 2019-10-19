@@ -94,6 +94,7 @@ p {
                 <option value="T4">T4</option>
                 <option value="C1">C1</option>
                 <option value="C1UWF">C1 UWF</option>
+                <option value="C2">C2</option>
             </select>
         </form>
     </div>
@@ -322,6 +323,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.19<br>"+
+    "- Added C2 telescope<br>"+
     "Version 1.18<br>"+
     "- Added link to my other Astro Image Tools at https://ruuth.xyz/AstroImageTools.html<br>"+
     "Version 1.17<br>"+
@@ -351,7 +354,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "IC 1805";
+var startup_image = "NGC 1365";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -1462,6 +1465,7 @@ function ViewImage()
     // T4 FOV 0° 15' 57" x 0° 12' 03"
     // C1 FOV 0° 31' 18" x 0° 20' 51"
     // C1 ultra wide field FOV 1° 21' 49" x 1° 00' 22"
+    // C2 wide field FOV 65'
 
     horizonSoft = teideSoft;
 
@@ -1492,6 +1496,10 @@ function ViewImage()
     } else if (telescope == "C1UWF") {
         fov_x = 1+(21*60.0+49)/3600.0; 
         fov_y = 1+22/3600.0;
+        telescope_location = 'chile';
+    } else if (telescope == "C2") {
+        fov_x = 65.0*60.0/3600.0;
+        fov_y = 65.0*60.0/3600.0;
         telescope_location = 'chile';
     }
 
