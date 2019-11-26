@@ -9,9 +9,19 @@
 <style>
 
 .header {
-  padding: 20px;
-  margin: 5px;
   background: lightgray;
+}
+
+.h2text {
+  padding: 20px;
+  text-align: center;
+}
+
+.homebutton {
+    float:left;
+    padding: 5px;
+    margin: 5px;
+    background:grey;
 }
 
 .banner {
@@ -63,6 +73,7 @@ p {
   padding: 10px;
   background: whitesmoke;
 }
+
 </style>
     <title>AstroMosaic</title>
     <meta charset = "UTF-8" />
@@ -73,7 +84,14 @@ p {
 <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
 
 <div class="header">
-        <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
+        <div class="homebutton">
+            <a href="https://ruuth.xyz/AstroImageTools.html">
+                <img src="AMT-favicon.png" alt="Home" >
+            </a>        
+        </div>
+        <div class="h2text">
+            <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
+        </div>
 </div>
     
 <div id="firstDiv" class="flex-container-top">
