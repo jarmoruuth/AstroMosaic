@@ -341,6 +341,10 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.20<br>"+
+    "- Added Slooh 500 target name layer, enabled by default<br>"+
+    "- Added map view control button<br>"+
+    "- Added full screen control button<br>"+
     "Version 1.19<br>"+
     "- Added C2 telescope<br>"+
     "Version 1.18<br>"+
@@ -372,7 +376,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "NGC 1365";
+var startup_image = "Horsehead Nebula";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -460,6 +464,7 @@ var chile_location_alt = 1450;
 
 var slooh500Teide = null;
 var slooh500Chile = null;
+var catSlooh500 = null;
 
 var slooh500select = null;
 var slooh500text = null;
@@ -1638,9 +1643,11 @@ function ViewGrid()
         aladin_fov = 1.2*fov_x;
     }
     var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
-                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                           showLayersControl:false, showGotoControl:false, 
+                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
+                           showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
+    aladin.addCatalog(catSlooh500);
+
     var radec = aladin.getRaDec();
 
     console.log("center RaDec = ", radec);
@@ -1760,9 +1767,10 @@ function ViewGridFromList(coordinates)
         aladin_fov = (grid_size_y+0.2)*fov_x;
     }
     var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:coordinates[0],
-                           showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                           showLayersControl:false, showGotoControl:false, 
+                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
+                           showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
+    aladin.addCatalog(catSlooh500);
     var radec = aladin.getRaDec();
 
     console.log("center RaDec = ", radec);
@@ -1890,6 +1898,17 @@ function ViewPanels()
         row = row - 1;
         row_number = row_number + 1;
         y = y + 1;
+    }
+}
+
+function addAladinCatalog(cat, list)
+{
+    for (var i = 0; i < list.length; i++) {
+        var radec = get_ra_dec(list[i][4]);
+        var dispname = list[i][2] + ' ' + list[i][3];
+        cat.addSources(A.source(radec[0], radec[1], {name: dispname}));
+        list[i][5] = radec[0];
+        list[i][6] = radec[1];
     }
 }
 
@@ -2275,7 +2294,7 @@ slooh500Chile = [
 [ 179 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
 [ 180 , "EMISSION NEBULAE" , "Cat's Paw Nebula" , "NGC 6334" , "17:20:50.9 -36:06:54" , 260.21 , -35.39 ],
 [ 181 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
-[ 182 , "EMISSION NEBULAE" , "De Mairan's Nebula", "M43", , "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
+[ 182 , "EMISSION NEBULAE" , "De Mairan's Nebula", "M43", "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
 [ 183 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
 [ 184 , "EMISSION NEBULAE" , "Emission Nebula" , "NGC 3199" , "10:16:32.80 -57:56:02.0" , 154.14 , -56.03 ],
 [ 185 , "EMISSION NEBULAE" , "Eta Carinae Nebula" , "NGC 3372" , "10:44:19.00 -59:53:21.0" , 161.08 , -58.00 ],
@@ -2414,6 +2433,12 @@ slooh500Chile = [
 [ 318 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M85" , "12:25:24.05 +18:11:27.8" , 186.35 , 18.30 ],
 [ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
 ];
+
+    if (catSlooh500 == null) {
+        catSlooh500 = A.catalog({name: 'Slooh 500', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
+        addAladinCatalog(catSlooh500, slooh500Teide);
+        addAladinCatalog(catSlooh500, slooh500Chile);
+    }
 }
 
 // create select object
