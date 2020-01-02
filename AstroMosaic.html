@@ -113,6 +113,7 @@ p {
                 <option value="C1">C1</option>
                 <option value="C1UWF">C1 UWF</option>
                 <option value="C2">C2</option>
+                <option value="C2FR">C2FR</option>
             </select>
         </form>
     </div>
@@ -341,6 +342,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.21<br>"+
+    "- Added C2 and C2FR, where FR is the scope with Focal Reducer<br>"+
     "Version 1.20<br>"+
     "- Added Slooh 500 target name layer, enabled by default<br>"+
     "- Added map view control button<br>"+
@@ -1521,6 +1524,12 @@ function ViewImage()
         fov_y = 1+22/3600.0;
         telescope_location = 'chile';
     } else if (telescope == "C2") {
+        // No focal reducer
+        fov_x = 43.0*60.0/3600.0;
+        fov_y = 43.0*60.0/3600.0;
+        telescope_location = 'chile';
+    } else if (telescope == "C2FR") {
+        // With focal reducer
         fov_x = 65.0*60.0/3600.0;
         fov_y = 65.0*60.0/3600.0;
         telescope_location = 'chile';
