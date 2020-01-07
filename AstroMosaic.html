@@ -467,7 +467,8 @@ var chile_location_alt = 1450;
 
 var slooh500Teide = null;
 var slooh500Chile = null;
-var catSlooh500 = null;
+var catSlooh500Teide = null;
+var catSlooh500Chile = null;
 
 var slooh500select = null;
 var slooh500text = null;
@@ -1655,7 +1656,11 @@ function ViewGrid()
                            showReticle:false, showZoomControl:false, showFullscreenControl:true, 
                            showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
-    aladin.addCatalog(catSlooh500);
+    if (telescope_location == 'teide') {
+        aladin.addCatalog(catSlooh500Teide);
+    } else {
+        aladin.addCatalog(catSlooh500Chile);
+    }
 
     var radec = aladin.getRaDec();
 
@@ -1779,7 +1784,11 @@ function ViewGridFromList(coordinates)
                            showReticle:false, showZoomControl:false, showFullscreenControl:true, 
                            showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
-    aladin.addCatalog(catSlooh500);
+    if (telescope_location == 'teide') {
+        aladin.addCatalog(catSlooh500Teide);
+    } else {
+        aladin.addCatalog(catSlooh500Chile);
+    }
     var radec = aladin.getRaDec();
 
     console.log("center RaDec = ", radec);
@@ -2443,10 +2452,11 @@ slooh500Chile = [
 [ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
 ];
 
-    if (catSlooh500 == null) {
-        catSlooh500 = A.catalog({name: 'Slooh 500', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
-        addAladinCatalog(catSlooh500, slooh500Teide);
-        addAladinCatalog(catSlooh500, slooh500Chile);
+    if (catSlooh500Teide == null) {
+        catSlooh500Teide = A.catalog({name: 'Slooh 500 Teide', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
+        catSlooh500Chile = A.catalog({name: 'Slooh 500 Chile', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
+        addAladinCatalog(catSlooh500Teide, slooh500Teide);
+        addAladinCatalog(catSlooh500Chile, slooh500Chile);
     }
 }
 
