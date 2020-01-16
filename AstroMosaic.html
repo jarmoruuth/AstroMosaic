@@ -335,13 +335,18 @@ p {
 </div>
 
 <div class="footer">
-    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a></p>
+    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a>
+        <br><a href="https://ruuth.xyz/AstroMosaicInfo.html#credits">Credits</a></small></p>
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
 var version_text = 
+    "<br>"+
+    "Version 1.22<br>"+
+    "- NGC and IC catalog layer added, not enabled by default<br>"+
+    "- Object markers are clickable and show a short info or Wiki page<br>"+
     "Version 1.21<br>"+
     "- Added C2 and C2FR, where FR is the scope with Focal Reducer<br>"+
     "Version 1.20<br>"+
@@ -379,7 +384,7 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "Horsehead Nebula";
+var startup_image = "Virgo Cluster";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -392,12 +397,14 @@ var wiki_panel_width = "500px";
 var wiki_frame_width = 500;
 var status_text = "error_text";
 var error_text = "error_text";
+var alt_wikitext = null;
 
 if (screen.height > screen.width) {
     // screen is taller than it is wide
     wiki_panel = "aladin-lite-div-30";
     wiki_panel_width = "700px";
     wiki_frame_width = 700;
+    version_text = null;
 }
 
 // size means number of panels on each side
@@ -438,6 +445,7 @@ if (typeof URLSearchParams === "function") {
 }
 
 var xmlhttp;
+var NGCxmlhttp;
 var resolved_name = null;
 var resolved_coordinates = null;
 
@@ -469,6 +477,7 @@ var slooh500Teide = null;
 var slooh500Chile = null;
 var catSlooh500Teide = null;
 var catSlooh500Chile = null;
+var catNGC = null;
 
 var slooh500select = null;
 var slooh500text = null;
@@ -1615,6 +1624,87 @@ function clearOldImage()
     }
 }
 
+function OpenNGC_type_to_typename(type)
+{
+    // Map OpenNSC types to a more descriptive text
+    if (type == '*')   return('Star');
+    if (type == '**')   return('Double star');
+    if (type == '*Ass')   return('Association of stars');
+    if (type == 'OCl')   return('Open Cluster');
+    if (type == 'GCl')   return('Globular Cluster');
+    if (type == 'Cl+N')   return('Star cluster + Nebula');
+    if (type == 'G')   return('Galaxy');
+    if (type == 'GPair')   return('Galaxy Pair');
+    if (type == 'GTrpl')   return('Galaxy Triplet');
+    if (type == 'GGroup')   return('Group of galaxies');
+    if (type == 'PN')   return('Planetary Nebula');
+    if (type == 'HII')   return('HII Ionized region');
+    if (type == 'DrkN')   return('Dark Nebula');
+    if (type == 'EmN')   return('Emission Nebula');
+    if (type == 'Neb')   return('Nebula');
+    if (type == 'RfN')   return('Reflection Nebula');
+    if (type == 'SNR')   return('Supernova remnant');
+    if (type == 'Nova')   return('Nova star');
+    if (type == 'NonEx')   return('Nonexistent object');
+    if (type == 'Dup')   return('Duplicated object (see NGC or IC columns to find the master object)');
+    if (type == 'Other')   return('Other classification (see object notes)');
+    
+    // Slooh type 
+    return(type);
+}
+
+function addTabRow(tab, v1, v2)
+{
+    return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
+}
+
+function initAladin(aladin_fov, aladin_target)
+{
+    var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
+                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
+                           showLayersControl:true, showGotoControl:false, 
+                           showControl: false, cooFrame: "J2000", showFrame: false});
+    if (telescope_location == 'teide') {
+        aladin.addCatalog(catSlooh500Teide);
+    } else {
+        aladin.addCatalog(catSlooh500Chile);
+    }
+    aladin.addCatalog(catNGC);
+
+    // define function triggered when an object is clicked
+    var objClicked;
+    aladin.on('objectClicked', function(object) {
+        if (object) {
+            objClicked = object;
+            object.select();
+            var tab = "<BR><TABLE>";
+            if (object.data.info.list == 'S') {
+                // Slooh
+                tab = addTabRow(tab, "Name", object.data.name);
+                tab = addTabRow(tab, "Type", object.data.info.type);
+                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+            } else {
+                // OpenNGC
+                tab = addTabRow(tab, "Name", object.data.name);
+                tab = addTabRow(tab, "Type", OpenNGC_type_to_typename(object.data.info.type));
+                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+                tab = addTabRow(tab, "Constellation", object.data.info.constellation);
+                tab = addTabRow(tab, "Magnitude", object.data.info.mag);
+                tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
+                tab = addTabRow(tab, "Notes", object.data.info.notes);
+            }
+            tab = tab + "</TABLE>";
+            console.log('aladin objectClicked', tab);
+            alt_wikitext = tab;
+            showWikiTarget(object.data.wikiname);
+            alt_wikitext = null;
+        } else {
+            console.log('aladin objectClicked, no object');
+        }
+    });
+
+    return aladin;
+}
 function ViewGrid()
 {
     console.log('ViewGrid');
@@ -1652,15 +1742,8 @@ function ViewGrid()
     } else {
         aladin_fov = 1.2*fov_x;
     }
-    var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:image_target,
-                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
-                           showLayersControl:true, showGotoControl:false, 
-                           showControl: false, cooFrame: "J2000", showFrame: false});
-    if (telescope_location == 'teide') {
-        aladin.addCatalog(catSlooh500Teide);
-    } else {
-        aladin.addCatalog(catSlooh500Chile);
-    }
+
+    var aladin = initAladin(aladin_fov, image_target);
 
     var radec = aladin.getRaDec();
 
@@ -1780,15 +1863,9 @@ function ViewGridFromList(coordinates)
     } else {
         aladin_fov = (grid_size_y+0.2)*fov_x;
     }
-    var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:coordinates[0],
-                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
-                           showLayersControl:true, showGotoControl:false, 
-                           showControl: false, cooFrame: "J2000", showFrame: false});
-    if (telescope_location == 'teide') {
-        aladin.addCatalog(catSlooh500Teide);
-    } else {
-        aladin.addCatalog(catSlooh500Chile);
-    }
+
+    var aladin = initAladin(aladin_fov, coordinates[0])
+
     var radec = aladin.getRaDec();
 
     console.log("center RaDec = ", radec);
@@ -1916,17 +1993,6 @@ function ViewPanels()
         row = row - 1;
         row_number = row_number + 1;
         y = y + 1;
-    }
-}
-
-function addAladinCatalog(cat, list)
-{
-    for (var i = 0; i < list.length; i++) {
-        var radec = get_ra_dec(list[i][4]);
-        var dispname = list[i][2] + ' ' + list[i][3];
-        cat.addSources(A.source(radec[0], radec[1], {name: dispname}));
-        list[i][5] = radec[0];
-        list[i][6] = radec[1];
     }
 }
 
@@ -2452,11 +2518,75 @@ slooh500Chile = [
 [ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
 ];
 
+    function addSloohToAladinCatalog(cat, list)
+    {
+        for (var i = 0; i < list.length; i++) {
+            var radec = get_ra_dec(list[i][4]);
+            var dispname = list[i][2] + ' ' + list[i][3];
+            cat.addSources(A.source(radec[0], radec[1], 
+                            { 
+                                name: dispname, 
+                                wikiname: list[i][3], 
+                                info: { 
+                                        list: 'S',
+                                        type: list[i][1],
+                                }
+                            } ));
+            list[i][5] = radec[0];
+            list[i][6] = radec[1];
+        }
+    }
+
+    function addOpenNGCToAladinCatalog(cat, list)
+    {
+        for (var i = 0; i < list.length; i++) {
+            var catname = list[i][0];
+            var extname = list[i][7];
+            if (extname != "") {
+                dispname = catname + ', ' + extname;
+            } else {
+                dispname = catname;
+            }
+
+            cat.addSources(A.source(list[i][1] * hoursToDeg, list[i][2], 
+                            {
+                                name: dispname, 
+                                wikiname: catname,
+                                info: { 
+                                        list: 'O',
+                                        type: list[i][3],
+                                        constellation: list[i][4],
+                                        mag: list[i][5],
+                                        distance: list[i][6],
+                                        notes: list[i][8]
+                                }
+                            } ));
+        }
+    }
+
     if (catSlooh500Teide == null) {
+        console.log("Init slooh500 catalogs");
         catSlooh500Teide = A.catalog({name: 'Slooh 500 Teide', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
         catSlooh500Chile = A.catalog({name: 'Slooh 500 Chile', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
-        addAladinCatalog(catSlooh500Teide, slooh500Teide);
-        addAladinCatalog(catSlooh500Chile, slooh500Chile);
+        addSloohToAladinCatalog(catSlooh500Teide, slooh500Teide);
+        addSloohToAladinCatalog(catSlooh500Chile, slooh500Chile);
+    }
+    if (catNGC == null) {
+        console.log("Init NGC catalog");
+        catNGC = A.catalog({name: 'NGC', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
+        catNGC.hide();
+
+        NGCxmlhttp = new XMLHttpRequest();
+        NGCxmlhttp.onreadystatechange = function()
+        {
+            if (NGCxmlhttp.readyState == 4 && NGCxmlhttp.status == 200) {
+                console.log("NGC catalog loaded", NGCxmlhttp.responseText.substr(30200, 30300));
+                var NGCobjects = JSON.parse(NGCxmlhttp.responseText);
+                addOpenNGCToAladinCatalog(catNGC, NGCobjects.data);
+            }
+        }
+        NGCxmlhttp.open("GET", "https://ruuth.xyz/OpenNGC.txt", true);
+        NGCxmlhttp.send();
     }
 }
 
@@ -2762,49 +2892,39 @@ function wikiReset()
     wikiIframe = null;
 }
 
+function noWikiAvailable()
+{
+    if (alt_wikitext != null) {
+        console.log("noWikiAvailable", alt_wikitext);
+
+        document.getElementById(wiki_panel).style.height = "300px";
+        document.getElementById(wiki_panel).style.width = wiki_panel_width;
+        document.getElementById(wiki_panel).innerHTML = alt_wikitext;
+
+        alt_wikitext = null;
+    }
+}
+
 function getWikiContent(pageid)
 {
     var url = "https://en.wikipedia.org/w/api.php?action=parse&origin=*&format=json&pageid=" + pageid;
 
     console.log("getWikiContent, pageid", pageid);
 
+    document.getElementById(wiki_panel).innerHTML = null;
     document.getElementById(wiki_panel).style.height = "700px";
     document.getElementById(wiki_panel).style.width = wiki_panel_width;
 
-    if (1) {
-        // use IFRAME and mobile wiki page
-        wikiReset();
+    // use IFRAME and mobile wiki page
+    wikiReset();
 
-        console.log("getWikiContent, create new IFRAME");
-        wikiIframe = document.createElement("IFRAME");
-        wikiIframe.width = wiki_frame_width;
-        wikiIframe.height = 700;
-        console.log("getWikiContent, set IFRAME src", "https://en.m.wikipedia.org/?curid="+pageid);
-        wikiIframe.setAttribute("src", "https://en.m.wikipedia.org/?curid="+pageid);
-        document.getElementById(wiki_panel).appendChild(wikiIframe);
-        return;
-    } else {
-        // load wiki html data
-        xmlhttp=new XMLHttpRequest();
-        xmlhttp.onreadystatechange=function()
-        {
-            if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                console.log('getWikiContent, get page content, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
-                var json = JSON.parse(xmlhttp.responseText);
-                var pagecontent = json.parse.text["*"];
-                if (pagecontent) {
-                    var x = document.createElement("P");
-                    x.innerHTML = pagecontent;
-                    document.getElementById(wiki_panel).appendChild(x);
-                } else {
-                    document.getElementById(status_text).innerHTML = "Failed to get Wiki page content from json";
-                }
-            }
-        }
-        console.log('getWikiContent, send HTTP GET(' + url + ')');
-        xmlhttp.open("GET", url, false);
-        xmlhttp.send(); 
-    }
+    console.log("getWikiContent, create new IFRAME");
+    wikiIframe = document.createElement("IFRAME");
+    wikiIframe.width = wiki_frame_width;
+    wikiIframe.height = 700;
+    console.log("getWikiContent, set IFRAME src", "https://en.m.wikipedia.org/?curid="+pageid);
+    wikiIframe.setAttribute("src", "https://en.m.wikipedia.org/?curid="+pageid);
+    document.getElementById(wiki_panel).appendChild(wikiIframe);
 }
 
 function charIsNumber(c)
@@ -2847,11 +2967,43 @@ function reformatTargetName(name)
     return newname;
 }
 
-function showWiki()
+function showWikiTarget(wiki_target)
 {
+    if (!document.getElementById("wikiCheckbox").checked) {
+        wikiReset();
+        noWikiAvailable();
+        return;
+    }
     var url = "https://en.wikipedia.org/w/api.php?action=query&redirects&" +
               "format=json&formatversion=2&prop=revisions&origin=*&titles=";
 
+    wiki_target = reformatTargetName(wiki_target);
+    console.log("showWikiTarget", wiki_target);
+
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.onreadystatechange=function()
+    {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+            console.log('showWiki, get page id, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
+            var json = JSON.parse(xmlhttp.responseText);
+            var pageid = json.query.pages[0].pageid;
+            if (pageid) {
+                getWikiContent(pageid);
+            } else {
+                console.log("Failed to get Wiki page id from json");
+                wikiReset();
+                noWikiAvailable();
+            }
+        }
+    }
+    var resolver_url = url + wiki_target.replace(/ /g, "%20");
+    console.log('showWiki, send HTTP GET(' + resolver_url + ')');
+    xmlhttp.open("GET", resolver_url, false);
+    xmlhttp.send(); 
+}
+
+function showWiki()
+{
     if (!document.getElementById("wikiCheckbox").checked) {
         console.log("showWiki:do not show");
         document.getElementById(wiki_panel).style.height = "0px";
@@ -2888,25 +3040,7 @@ function showWiki()
         wiki_target = reformatTargetName(image_target);
     }
 
-    xmlhttp=new XMLHttpRequest();
-    xmlhttp.onreadystatechange=function()
-    {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            console.log('showWiki, get page id, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
-            var json = JSON.parse(xmlhttp.responseText);
-            var pageid = json.query.pages[0].pageid;
-            if (pageid) {
-                getWikiContent(pageid);
-            } else {
-                console.log("Failed to get Wiki page id from json");
-                document.getElementById(status_text).innerHTML = "Failed to get Wiki page id from json";
-            }
-        }
-    }
-    var resolver_url = url + wiki_target.replace(/ /g, "%20");
-    console.log('showWiki, send HTTP GET(' + resolver_url + ')');
-    xmlhttp.open("GET", resolver_url, false);
-    xmlhttp.send(); 
+    showWikiTarget(wiki_target);
 }
 
 </script>
