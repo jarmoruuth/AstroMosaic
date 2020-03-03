@@ -114,6 +114,7 @@ p {
                 <option value="C1UWF">C1 UWF</option>
                 <option value="C2">C2</option>
                 <option value="C2FR">C2FR</option>
+                <option value="C2LPT">C2LPT</option>
             </select>
         </form>
     </div>
@@ -344,6 +345,8 @@ p {
 
 var version_text = 
     "<br>"+
+    "Version 1.23<br>"+
+    "- Added C2LPT (Lunar and Planetary Telescope)<br>"+
     "Version 1.22<br>"+
     "- NGC and IC catalog layer added, not enabled by default<br>"+
     "- Object markers are clickable and show a short info or Wiki page<br>"+
@@ -384,7 +387,8 @@ var version_text =
     "- basic FoV, mosaic grid and panels views<br>"+
     "- target visibility during one night and next 12 months";
 
-var startup_image = "Virgo Cluster";
+var startup_image = "Tarantula Nebula";
+var startup_telescope = "C2";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -529,6 +533,9 @@ var teideSoft = [
 
 if (!url_target) {
     url_target = startup_image;
+}
+if (!url_telescope) {
+    url_telescope = startup_telescope;
 }
 
 //url_target = "Tarantula nebula";
@@ -1501,7 +1508,9 @@ function ViewImage()
     // T4 FOV 0° 15' 57" x 0° 12' 03"
     // C1 FOV 0° 31' 18" x 0° 20' 51"
     // C1 ultra wide field FOV 1° 21' 49" x 1° 00' 22"
-    // C2 wide field FOV 65'
+    // C2 wide field FOV 43'
+    // C2FR Focal Recucer field FOV 65'
+    // C2LPT wide field FOV 0° 08' 24" x 0° 05' 18"
 
     horizonSoft = teideSoft;
 
@@ -1542,6 +1551,11 @@ function ViewImage()
         // With focal reducer
         fov_x = 65.0*60.0/3600.0;
         fov_y = 65.0*60.0/3600.0;
+        telescope_location = 'chile';
+    } else if (telescope == "C2LPT") {
+        // With focal reducer
+        fov_x = (8.0*60.0+24.0)/3600.0;
+        fov_y = (5.0*60.0+18.0)/3600.0;
         telescope_location = 'chile';
     }
 
