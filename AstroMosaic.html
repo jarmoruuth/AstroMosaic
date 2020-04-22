@@ -344,50 +344,51 @@ p {
 <script type="text/javascript">
 
 var version_text = 
-    "<br>"+
-    "Version 1.23<br>"+
-    "- Added C2LPT (Lunar and Planetary Telescope)<br>"+
-    "Version 1.22<br>"+
-    "- NGC and IC catalog layer added, not enabled by default<br>"+
-    "- Object markers are clickable and show a short info or Wiki page<br>"+
-    "Version 1.21<br>"+
-    "- Added C2 and C2FR, where FR is the scope with Focal Reducer<br>"+
-    "Version 1.20<br>"+
-    "- Added Slooh 500 target name layer, enabled by default<br>"+
-    "- Added map view control button<br>"+
-    "- Added full screen control button<br>"+
-    "Version 1.19<br>"+
-    "- Added C2 telescope<br>"+
-    "Version 1.18<br>"+
-    "- Added link to my other Astro Image Tools at https://ruuth.xyz/AstroImageTools.html<br>"+
-    "Version 1.17<br>"+
-    "- Multiple target coordinates can be listed in target field separated by comma<br>"+
-    "- Coordinate Format HHMMSS DDMMSS is also accepted<br>"+
-    "Version 1.16<br>"+
-    "- Added visible/not visible line type to year visibility<br>"+
-    "Version 1.15<br>"+
-    "- Fixed a few Slooh 500 list coordinates<br>"+
-    "Version 1.14<br>"+
-    "- Fixed ra/dec parsing with missing seconds part<br>"+
-    "Version 1.13<br>"+
-    "- moon distance filter for Slooh 500 list<br>"+
-    "- more Slooh 500 list filter points<br>"+
-    "- separate field for error text<br>"+
-    "Version 1.12<br>"+
-    "- changes to work better on mobile devices<br>"+
-    "Version 1.11<br>"+
-    "- mosaic grid max size increased to 10x10<br>"+
-    "- target coordinates can be given also in RA.ddd DEC.ddd format<br>"+
-    "- mosaic grid coordinates are shown as a table<br>"+
-    "Version 1.10<br>"+
-    "- added Slooh 500 list with altitude and time filtering<br>"+
-    "- added embedded Wikipedia page if Wiki checkbox is checked<br>"+
-    "- mosaic panel view shows actual panels up to size 5x5<br>"+
-    "Version 1.00<br>"+
-    "- basic FoV, mosaic grid and panels views<br>"+
-    "- target visibility during one night and next 12 months";
+    "Version 1.24\n"+
+    "- Added color coding to separate visible and not visible Slooh 500 targets\n"+
+    "Version 1.23\n"+
+    "- Added C2LPT (Lunar and Planetary Telescope)\n"+
+    "Version 1.22\n"+
+    "- NGC and IC catalog layer added, not enabled by default\n"+
+    "- Object markers are clickable and show a short info or Wiki page\n"+
+    "Version 1.21\n"+
+    "- Added C2 and C2FR, where FR is the scope with Focal Reducer\n"+
+    "Version 1.20\n"+
+    "- Added Slooh 500 target name layer, enabled by default\n"+
+    "- Added map view control button\n"+
+    "- Added full screen control button\n"+
+    "Version 1.19\n"+
+    "- Added C2 telescope\n"+
+    "Version 1.18\n"+
+    "- Added link to my other Astro Image Tools at https://ruuth.xyz/AstroImageTools.html\n"+
+    "Version 1.17\n"+
+    "- Multiple target coordinates can be listed in target field separated by comma\n"+
+    "- Coordinate Format HHMMSS DDMMSS is also accepted\n"+
+    "Version 1.16\n"+
+    "- Added visible/not visible line type to year visibility\n"+
+    "Version 1.15\n"+
+    "- Fixed a few Slooh 500 list coordinates\n"+
+    "Version 1.14\n"+
+    "- Fixed ra/dec parsing with missing seconds part\n"+
+    "Version 1.13\n"+
+    "- moon distance filter for Slooh 500 list\n"+
+    "- more Slooh 500 list filter points\n"+
+    "- separate field for error text\n"+
+    "Version 1.12\n"+
+    "- changes to work better on mobile devices\n"+
+    "Version 1.11\n"+
+    "- mosaic grid max size increased to 10x10\n"+
+    "- target coordinates can be given also in RA.ddd DEC.ddd format\n"+
+    "- mosaic grid coordinates are shown as a table\n"+
+    "Version 1.10\n"+
+    "- added Slooh 500 list with altitude and time filtering\n"+
+    "- added embedded Wikipedia page if Wiki checkbox is checked\n"+
+    "- mosaic panel view shows actual panels up to size 5x5\n"+
+    "Version 1.00\n"+
+    "- basic FoV, mosaic grid and panels views\n"+
+    "- target visibility during one night and next 12 months\n";
 
-var startup_image = "Tarantula Nebula";
+var startup_image = "Eagle Nebula";
 var startup_telescope = "C2";
 
 var image_panel = "aladin-lite-div-00";
@@ -479,8 +480,6 @@ var chile_location_alt = 1450;
 
 var slooh500Teide = null;
 var slooh500Chile = null;
-var catSlooh500Teide = null;
-var catSlooh500Chile = null;
 var catNGC = null;
 
 var slooh500select = null;
@@ -1678,11 +1677,14 @@ function initAladin(aladin_fov, aladin_target)
                            showReticle:false, showZoomControl:false, showFullscreenControl:true, 
                            showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
+    var catSlooh500;
     if (telescope_location == 'teide') {
-        aladin.addCatalog(catSlooh500Teide);
+        catSlooh500 = createSlooh500Catalog(true);
     } else {
-        aladin.addCatalog(catSlooh500Chile);
+        catSlooh500 = createSlooh500Catalog(false);
     }
+    aladin.addCatalog(catSlooh500.visible);
+    aladin.addCatalog(catSlooh500.notvisible);
     aladin.addCatalog(catNGC);
 
     // define function triggered when an object is clicked
@@ -1848,9 +1850,17 @@ function ViewGrid()
     }
     if (version_text) {
         // use wiki panel to show version info
+        var lines = version_text.split('\n');
+        var visible_text = '<br>';
+        for (var i = 0; i < 35 && i < lines.length; i++) {
+            visible_text = visible_text + lines[i] + '<br>';
+        }
+        if (i < lines.length) {
+            visible_text = visible_text + '...<br>';
+        }
         document.getElementById(wiki_panel).style.height = "300px";
         document.getElementById(wiki_panel).style.width = wiki_panel_width;
-        document.getElementById(wiki_panel).innerHTML = version_text;
+        document.getElementById(wiki_panel).innerHTML = visible_text;
         // show only once, next time it is not shown
         version_text = null;    
     }
@@ -2532,25 +2542,6 @@ slooh500Chile = [
 [ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
 ];
 
-    function addSloohToAladinCatalog(cat, list)
-    {
-        for (var i = 0; i < list.length; i++) {
-            var radec = get_ra_dec(list[i][4]);
-            var dispname = list[i][2] + ' ' + list[i][3];
-            cat.addSources(A.source(radec[0], radec[1], 
-                            { 
-                                name: dispname, 
-                                wikiname: list[i][3], 
-                                info: { 
-                                        list: 'S',
-                                        type: list[i][1],
-                                }
-                            } ));
-            list[i][5] = radec[0];
-            list[i][6] = radec[1];
-        }
-    }
-
     function addOpenNGCToAladinCatalog(cat, list)
     {
         for (var i = 0; i < list.length; i++) {
@@ -2578,13 +2569,6 @@ slooh500Chile = [
         }
     }
 
-    if (catSlooh500Teide == null) {
-        console.log("Init slooh500 catalogs");
-        catSlooh500Teide = A.catalog({name: 'Slooh 500 Teide', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
-        catSlooh500Chile = A.catalog({name: 'Slooh 500 Chile', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
-        addSloohToAladinCatalog(catSlooh500Teide, slooh500Teide);
-        addSloohToAladinCatalog(catSlooh500Chile, slooh500Chile);
-    }
     if (catNGC == null) {
         console.log("Init NGC catalog");
         catNGC = A.catalog({name: 'NGC', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
@@ -2602,6 +2586,46 @@ slooh500Chile = [
         NGCxmlhttp.open("GET", "https://ruuth.xyz/OpenNGC.txt", true);
         NGCxmlhttp.send();
     }
+}
+
+function addSloohToAladinCatalog(cat, list)
+{
+    for (var i = 0; i < list.length; i++) {
+        var radec = get_ra_dec(list[i][4]);
+        var dispname = list[i][2] + ' ' + list[i][3];
+        cat.addSources(A.source(radec[0], radec[1], 
+                        { 
+                            name: dispname, 
+                            wikiname: list[i][3], 
+                            info: { 
+                                    list: 'S',
+                                    type: list[i][1],
+                            }
+                        } ));
+        list[i][5] = radec[0];
+        list[i][6] = radec[1];
+    }
+}
+
+function createSlooh500Catalog(isTeide)
+{
+        var name;
+        var slooh500;
+        if (isTeide) {
+            name = 'Slooh 500 Teide';
+            slooh500 = slooh500teidelist;
+        } else {
+            name = 'Slooh 500 Chile';
+            slooh500 = slooh500chilelist;
+        }
+
+        console.log("Create slooh500 catalog");
+        var catSlooh500visible = A.catalog({name: name + ' visible', labelColumn: 'name', displayLabel: true, labelColor: '#29a329', labelFont: '12px sans-serif'});
+        var catSlooh500notvisible = A.catalog({name: name + ' not visible', labelColumn: 'name', displayLabel: true, labelColor: '#ff9999', labelFont: '12px sans-serif'});
+        addSloohToAladinCatalog(catSlooh500visible, slooh500.visible);
+        addSloohToAladinCatalog(catSlooh500notvisible, slooh500.notvisible);
+
+        return { visible: catSlooh500visible, notvisible: catSlooh500notvisible};
 }
 
 // create select object
@@ -2646,8 +2670,11 @@ function filtervisibleslooh500(list, lat, lng)
         midnight = UTCdate_ms + slooh500time;
     }
     var fl = [];
+    var visible = [];
+    var notvisible = [];
     var idx = [];
     fl[fl.length] = ['', ''];
+
     // if object altitude is above slooh500filter degrees in any of the following
     // points during the night we add it to list
     aa1 = object_altitude_init(midnight, lat, lng);
@@ -2738,9 +2765,12 @@ function filtervisibleslooh500(list, lat, lng)
             var item = [ list[i][4], list[i][1] + ' ' + list[i][2] + ' ' + list[i][3] ];
             fl[fl.length] = item;
             idx[idx.length] = i;
+            visible[visible.length] = list[i];
+        } else {
+            notvisible[notvisible.length] = list[i];
         }
     }
-    return { list: fl, index: idx};
+    return { list: fl, index: idx, visible: visible, notvisible: notvisible};
 }
 
 function initslooh500()
