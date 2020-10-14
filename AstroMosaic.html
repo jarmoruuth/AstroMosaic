@@ -344,6 +344,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.26\n"+
+    "- Better error handling\n"+
     "Version 1.25\n"+
     "- Show RA/DEC in different coordinate formats in FoV view\n"+
     "Version 1.24\n"+
@@ -390,8 +392,8 @@ var version_text =
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
 
-var startup_image = "Horsehead Nebula";
-var startup_telescope = "T1";
+var startup_image = "NGC 1365";
+var startup_telescope = "C2";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -1676,54 +1678,64 @@ function addTabRow(tab, v1, v2)
 function initAladin(aladin_fov, aladin_target)
 {
     console.log('initAladin', aladin_target);
-    var aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
+    var aladin = null;
+    if (A) {
+        aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
                            showReticle:false, showZoomControl:false, showFullscreenControl:true, 
                            showLayersControl:true, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
+    } else {
+        document.getElementById(image_panel).style.height = "50px";
+        document.getElementById(image_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
+    }
     var catSlooh500;
     if (telescope_location == 'teide') {
         catSlooh500 = createSlooh500Catalog(true);
     } else {
         catSlooh500 = createSlooh500Catalog(false);
     }
-    aladin.addCatalog(catSlooh500.visible);
-    aladin.addCatalog(catSlooh500.notvisible);
-    aladin.addCatalog(catNGC);
+    if (aladin) {
+        aladin.addCatalog(catSlooh500.visible);
+        aladin.addCatalog(catSlooh500.notvisible);
+        aladin.addCatalog(catNGC);
+    }
 
     // define function triggered when an object is clicked
     var objClicked;
-    aladin.on('objectClicked', function(object) {
-        if (object) {
-            objClicked = object;
-            object.select();
-            var tab = "<BR><TABLE>";
-            if (object.data.info.list == 'S') {
-                // Slooh
-                tab = addTabRow(tab, "Name", object.data.name);
-                tab = addTabRow(tab, "Type", object.data.info.type);
-                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+    if (aladin) {
+        aladin.on('objectClicked', function(object) {
+            if (object) {
+                objClicked = object;
+                object.select();
+                var tab = "<BR><TABLE>";
+                if (object.data.info.list == 'S') {
+                    // Slooh
+                    tab = addTabRow(tab, "Name", object.data.name);
+                    tab = addTabRow(tab, "Type", object.data.info.type);
+                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+                } else {
+                    // OpenNGC
+                    tab = addTabRow(tab, "Name", object.data.name);
+                    tab = addTabRow(tab, "Type", OpenNGC_type_to_typename(object.data.info.type));
+                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+                    tab = addTabRow(tab, "Constellation", object.data.info.constellation);
+                    tab = addTabRow(tab, "Magnitude", object.data.info.mag);
+                    tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
+                    tab = addTabRow(tab, "Notes", object.data.info.notes);
+                }
+                tab = tab + "</TABLE>";
+                console.log('aladin objectClicked', tab);
+                alt_wikitext = tab;
+                showWikiTarget(object.data.wikiname);
+                alt_wikitext = null;
             } else {
-                // OpenNGC
-                tab = addTabRow(tab, "Name", object.data.name);
-                tab = addTabRow(tab, "Type", OpenNGC_type_to_typename(object.data.info.type));
-                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                tab = addTabRow(tab, "Constellation", object.data.info.constellation);
-                tab = addTabRow(tab, "Magnitude", object.data.info.mag);
-                tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
-                tab = addTabRow(tab, "Notes", object.data.info.notes);
+                console.log('aladin objectClicked, no object');
             }
-            tab = tab + "</TABLE>";
-            console.log('aladin objectClicked', tab);
-            alt_wikitext = tab;
-            showWikiTarget(object.data.wikiname);
-            alt_wikitext = null;
-        } else {
-            console.log('aladin objectClicked, no object');
-        }
-    });
-
+        });
+    }
     return aladin;
 }
+
 function ViewGrid()
 {
     console.log('ViewGrid');
@@ -1764,7 +1776,10 @@ function ViewGrid()
 
     var aladin = initAladin(aladin_fov, image_target);
 
-    var radec = aladin.getRaDec();
+    var radec = null;
+    if (aladin) {
+        radec = aladin.getRaDec();
+    }
 
     console.log("center RaDec = ", radec);
 
@@ -1810,7 +1825,7 @@ function ViewGrid()
 
             var line_color = '#ee2345';
 
-            if (grid_type == "mosaic" || (x == 1 && y == 1)) {
+            if ((grid_type == "mosaic" || (x == 1 && y == 1)) && aladin) {
                 var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
                 aladin.addOverlay(overlay);
                 overlay.add(A.polyline(panel));
@@ -1897,10 +1912,9 @@ function ViewGridFromList(coordinates)
     }
 
     var aladin = initAladin(aladin_fov, coordinates[0])
+    var radec = null;
 
-    var radec = aladin.getRaDec();
-
-    console.log("center RaDec = ", radec);
+    console.log("center RaDec = ", coordinates[0]);
 
     for (var i = 0; i < coordinates.length; i++) {
         radec = get_ra_dec(coordinates[i]);
@@ -1926,9 +1940,11 @@ function ViewGridFromList(coordinates)
         ];
 
         var line_color = '#ee2345';
-        var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
-        aladin.addOverlay(overlay);
-        overlay.add(A.polyline(panel));
+        if (aladin) {
+            var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+            aladin.addOverlay(overlay);
+            overlay.add(A.polyline(panel));
+        }
     }
 }
 
@@ -2011,11 +2027,12 @@ function ViewPanels()
             } else {
                 document.getElementById(panel_id).style.height = "300px";
             }
-            aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
-                                showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                                showLayersControl:false, showGotoControl:false,
-                                showControl: false, cooFrame: "J2000", showFrame: false});
-
+            if (A) {
+                aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
+                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                                    showLayersControl:false, showGotoControl:false,
+                                    showControl: false, cooFrame: "J2000", showFrame: false});
+            }
             document.getElementById("panel-text-"+y.toString()+x.toString()).innerHTML = (i+1).toString() + " RA/DEC " + col_ra.toFixed(5) + " " + row_dec.toFixed(5);
             col = col - 1;
             i = i + 1;
@@ -2577,7 +2594,7 @@ slooh500Chile = [
         }
     }
 
-    if (catNGC == null) {
+    if (catNGC == null && A) {
         console.log("Init NGC catalog");
         catNGC = A.catalog({name: 'NGC', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
         catNGC.hide();
@@ -2601,15 +2618,17 @@ function addSloohToAladinCatalog(cat, list)
     for (var i = 0; i < list.length; i++) {
         var radec = get_ra_dec(list[i][4]);
         var dispname = list[i][2] + ' ' + list[i][3];
-        cat.addSources(A.source(radec[0], radec[1], 
-                        { 
-                            name: dispname, 
-                            wikiname: list[i][3], 
-                            info: { 
-                                    list: 'S',
-                                    type: list[i][1],
-                            }
-                        } ));
+        if (A) {
+            cat.addSources(A.source(radec[0], radec[1], 
+                            { 
+                                name: dispname, 
+                                wikiname: list[i][3], 
+                                info: { 
+                                        list: 'S',
+                                        type: list[i][1],
+                                }
+                            } ));
+        }
         list[i][5] = radec[0];
         list[i][6] = radec[1];
     }
@@ -2628,11 +2647,14 @@ function createSlooh500Catalog(isTeide)
         }
 
         console.log("Create slooh500 catalog");
-        var catSlooh500visible = A.catalog({name: name + ' visible', labelColumn: 'name', displayLabel: true, labelColor: '#29a329', labelFont: '12px sans-serif'});
-        var catSlooh500notvisible = A.catalog({name: name + ' not visible', labelColumn: 'name', displayLabel: true, labelColor: '#ff9999', labelFont: '12px sans-serif'});
-        addSloohToAladinCatalog(catSlooh500visible, slooh500.visible);
-        addSloohToAladinCatalog(catSlooh500notvisible, slooh500.notvisible);
-
+        var catSlooh500visible = null;
+        var catSlooh500notvisible = null;
+        if (A) {
+            catSlooh500visible = A.catalog({name: name + ' visible', labelColumn: 'name', displayLabel: true, labelColor: '#29a329', labelFont: '12px sans-serif'});
+            catSlooh500notvisible = A.catalog({name: name + ' not visible', labelColumn: 'name', displayLabel: true, labelColor: '#ff9999', labelFont: '12px sans-serif'});
+            addSloohToAladinCatalog(catSlooh500visible, slooh500.visible);
+            addSloohToAladinCatalog(catSlooh500notvisible, slooh500.notvisible);
+        }
         return { visible: catSlooh500visible, notvisible: catSlooh500notvisible};
 }
 
