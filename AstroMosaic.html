@@ -344,6 +344,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.27\n"+
+    "- Added Sharpless and RCW catalogs\n"+
     "Version 1.26\n"+
     "- Better error handling\n"+
     "Version 1.25\n"+
@@ -392,8 +394,8 @@ var version_text =
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
 
-var startup_image = "NGC 1365";
-var startup_telescope = "C2";
+var startup_image = "Sh2-229";
+var startup_telescope = "T1";
 
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
@@ -485,6 +487,8 @@ var chile_location_alt = 1450;
 var slooh500Teide = null;
 var slooh500Chile = null;
 var catNGC = null;
+var catRCW = null;
+var catSh = null;
 
 var slooh500select = null;
 var slooh500text = null;
@@ -1698,6 +1702,8 @@ function initAladin(aladin_fov, aladin_target)
         aladin.addCatalog(catSlooh500.visible);
         aladin.addCatalog(catSlooh500.notvisible);
         aladin.addCatalog(catNGC);
+        aladin.addCatalog(catRCW);
+        aladin.addCatalog(catSh);
     }
 
     // define function triggered when an object is clicked
@@ -1713,7 +1719,7 @@ function initAladin(aladin_fov, aladin_target)
                     tab = addTabRow(tab, "Name", object.data.name);
                     tab = addTabRow(tab, "Type", object.data.info.type);
                     tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                } else {
+                } else if (object.data.info.list == 'N') {
                     // OpenNGC
                     tab = addTabRow(tab, "Name", object.data.name);
                     tab = addTabRow(tab, "Type", OpenNGC_type_to_typename(object.data.info.type));
@@ -1721,6 +1727,10 @@ function initAladin(aladin_fov, aladin_target)
                     tab = addTabRow(tab, "Constellation", object.data.info.constellation);
                     tab = addTabRow(tab, "Magnitude", object.data.info.mag);
                     tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
+                    tab = addTabRow(tab, "Notes", object.data.info.notes);
+                } else {
+                    tab = addTabRow(tab, "Name", object.data.name);
+                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
                     tab = addTabRow(tab, "Notes", object.data.info.notes);
                 }
                 tab = tab + "</TABLE>";
@@ -2572,6 +2582,7 @@ slooh500Chile = [
         for (var i = 0; i < list.length; i++) {
             var catname = list[i][0];
             var extname = list[i][7];
+            var dispname;
             if (extname != "") {
                 dispname = catname + ', ' + extname;
             } else {
@@ -2583,7 +2594,7 @@ slooh500Chile = [
                                 name: dispname, 
                                 wikiname: catname,
                                 info: { 
-                                        list: 'O',
+                                        list: 'N',
                                         type: list[i][3],
                                         constellation: list[i][4],
                                         mag: list[i][5],
@@ -2610,6 +2621,53 @@ slooh500Chile = [
         }
         NGCxmlhttp.open("GET", "https://ruuth.xyz/OpenNGC.txt", true);
         NGCxmlhttp.send();
+    }
+
+    /* Add generic Json catalog. */
+    function addJsonToAladinCatalog(cat, list)
+    {
+        /* "format" : ["CAT", "RA", "DEC", "INFO", "TYPE"] */
+        for (var i = 0; i < list.length; i++) {
+            var catname = list[i][0];
+            cat.addSources(A.source(list[i][1] * hoursToDeg, list[i][2], 
+                            {
+                                name: catname, 
+                                wikiname: catname,
+                                info: { 
+                                        list: 'J',
+                                        notes: list[i][3]
+                                }
+                            } ));
+        }
+    }
+
+    function loadJsonCatalog(name, cat)
+    {
+        console.log("´Load Json catalog " + name);
+        cat.hide();
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function()
+        {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                console.log("Catalog " + name + " loaded", xmlhttp.responseText.substr(30200, 30300));
+                var jsonObjects = JSON.parse(xmlhttp.responseText);
+                addJsonToAladinCatalog(cat, jsonObjects.data);
+            }
+        }
+        xmlhttp.open("GET", "https://ruuth.xyz/" + name, true);
+        xmlhttp.send();
+    }
+
+    if (catRCW == null && A) {
+        // Green 3
+        catRCW = A.catalog({name: 'RCW', labelColumn: 'name', displayLabel: true, labelColor: '00af00', labelFont: '12px sans-serif'});
+        loadJsonCatalog('RCW.json', catRCW);
+    }
+    if (catSh == null && A) {
+        // DeepSkyBlue1
+        catSh = A.catalog({name: 'Sharpless', labelColumn: 'name', displayLabel: true, labelColor: '#00afff', labelFont: '12px sans-serif'});
+        loadJsonCatalog('Sharpless.json', catSh);
     }
 }
 
