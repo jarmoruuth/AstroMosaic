@@ -344,6 +344,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.28\n"+
+    "- Added astronomical seeing widget\n"+
     "Version 1.27\n"+
     "- Added Sharpless and RCW catalogs\n"+
     "Version 1.26\n"+
@@ -404,6 +406,7 @@ var dayvisibility_panel = "aladin-lite-div-10";
 var dayvisibility_panel_text = "panel-text-10";
 var yearvisibility_panel = "aladin-lite-div-20";
 var yearvisibility_panel_text = "panel-text-20";
+var weather_panel = "aladin-lite-div-30";
 var wiki_panel_width = "500px";
 var wiki_frame_width = 500;
 var status_text = "error_text";
@@ -416,6 +419,7 @@ if (screen.height > screen.width) {
     wiki_panel_width = "700px";
     wiki_frame_width = 700;
     version_text = null;
+    var weather_panel = "aladin-lite-div-40";
 }
 
 // size means number of panels on each side
@@ -1604,6 +1608,8 @@ function ViewImage()
         // try to resolve target as a name
         ViewImageByName();
     }
+
+    showWeatherForecast(telescope_location == 'chile');
 }
 
 function ViewImageByType()
@@ -1977,10 +1983,7 @@ function ViewPanels()
         grid_size_y = 5;
     }
 
-    if (wikiIframe != null && wikiIframe.parentNode) {
-        wikiIframe.parentNode.removeChild(wikiIframe);
-    }
-    wikiIframe = null;
+    wikiReset();
 
     for (var x = 0; x < grid_size_x; x++) {
         for (var y = 0; y < grid_size_y; y++) {
@@ -3173,6 +3176,34 @@ function showWiki()
     }
 
     showWikiTarget(wiki_target);
+}
+
+// Seeing widget from 
+// https://www.meteoblue.com/
+function showWeatherForecast(telescope_location_chile)
+{
+    var s;
+    if (telescope_location_chile) {
+        s = '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/santiago_chile_3871336?geoloc=fixed&noground=0"  '+
+            'frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" '+
+            'style="width: 520px; height: 711px"></iframe><div>'+
+            '<!-- DO NOT REMOVE THIS LINK -->'+
+            '<a href="https://www.meteoblue.com/en/weather/forecast/seeing/santiago_chile_3871336?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue'+
+            '</a></div>';
+    } else {
+        s = '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  '+
+            'frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" '+
+            'style="width: 520px; height: 695px"></iframe>'+
+            '<div><!-- DO NOT REMOVE THIS LINK -->'+
+            '<a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue'+
+            '</a></div>';
+    }
+
+    setTimeout(function(){ 
+        document.getElementById(weather_panel).style.height = "700px";
+        document.getElementById(weather_panel).style.width = "600px";
+        document.getElementById(weather_panel).innerHTML = s;
+    }, 1000);
 }
 
 </script>
