@@ -1,8 +1,8 @@
 # AstroMosaic
 
-Tools to calculate coordinates for astro image mosaics using Slooh
+Tools for visial view and coordinates calculations for astro image mosaics. There are predefined telescope settings for Slooh
 telescopes. There are both HTML and Python versions. Python version is 
-old and not maintaioed any more.
+old and not maintained any more.
 
 HTML version AstroMosaic.html includes 
 - Visual view of target using Aladin Sky Atlas
@@ -21,7 +21,9 @@ HTML version AstroMosaic.html includes
 - A comma separated list can be given to show multiple targets
 - Wiki interface to show target information
 
-AstroMosaic.html can be found at https://www.ruuth.xyz/AstroMosaic.html.
+More details can be found at https://ruuth.xyz/AstroMosaicInfo.html.
+
+-----
 
 Below is a description of the older standalone Python version.
 
