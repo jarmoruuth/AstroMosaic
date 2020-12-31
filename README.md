@@ -1,19 +1,20 @@
-# AstroMosaic
+# Astro Mosaic Telescope Planner
 
-Tools for visial view and coordinates calculations for astro image mosaics. There are predefined telescope settings for Slooh
-telescopes. There are both HTML and Python versions. Python version is 
-old and not maintained any more.
+Astro Mosaic is a tool for planning telescope observations. It shows a visual view of the target using a selected telescope, 
+visibility during night and it can calculate mosaic coordinates. There are predefined telescope settings for 
+some remote telescope services. There is current HTML and a very old Python version. Python version has not maintained 
+any more.
 
 HTML version AstroMosaic.html includes 
 - Visual view of target using Aladin Sky Atlas
 - Target name resolution using Sesame interface
-- Field of View (FoV) view of target with a chosen Slooh telescope
+- Field of View (FoV) view of target with a chosen telescope
 - View and calculate mosaic coordinates up to 10x10 size
 - Target visibility during the night
 - Moon altitude and distance from the target
 - Target and moon altitude over next 12 months
-- Slooh 500 list for selecting the target
-- Filtering of Slooh 500 list based on altitude, time and distance from the moon
+- Catalog lists for selecting the target
+- Filtering of catalog list based on altitude, time and distance from the moon
 - Multiple target coordinate formats are supported:
     HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
     HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
@@ -23,7 +24,7 @@ HTML version AstroMosaic.html includes
 
 More details can be found at https://ruuth.xyz/AstroMosaicInfo.html.
 
------
+----- OLD PYTHON VERSION BELOW -----
 
 Below is a description of the older standalone Python version.
 

@@ -1,4 +1,4 @@
-<!-- Tool to visualize Slooh telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2019 -->
+<!-- Tool to visualize telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2020 -->
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
@@ -14,7 +14,8 @@
 
 .h2text {
   padding: 20px;
-  text-align: center;
+  text-align: left;
+  margin-left: 60px;
 }
 
 .homebutton {
@@ -90,7 +91,7 @@ p {
             </a>        
         </div>
         <div class="h2text">
-            <h2 id="astro_mosaic_title" >Astro Mosaic for Slooh telescopes</h2>
+            <h2 id="astro_mosaic_title" >Astro Mosaic Telescope Planner</h2>
         </div>
 </div>
     
@@ -103,25 +104,22 @@ p {
     </div>
     <div>
         <form>
+            Service:<br>
+            <select id="current-telescope-service" onchange="javascript:ViewImage(1)">
+            </select>
+        </form>
+    </div>
+    <div>
+        <form>
             Telescope:<br>
-            <select id="telescope" onchange="javascript:ViewImage()">
-                <option value="T1">T1</option>
-                <option value="T2">T2</option>
-                <option value="T2UWF">T2 UWF</option>
-                <option value="T3">T3</option>
-                <option value="T4">T4</option>
-                <option value="C1">C1</option>
-                <option value="C1UWF">C1 UWF</option>
-                <option value="C2">C2</option>
-                <option value="C2FR">C2FR</option>
-                <option value="C2LPT">C2LPT</option>
+            <select id="current-telescope" onchange="javascript:ViewImage(2)">
             </select>
         </form>
     </div>
     <div>
         <form>
             View:<br>
-            <select id="grid_type" onchange="javascript:ViewImage()">
+            <select id="grid_type" onchange="javascript:ViewImage(0)">
                 <option value="fov">FoV</option>
                 <option value="mosaic">Mosaic grid</option>
                 <option value="panels">Mosaic panels</option>
@@ -129,27 +127,27 @@ p {
         </form>
     </div>
     <div>
-        <form action="javascript:ViewImage()">
+        <form action="javascript:ViewImage(0)">
             Mosaic overlap (%):<br>
             <input type="number" id="overlap_percentage" min="1" max="100">
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage()">
+        <form action="javascript:ViewImage(0)">
             Grid size (x,y):<br>
             <input type="number" id="size_x" min="1" max="10">
             <input type="number" id="size_y" min="1" max="10">
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage()">
+        <form action="javascript:ViewImage(0)">
             Date (YYYY-MM-DD):<br>
             <input type="text" id="view_date">
         </form>    
     </div>
     <div>
         <br>
-        <button onclick="ViewImage()">View image</button>
+        <button onclick="ViewImage(0)">View image</button>
     </div>
     <div>
         <br>
@@ -158,13 +156,19 @@ p {
 </div>
 
 <div id="secondDiv" class="flex-container-top2">
-    <div><p id="slooh500txt">Slooh 500:</p></div>
-    <div id ="slooh500Div">
+
+    <div>
+        <form>
+            <select id="catalog-selection" onchange="javascript:filterChanged()">
+            </select>
+        </form>
+    </div>
+    <div id ="catalogDiv">
     </div>
     <div>
         <form>
-            Filter:
-            <select id="slooh500filter" onchange="javascript:filterChanged()">
+            Altitude:
+            <select id="catalogFilterDegrees" onchange="javascript:filterChanged()">
                 <option value="all">All</option>
                 <option value="0">0°</option>
                 <option value="15">15°</option>
@@ -178,13 +182,13 @@ p {
     <div>
         <form action="javascript:filterTimeChanged()">
             Time:
-            <input type="text" id="filter_time" size=5>
+            <input type="text" id="catalogFilterTime" size=5>
         </form>    
     </div>
     <div>
         <form>
             Moon:
-            <select id="slooh500moonFilter" onchange="javascript:filterChanged()">
+            <select id="catalogFilterMoon" onchange="javascript:filterChanged()">
                 <option value="all">All</option>
                 <option value="45">45°</option>
                 <option value="90">90°</option>
@@ -193,7 +197,7 @@ p {
         </form>
     </div>
     <div>
-        <form action="javascript:ViewImage()">
+        <form action="javascript:ViewImage(0)">
             <input type="checkbox" id="wikiCheckbox">Wiki
         </form>    
     </div>
@@ -344,6 +348,10 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.30\n"+
+    "- Added Telescope Live telescopes\n"+
+    "- Added more catalogs to filtered view list\n"+
+    "- Restructured code for telescope and catalog handling\n"+
     "Version 1.28\n"+
     "- Added astronomical seeing widget\n"+
     "Version 1.27\n"+
@@ -366,7 +374,7 @@ var version_text =
     "- Added map view control button\n"+
     "- Added full screen control button\n"+
     "Version 1.19\n"+
-    "- Added C2 telescope\n"+
+    "- Added C2 current_telescope\n"+
     "Version 1.18\n"+
     "- Added link to my other Astro Image Tools at https://ruuth.xyz/AstroImageTools.html\n"+
     "Version 1.17\n"+
@@ -396,120 +404,127 @@ var version_text =
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
 
-var startup_image = "Sh2-229";
-var startup_telescope = "T1";
+var startup_image = "Horsehead nebula";
 
-var image_panel = "aladin-lite-div-00";
-var image_panel_text = "panel-text-00";
-var wiki_panel = "aladin-lite-div-01";
-var dayvisibility_panel = "aladin-lite-div-10";
-var dayvisibility_panel_text = "panel-text-10";
-var yearvisibility_panel = "aladin-lite-div-20";
-var yearvisibility_panel_text = "panel-text-20";
-var weather_panel = "aladin-lite-div-30";
-var wiki_panel_width = "500px";
-var wiki_frame_width = 500;
-var status_text = "error_text";
-var error_text = "error_text";
-var alt_wikitext = null;
-
-if (screen.height > screen.width) {
-    // screen is taller than it is wide
-    wiki_panel = "aladin-lite-div-30";
-    wiki_panel_width = "700px";
-    wiki_frame_width = 700;
-    version_text = null;
-    var weather_panel = "aladin-lite-div-40";
-}
-
-// size means number of panels on each side
-// 0.5 means 2 panels
-// 1 means 3 panels
-// 1.5 means 4 panes etc.
-var size_x = 1;
-var size_y = 1;
-
-var telescope = "T1";
-var fov_x;
-var fov_y;
-var img_fov = 0.8;  // field of view for single image considering the overlap
-var img_size = 300;
-var image_target;
-var image_target_list = [];
-
-var UTCdate_ms;
-
-var url = new URL(window.location);
-console.log(url);
-
-var url_target = null;
-var url_telescope = null;
-var url_name = null;
-var url_type = null;
-var url_overlap = null;
-var url_date = null;
-
-if (typeof URLSearchParams === "function") {
-    searchParams = new URLSearchParams(url.search.slice(1));
-    url_target = searchParams.get('target');
-    url_telescope = searchParams.get('telescope');
-    url_name = searchParams.get('name');
-    url_type = searchParams.get('type');
-    url_overlap = searchParams.get('overlap');
-    url_date = searchParams.get('date');
-}
-
-var xmlhttp;
-var NGCxmlhttp;
-var resolved_name = null;
-var resolved_coordinates = null;
-
-var target_ra;
-var target_dec;
-var location_lat;
-var location_lng;
-var location_alt;
-
-var hour_ms = 60*60*1000;
-var day_ms = 24*hour_ms;
-var degToRad = Math.PI/180.0;
-var radToDeg = 180.0/Math.PI;
-var degToHours = 1/15;
-var hoursToDeg = 15;
-var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascript zero time
-
-var telescope_location = 'teide';
-
-var teide_location_lat = 28.29970;        // N28.29970 (N28° 17′ 58.92″)
-var teide_location_lng = -16.50826;       // W016.50826 (W016° 30′ 29.736″)
-var teide_location_alt = 2372;
-
-var chile_location_lat = -33.269;         // S33.269 (S33° 16' 8.4")
-var chile_location_lng = -70.534;         // W070.534 (W070° 32' 2.4")
-var chile_location_alt = 1450;
-
-var slooh500Teide = null;
-var slooh500Chile = null;
-var catNGC = null;
-var catRCW = null;
-var catSh = null;
-
-var slooh500select = null;
-var slooh500text = null;
-var slooh500teidelist = null;
-var slooh500chilelist = null;
-var slooh500location = ''; // last telescope_location
-var slooh500date = null;
-var slooh500time = null;
-var slooh500filter = null;
-var slooh500moonFilter = null;
-var slooh500_index = null;
-
-var wikiChecked = false;
-
-// Hard and soft limits for current telecope
-var horizonHard = [];
-var horizonSoft = [];
+// Messier cata log is in the source as a dedault catalog (altough
+// not that useful for southern sky). But we need to have some
+// catalog in place at statup and loading catalogs may take time.
+var messier_catalog = { 
+"Credits" : "Information retrieved from Sesame",
+"format" : ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"],
+"data" : [
+["M 1",5.57554,22.0145,"SuperNova Remnant","",0,0,"",""],
+["M 2",21.55751,-0.82325,"Globular Cluster","",0,0,"",""],
+["M 3",13.70323,28.37728,"Globular Cluster","",0,0,"",""],
+["M 4",16.39312,-26.52575,"Globular Cluster","",0,0,"",""],
+["M 5",15.30923,2.08103,"Globular Cluster","",0,0,"",""],
+["M 6",17.67222,-32.25333,"Open (galactic) Cluster","",0,0,"",""],
+["M 7",17.8975,-34.79333,"Open (galactic) Cluster","",0,0,"",""],
+["M 8",18.06028,-24.38667,"HII (ionized) region","",0,0,"",""],
+["M 9",17.31994,-18.51625,"Globular Cluster","",0,0,"",""],
+["M 10",16.95251,-4.10031,"Globular Cluster","",0,0,"",""],
+["M 11",18.85139,-6.27,"Open (galactic) Cluster","",0,0,"",""],
+["M 12",16.78727,-1.94853,"Globular Cluster","",0,0,"",""],
+["M 13",16.6949,36.46132,"Globular Cluster","",0,0,"",""],
+["M 14",17.62671,-3.24592,"Globular Cluster","",0,0,"",""],
+["M 15",21.49954,12.167,"Globular Cluster","",0,0,"",""],
+["M 16",18.31333,-13.80667,"Open (galactic) Cluster","",0,0,"",""],
+["M 17",18.34639,-16.17167,"Open (galactic) Cluster","",0,0,"",""],
+["M 18",18.33278,-17.10167,"Open (galactic) Cluster","",0,0,"",""],
+["M 19",17.0438,-26.26794,"Globular Cluster","",0,0,"",""],
+["M 20",18.045,-22.97167,"Open (galactic) Cluster","",0,0,"",""],
+["M 21",18.07028,-22.49,"Open (galactic) Cluster","",0,0,"",""],
+["M 22",18.60665,-23.90475,"Globular Cluster","",0,0,"",""],
+["M 23",17.95111,-18.985,"Open (galactic) Cluster","",0,0,"",""],
+["M 24",18.28,-18.55,"Association of Stars","",0,0,"",""],
+["M 25",18.52972,-19.11667,"Open (galactic) Cluster","",0,0,"",""],
+["M 26",18.755,-9.38333,"Open (galactic) Cluster","",0,0,"",""],
+["M 27",19.99343,22.7212,"Planetary Nebula","",0,0,"",""],
+["M 28",18.40914,-24.86983,"Globular Cluster","",0,0,"",""],
+["M 29",20.39889,38.52333,"Open (galactic) Cluster","",0,0,"",""],
+["M 30",21.67281,-23.17986,"Globular Cluster","",0,0,"",""],
+["M 31",0.71231,41.26875,"Galaxy","",0,0,"",""],
+["M 32",0.71162,40.86517,"Interacting Galaxies","",0,0,"",""],
+["M 33",1.56414,30.65994,"Galaxy in Group of Galaxies","",0,0,"",""],
+["M 34",2.70139,42.76167,"Open (galactic) Cluster","",0,0,"",""],
+["M 35",6.14833,24.33333,"Open (galactic) Cluster","",0,0,"",""],
+["M 36",5.605,34.14,"Open (galactic) Cluster","",0,0,"",""],
+["M 37",5.87167,32.55333,"Open (galactic) Cluster","",0,0,"",""],
+["M 38",5.47861,35.855,"Open (galactic) Cluster","",0,0,"",""],
+["M 39",21.53,48.43333,"Open (galactic) Cluster","",0,0,"",""],
+["M 40",12.37015,58.08294,"Composite object","",0,0,"",""],
+["M 41",6.76694,-20.75667,"Open (galactic) Cluster","",0,0,"",""],
+["M 42",5.58814,-5.39111,"HII (ionized) region","",0,0,"",""],
+["M 43",5.59194,-5.27,"HII (ionized) region","",0,0,"",""],
+["M 44",8.67333,19.66667,"Open (galactic) Cluster","",0,0,"",""],
+["M 45",3.78333,24.11667,"Open (galactic) Cluster","",0,0,"",""],
+["M 46",7.69611,-14.81,"Open (galactic) Cluster","",0,0,"",""],
+["M 47",7.60972,-14.48333,"Open (galactic) Cluster","",0,0,"",""],
+["M 48",8.22861,-5.75,"Open (galactic) Cluster","",0,0,"",""],
+["M 49",12.49633,8.00041,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 50",7.04653,-8.33778,"Open (galactic) Cluster","",0,0,"",""],
+["M 51",13.49797,47.19526,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 52",23.41333,61.59333,"Open (galactic) Cluster","",0,0,"",""],
+["M 53",13.21535,18.16817,"Globular Cluster","",0,0,"",""],
+["M 54",18.91759,-30.47986,"Globular Cluster","",0,0,"",""],
+["M 55",19.66659,-30.96475,"Globular Cluster","",0,0,"",""],
+["M 56",19.27655,30.18347,"Globular Cluster","",0,0,"",""],
+["M 57",18.89308,33.02913,"Planetary Nebula","",0,0,"",""],
+["M 58",12.62878,11.81809,"Seyfert Galaxy","",0,0,"",""],
+["M 59",12.70064,11.64693,"Galaxy in Group of Galaxies","",0,0,"",""],
+["M 60",12.72778,11.55261,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 61",12.36526,4.47377,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 62",17.02017,-30.11236,"Globular Cluster","",0,0,"",""],
+["M 63",13.26369,42.02937,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 64",12.94547,21.68266,"Seyfert Galaxy","",0,0,"",""],
+["M 65",11.31554,13.09221,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 66",11.33751,12.99129,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 67",8.855,11.8,"Open (galactic) Cluster","",0,0,"",""],
+["M 68",12.65777,-26.74406,"Globular Cluster","",0,0,"",""],
+["M 69",18.52308,-32.34808,"Globular Cluster","",0,0,"",""],
+["M 70",18.72021,-32.29211,"Globular Cluster","",0,0,"",""],
+["M 71",19.89625,18.77919,"Globular Cluster","",0,0,"",""],
+["M 72",20.89103,-12.53731,"Globular Cluster","",0,0,"",""],
+["M 73",20.98333,-12.63333,"Cluster of Stars","",0,0,"",""],
+["M 74",1.6116,15.78346,"Galaxy","",0,0,"",""],
+["M 75",20.10134,-21.92226,"Globular Cluster","",0,0,"",""],
+["M 76",1.70546,51.57543,"Planetary Nebula","",0,0,"",""],
+["M 77",2.71133,-0.01329,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 78",5.77939,0.07917,"Reflection Nebula","",0,0,"",""],
+["M 79",5.40294,-24.52425,"Globular Cluster","",0,0,"",""],
+["M 80",16.284,-22.97608,"Globular Cluster","",0,0,"",""],
+["M 81",9.92588,69.06529,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 82",9.93123,69.6797,"Interacting Galaxies","",0,0,"",""],
+["M 83",13.61692,-29.86576,"Starburst Galaxy","",0,0,"",""],
+["M 84",12.41771,12.88698,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 85",12.42335,18.19108,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 86",12.43661,12.94597,"Galaxy in Group of Galaxies","",0,0,"",""],
+["M 87",12.51373,12.39112,"Brightest galaxy in a Cluster (BCG)","",0,0,"",""],
+["M 88",12.53312,14.42041,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 89",12.59439,12.55634,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 90",12.61384,13.16287,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 91",12.59068,14.49632,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 92",17.28539,43.13594,"Globular Cluster","",0,0,"",""],
+["M 93",7.74167,-23.85667,"Open (galactic) Cluster","",0,0,"",""],
+["M 94",12.8481,41.12015,"Seyfert Galaxy","",0,0,"",""],
+["M 95",10.7327,11.70361,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 96",10.77937,11.81994,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 97",11.24659,55.01902,"Planetary Nebula","",0,0,"",""],
+["M 98",12.23008,14.90047,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 99",12.31378,14.41649,"HII Galaxy","",0,0,"",""],
+["M 100",12.38193,15.8223,"Active Galaxy Nucleus","",0,0,"",""],
+["M 101",14.0535,54.34875,"Galaxy in Pair of Galaxies","",0,0,"",""],
+["M 102",15.10821,55.76331,"Seyfert Galaxy","",0,0,"",""],
+["M 103",1.55639,60.65,"Open (galactic) Cluster","",0,0,"",""],
+["M 104",12.66651,-11.62305,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 105",10.79711,12.58163,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
+["M 106",12.31601,47.30372,"Seyfert 2 Galaxy","",0,0,"",""],
+["M 107",16.54218,-13.05378,"Globular Cluster","",0,0,"",""],
+["M 108",11.19194,55.67412,"Starburst Galaxy","",0,0,"",""],
+["M 109",11.96,53.37452,"Galaxy in Group of Galaxies","",0,0,"",""],
+["M 110",0.67279,41.68542,"Galaxy in Group of Galaxies","",0,0,"",""]
+]
+};
 
 var chile1Hard = [
 7.75,5.75,3.5,1.75,1.75,1.75,6.75,1.5,1,0.75,0.5,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0.75,1.25,0.75,0.5,0.5,4,13.5,11,
@@ -542,24 +557,230 @@ var teideSoft = [
 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
 ];
 
-if (!url_target) {
-    url_target = startup_image;
-}
-if (!url_telescope) {
-    url_telescope = startup_telescope;
+var horizon0 = [
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+];
+
+var horizon20 = [
+20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,
+20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+];
+
+var horizon30 = [
+30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,
+30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
+];
+
+// Seeing widget from https://www.meteoblue.com/
+var weather_services = [
+    { name: "slooh-teide", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>' },
+    { name: "slooh-chile", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/la-dehesa_chile_3886112?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/la-dehesa_chile_3886112?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+    { name: "tl-chi", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/portezuelo-del-chaco_chile_3895723?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/portezuelo-del-chaco_chile_3895723?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+    { name: "tl-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/el-chaparral-alto_spain_2518568?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/el-chaparral-alto_spain_2518568?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+    { name: "tl-aus", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/mount-manton_australia_8167256?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/mount-manton_australia_8167256?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+    { name: "detect_location", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing?geoloc=detect&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'}
+];
+
+var slooh_telescopes = [
+    { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
+    { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide2Hard, horizonSoft: teideSoft }, 
+    { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide2Hard, horizonSoft: teideSoft }, 
+    { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide3Hard, horizonSoft: teideSoft }, 
+    { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide4Hard, horizonSoft: teideSoft }, 
+
+    { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
+    { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
+    { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
+    { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
+    { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }
+];
+
+var telescope_live_telescopes = [
+    { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    
+    { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
+    { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 },
+
+    { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, alt: 648, weather: "tl-aus", weather_url: null, horizonHard: horizon20, horizonSoft: horizon20 }   
+];
+
+var catalogs = [
+    { name: "Messier", targets: messier_catalog.data, url: "https://ruuth.xyz/Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
+    { name: "Slooh 500 Teide", targets: null, url: "https://ruuth.xyz/Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
+    { name: "Slooh 500 Chile", targets: null, url: "https://ruuth.xyz/Slooh500Chile.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
+    { name: "NGC", targets: null, url: "https://ruuth.xyz/OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
+    { name: "IC", targets: null, url: "https://ruuth.xyz/OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
+    { name: "RCW", targets: null, url: "https://ruuth.xyz/RCW.json", source: "simbad", AladinCatalog: null, color: '00af00' },
+    { name: "Sharpless", targets: null, url: "https://ruuth.xyz/Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' }
+];
+
+var telescope_services = [
+    { name: "Slooh", telescopes: slooh_telescopes },
+    { name: "Telescope Live", telescopes: telescope_live_telescopes }
+];
+
+// screen location for some items
+var image_panel = "aladin-lite-div-00";
+var image_panel_text = "panel-text-00";
+var wiki_panel = "aladin-lite-div-01";
+var dayvisibility_panel = "aladin-lite-div-10";
+var dayvisibility_panel_text = "panel-text-10";
+var yearvisibility_panel = "aladin-lite-div-20";
+var yearvisibility_panel_text = "panel-text-20";
+var weather_panel = "aladin-lite-div-30";
+var wiki_panel_width = "500px";
+var wiki_frame_width = 500;
+var status_text = "error_text";
+var error_text = "error_text";
+var alt_wikitext = null;
+
+if (screen.height > screen.width) {
+    // screen is taller than it is wide
+    wiki_panel = "aladin-lite-div-30";
+    wiki_panel_width = "700px";
+    wiki_frame_width = 700;
+    version_text = null;
+    var weather_panel = "aladin-lite-div-40";
 }
 
-//url_target = "Tarantula nebula";
-//document.getElementById("telescope").value = "C1";
+// size means number of panels on each side
+// 0.5 means 2 panels
+// 1 means 3 panels
+// 1.5 means 4 panes etc.
+var size_x = 1;
+var size_y = 1;
 
+var current_telescope_service = telescope_services[0];
+var current_telescope = current_telescope_service.telescopes[0];
+var current_telescope_service_selected_index = 0;   // for init
+var current_telescope_selected_index = 0;           // for init
+var fov_x;
+var fov_y;
+var img_fov = 0.8;  // field of view for single image considering the overlap
+var img_size = 300;
+var image_target;
+var image_target_list = [];
+
+var UTCdate_ms;
+
+var url = new URL(window.location);
+console.log(url);
+
+var resolved_name = null;
+var resolved_coordinates = null;
+
+var target_ra;
+var target_dec;
+var location_lat;
+var location_lng;
+
+var hour_ms = 60*60*1000;
+var day_ms = 24*hour_ms;
+var degToRad = Math.PI/180.0;
+var radToDeg = 180.0/Math.PI;
+var degToHours = 1/15;
+var hoursToDeg = 15;
+var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascript zero time
+
+var current_catalog = null;                 // current visible catalog
+var current_catalog_filtered_list = null;   // filtered list of catalog items
+var catalog_filters_changed = true;
+var catalogDiv_select = null;
+var catalog_text = null;
+var catalog_date = null;
+var catalog_filter_time = null;
+var catalogFilterDegrees = null;
+var catalogFilterMoon = null;
+var catalog_index = null;
+
+var wikiChecked = false;
+
+// Hard and soft limits for current telecope
+var horizonHard = [];
+var horizonSoft = [];
+
+var url_target = null;
+var url_new_service = null;
+var url_service = null;
+var url_telescope = null;
+var url_name = null;
+var url_grid_type = null;
+var url_overlap = null;
+var url_date = null;
+
+if (typeof URLSearchParams === "function") {
+    searchParams = new URLSearchParams(url.search.slice(1));
+    url_target = searchParams.get('target');
+    url_new_service = searchParams.get('new_service');
+    url_service = searchParams.get('service');
+    url_telescope = searchParams.get('telescope');
+    url_name = searchParams.get('name');
+    url_grid_type = searchParams.get('grid_type');
+    url_overlap = searchParams.get('overlap');
+    url_date = searchParams.get('date');
+}
+
+if (url_target) {
+    console.log("url_target", url_target);
+    startup_image = url_target;
+}
+if (url_new_service) {
+    console.log("url_new_service", url_new_service);
+    var params = url_new_service.split(',');
+    if (params.length < 6) {
+        alert("Too few parameters in url-parameter new_service! Ignoring new_service.");
+    } else {
+        var new_telescope = {
+            name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), lat: parseFloat(params[4]), lng: parseFloat(params[5]),
+            alt: 0, weather: null, weather_url: null, horizonHard: horizon0, horizonSoft: horizon0
+        };
+        if (params.length >= 7) {
+            for (var i = 0; i < weather_services.length; i++) {
+                if (weather_services[i].name == params[6]) {
+                    new_telescope.weather = params[6];
+                    break;
+                }
+            }
+        }
+        var new_service = { name: params[0], telescopes: [ new_telescope ] };
+        telescope_services[telescope_services.length] = new_service;
+        current_telescope_service = new_service;
+        current_telescope = current_telescope_service.telescopes[0];
+        current_telescope_service_selected_index = telescope_services.length - 1;
+    }
+}
+if (url_service) {
+    console.log("url_service", url_service);
+    for (var i = 0; i < telescope_services.length; i++) {
+        if (telescope_services[i].name == url_service) {
+            current_telescope_service = telescope_services[i];
+            current_telescope = current_telescope_service.telescopes[0];
+            current_telescope_service_selected_index = i;
+            break;
+        }
+    }
+}
+if (url_telescope) {
+    console.log("url_telescope", url_telescope);
+    for (var i = 0; i < current_telescope_service.telescopes.length; i++) {
+        if (current_telescope_service.telescopes[i].name == url_telescope) {
+            current_telescope = current_telescope_service.telescopes[i];
+            current_telescope_selected_index = i;
+            break;
+        }
+    }
+}
 if (url_name) {
     document.getElementById("astro_mosaic_title").innerHTML = url_name;
 }
-if (url_telescope) {
-    document.getElementById("telescope").value = url_telescope;
-}
-if (url_type) {
-    document.getElementById("grid_type").value = url_type;
+if (url_grid_type) {
+    document.getElementById("grid_type").value = url_grid_type;
 }
 if (url_overlap) {
     document.getElementById("overlap_percentage").value = url_overlap;
@@ -573,15 +794,35 @@ if (url_date) {
     document.getElementById("view_date").value = d.toISOString().substr(0, 10);
 }
 
-if (url_target) {
-    document.getElementById("target").value = url_target;
-    ViewImage();
+// initialization
+initAstroMosaic();
+
+if (startup_image) {
+    document.getElementById("target").value = startup_image;
+    ViewImage(0);
 }
 
 document.getElementById("size_x").value = 3;
 document.getElementById("size_y").value = 3;
 
-// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
+function initAstroMosaic()
+{
+    load_and_init_catalogs();
+    update_telescope_service_list();
+    update_telescope_list(current_telescope_service.name);
+    update_catalog_list();
+    init_catalog_view_list();
+
+    // Update telescope FoV values.
+    for (var i = 0; i < telescope_services.length; i++) {
+        for (var j = 0; j < telescope_services[i].telescopes.length; j++) {
+            telescope_services[i].telescopes[j].fov_x = getFov(telescope_services[i].telescopes[j].fov_x);
+            telescope_services[i].telescopes[j].fov_y = getFov(telescope_services[i].telescopes[j].fov_y);
+        }
+    }
+}
+
+// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees
 function get_ra_dec(target)
 {
     var radec = [];
@@ -1312,7 +1553,8 @@ function find_coordinates(str)
     image_target = trim_spaces(image_target);
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
-    document.getElementById(status_text).innerHTML = "Resolved RA/DEC " + image_target;
+    //document.getElementById(status_text).innerHTML = "Resolved RA/DEC " + image_target;
+    document.getElementById(status_text).innerHTML = "";
 
     resolved_coordinates = image_target;
 
@@ -1341,7 +1583,7 @@ function ViewImageByName()
     // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
     var resolver_url = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
 
-    xmlhttp=new XMLHttpRequest();
+    var xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange=function()
     {
         if (xmlhttp.readyState==4 && xmlhttp.status==200) {
@@ -1462,18 +1704,108 @@ function reformat_coordinates(coord)
 }
 
 // target field action handler
-// we clear slooh 500 selection if target is changed
+// we clear catalog list selection if target is changed
 function ViewTarget()
 {
-    slooh500select.value = '';
-    ViewImage();
+    catalogDiv_select.value = '';
+    ViewImage(0);
+}
+
+function update_telescope_service_list()
+{
+    console.log('update_telescope_service_list');
+
+    var x = document.getElementById("current-telescope-service");
+    while (x.length > 0) {
+        x.remove(0);
+    }
+
+    // Update list of telescopes
+    for (i = 0; i < telescope_services.length; i++) {
+        var option = document.createElement("option");
+        option.text = telescope_services[i].name;
+        x.add(option);
+    }
+    if (current_telescope_service_selected_index > 0) {
+        x.selectedIndex = current_telescope_service_selected_index;
+        current_telescope_service_selected_index = 0;
+    }
+}
+
+function update_telescope_list(new_name)
+{
+    console.log('update_telescope_list');
+
+    var x = document.getElementById("current-telescope");
+    while (x.length > 0) {
+        x.remove(0);
+    }
+
+    // Find the service
+    for (var i = 0; i < telescope_services.length; i++) {
+        if (telescope_services[i].name == new_name) {
+            console.log('update_telescope_list: current_telescope_service', current_telescope_service.name);
+            current_telescope_service = telescope_services[i];
+            break;
+        }
+    }
+    // Update list of telescopes
+    current_telescope = current_telescope_service.telescopes[0];
+    for (i = 0; i < current_telescope_service.telescopes.length; i++) {
+        var option = document.createElement("option");
+        option.text = current_telescope_service.telescopes[i].name;
+        x.add(option);
+    }
+    if (current_telescope_selected_index > 0) {
+        x.selectedIndex = current_telescope_selected_index;
+        current_telescope_selected_index = 0;
+    }
+}
+
+function skip_slooh_catalog(service, catalog)
+{
+    return service.name != "Slooh" && catalog.source == "slooh";
+}
+
+function update_catalog_list()
+{
+    console.log('update_catalog_list');
+
+    var x = document.getElementById("catalog-selection");
+    while (x.length > 0) {
+        x.remove(0);
+    }
+    current_catalog = null;
+    for (i = 0; i < catalogs.length; i++) {
+        if (skip_slooh_catalog(current_telescope_service, catalogs[i])) {
+            // Skip Slooh catalog on other services
+            continue;
+        }
+        if (current_catalog == null) {
+            current_catalog = catalogs[i];
+        }
+        if (catalogs[i].targets != null && catalogs[i].AladinCatalog == null) {
+            addJsonToAladinCatalog(catalogs[i]);
+        }
+        var option = document.createElement("option");
+        option.text = catalogs[i].name;
+        x.add(option);
+    }
+}
+
+function getFov(fov)
+{
+    return (fov*60.0)/3600.0;
 }
 
 // Main function to view image. Get parameters
 // and call correct view function
-function ViewImage()
+// Values for oper_
+//      1 - Telescope service changed
+//      2 - Telescope changed
+function ViewImage(oper)
 {
-    console.log('ViewImage');
+    console.log('ViewImage', oper);
 
     document.getElementById(status_text).innerHTML = "";
     document.getElementById(error_text).innerHTML = "";
@@ -1494,96 +1826,48 @@ function ViewImage()
     UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
                           parseInt(view_date.substr(8, 2)));
 
-    if (slooh500date != UTCdate_ms) {
-        // time changed, reset slooh500 list
-        console.log("ViewImage, date changed, reset slooh500");
-        slooh500date = UTCdate_ms;
-        slooh500reset();
+    if (catalog_date != UTCdate_ms) {
+        // time changed, reset catalog view list
+        console.log("ViewImage, date changed, reset catalog view");
+        catalog_date = UTCdate_ms;
+        catalog_reset();
+    }
+
+    if (oper == 1) {
+        // Telescope service changed
+        var telescope_service_name = document.getElementById("current-telescope-service").value;
+        /* Update list of telescopes. */
+        update_telescope_list(telescope_service_name);
+        update_catalog_list();
+        catalog_filters_changed = true;
+    }
+
+    if (oper == 2) {
+        // Telescope is changed
+        var telescope_name = document.getElementById("current-telescope").value;
+        for (var i = 0; i < current_telescope_service.telescopes.length; i++) {
+            if (telescope_name == current_telescope_service.telescopes[i].name) {
+                current_telescope = current_telescope_service.telescopes[i];
+            }
+        }
     }
 
     img_fov = document.getElementById("overlap_percentage").value;
     img_fov = 1 - img_fov / 100;
 
-    telescope = document.getElementById("telescope").value;
-
-    // assume Teide, both in degrees
-    telescope_location = 'teide';
-    location_lat = teide_location_lat;
-    location_lng = teide_location_lng;
-    location_alt = teide_location_alt
-
-    // T1 FOV 37´
-    // T2 wide field FOV 43'
-    // T2 ultra wide field FOV 1° 47' 06" x 1° 12' 12"
-    // T3 FOV 1.654° x 1.249°
-    // T4 FOV 0° 15' 57" x 0° 12' 03"
-    // C1 FOV 0° 31' 18" x 0° 20' 51"
-    // C1 ultra wide field FOV 1° 21' 49" x 1° 00' 22"
-    // C2 wide field FOV 43'
-    // C2FR Focal Recucer field FOV 65'
-    // C2LPT wide field FOV 0° 08' 24" x 0° 05' 18"
-
-    horizonSoft = teideSoft;
-
-    if (telescope == "T1") {
-        fov_x = 37.0*60.0/3600.0;
-        fov_y = 37.0*60.0/3600.0;
-        horizonHard = teide1Hard;
-    } else if (telescope == "T2") {
-        fov_x = 43.0*60.0/3600.0;
-        fov_y = 43.0*60.0/3600.0;
-        horizonHard = teide2Hard;
-    } else if (telescope == "T2UWF") {
-        fov_x = 1+(47.0*60.0+6.0)/3600.0;
-        fov_y = 1+(12.0*60.0+12.0)/3600.0;
-        horizonHard = teide2Hard;
-    } else if (telescope == "T3") {
-        fov_x = 1.654;
-        fov_y = 1.249;
-        horizonHard = teide3Hard;
-    } else if (telescope == "T4") {
-        fov_x = (15*60.0+57)/3600.0;
-        fov_y = (12*60.0+3)/3600.0;
-        horizonHard = teide4Hard;
-    } else if (telescope == "C1") {
-        fov_x = (31*60.0+18)/3600.0; 
-        fov_y = (20*60.0+51)/3600.0;
-        telescope_location = 'chile';
-    } else if (telescope == "C1UWF") {
-        fov_x = 1+(21*60.0+49)/3600.0; 
-        fov_y = 1+22/3600.0;
-        telescope_location = 'chile';
-    } else if (telescope == "C2") {
-        // No focal reducer
-        fov_x = 43.0*60.0/3600.0;
-        fov_y = 43.0*60.0/3600.0;
-        telescope_location = 'chile';
-    } else if (telescope == "C2FR") {
-        // With focal reducer
-        fov_x = 65.0*60.0/3600.0;
-        fov_y = 65.0*60.0/3600.0;
-        telescope_location = 'chile';
-    } else if (telescope == "C2LPT") {
-        // With focal reducer
-        fov_x = (8.0*60.0+24.0)/3600.0;
-        fov_y = (5.0*60.0+18.0)/3600.0;
-        telescope_location = 'chile';
-    }
-
-    if (telescope_location == 'chile') {
-        // Chile telescope_location in degrees
-        location_lat = chile_location_lat;
-        location_lng = chile_location_lng;
-        location_alt = chile_location_alt;
-        horizonHard = chile1Hard;
-        horizonSoft = chileSoft;
-    }
+    // Update processing variables based on telescope
+    fov_x = current_telescope.fov_x;
+    fov_y = current_telescope.fov_y;
+    location_lat = current_telescope.lat;
+    location_lng = current_telescope.lng;
+    horizonHard = current_telescope.horizonHard;
+    horizonSoft = current_telescope.horizonSoft;
+    telescope_location = current_telescope.name;
 
     var target_name;
 
-    initslooh500();
+    init_catalog_view_list();
 
-    console.log("chile1Hard[0]", chile1Hard[0]);
     console.log("horizonHard[0]", horizonHard[0]);
 
     image_target = document.getElementById("target").value;
@@ -1609,7 +1893,7 @@ function ViewImage()
         ViewImageByName();
     }
 
-    showWeatherForecast(telescope_location == 'chile');
+    showWeatherForecast();
 }
 
 function ViewImageByType()
@@ -1651,7 +1935,7 @@ function clearOldImage()
     }
 }
 
-function OpenNGC_type_to_typename(type)
+function OpenNGC_type_to_typename(type, target_list)
 {
     // Map OpenNSC types to a more descriptive text
     if (type == '*')   return('Star');
@@ -1674,7 +1958,13 @@ function OpenNGC_type_to_typename(type)
     if (type == 'Nova')   return('Nova star');
     if (type == 'NonEx')   return('Nonexistent object');
     if (type == 'Dup')   return('Duplicated object (see NGC or IC columns to find the master object)');
-    if (type == 'Other')   return('Other classification (see object notes)');
+    if (type == 'Other')   {
+        if (target_list) {
+            return('');
+        } else {
+            return('Other classification (see object notes)');
+        }
+    }
     
     // Slooh type 
     return(type);
@@ -1698,18 +1988,14 @@ function initAladin(aladin_fov, aladin_target)
         document.getElementById(image_panel).style.height = "50px";
         document.getElementById(image_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
     }
-    var catSlooh500;
-    if (telescope_location == 'teide') {
-        catSlooh500 = createSlooh500Catalog(true);
-    } else {
-        catSlooh500 = createSlooh500Catalog(false);
-    }
     if (aladin) {
-        aladin.addCatalog(catSlooh500.visible);
-        aladin.addCatalog(catSlooh500.notvisible);
-        aladin.addCatalog(catNGC);
-        aladin.addCatalog(catRCW);
-        aladin.addCatalog(catSh);
+        for (var i = 0; i < catalogs.length; i++) {
+            if (catalogs[i].AladinCatalog != null) {
+                if (!skip_slooh_catalog(current_telescope_service, catalogs[i])) {
+                    aladin.addCatalog(catalogs[i].AladinCatalog);
+                }
+            }
+        }
     }
 
     // define function triggered when an object is clicked
@@ -1720,25 +2006,18 @@ function initAladin(aladin_fov, aladin_target)
                 objClicked = object;
                 object.select();
                 var tab = "<BR><TABLE>";
-                if (object.data.info.list == 'S') {
-                    // Slooh
-                    tab = addTabRow(tab, "Name", object.data.name);
-                    tab = addTabRow(tab, "Type", object.data.info.type);
-                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                } else if (object.data.info.list == 'N') {
-                    // OpenNGC
-                    tab = addTabRow(tab, "Name", object.data.name);
-                    tab = addTabRow(tab, "Type", OpenNGC_type_to_typename(object.data.info.type));
-                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                    tab = addTabRow(tab, "Constellation", object.data.info.constellation);
-                    tab = addTabRow(tab, "Magnitude", object.data.info.mag);
-                    tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
-                    tab = addTabRow(tab, "Notes", object.data.info.notes);
-                } else {
-                    tab = addTabRow(tab, "Name", object.data.name);
-                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                    tab = addTabRow(tab, "Notes", object.data.info.notes);
-                }
+                tab = addTabRow(tab, "Name", object.data.name);
+                tab = addTabRow(tab, "Type", object.data.info.type);
+                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
+                tab = addTabRow(tab, "Constellation", object.data.info.constellation);
+                tab = addTabRow(tab, "Magnitude", object.data.info.mag);
+                tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
+                tab = addTabRow(tab, "Notes", object.data.info.notes);
+                tab = addTabRow(
+                        tab, 
+                        "Url", 
+                        '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+object.data.name.replace(/ /g, "+")+'">SIMBAD</a>');
+            
                 tab = tab + "</TABLE>";
                 console.log('aladin objectClicked', tab);
                 alt_wikitext = tab;
@@ -2058,677 +2337,94 @@ function ViewPanels()
     }
 }
 
-function slooh500initlists()
+function addJsonToAladinCatalog(cat)
 {
-slooh500Teide = [
-[ 1 , "STAR" , "Adhil" , "Xi Andromedae" , "01:22:20.41 +45:31:43.6" , 20.59 , 45.76 ],
-[ 2 , "STAR" , "Albali" , "Epsilon Aquarii" , "20:47:40.55 -09:29:44.7" , 311.92 , -8.85 ],
-[ 3 , "STAR" , "Almach" , "Gamma Andromedae" , "02:03:53.95 +42:19:47.0" , 30.97 , 42.71 ],
-[ 4 , "STAR" , "Alpheratz" , "Alpha Andromedae" , "00:08:23.25 +29:05:25.5" , 2.10 , 29.49 ],
-[ 5 , "STAR" , "Alshain" , "Beta Aquilae" , "19:55:18.79 +06:24:24.3" , 298.83 , 6.10 ],
-[ 6 , "STAR" , "Altair" , "Alpha Aquilae" , "19:50:46.99 +08:52:05.9" , 297.70 , 8.14 ],
-[ 7 , "STAR" , "Ancha" , "Theta Aquarii" , "22:16:50.03 -07:46:59.8" , 334.21 , -6.88 ],
-[ 8 , "STAR" , "Bharani" , "41 Arietis" , "02:49:59.03 +27:15:37.8" , 42.50 , 27.46 ],
-[ 9 , "STAR" , "Botein" , "Delta Arietis" , "03:11:37.76 +19:43:36.0" , 47.91 , 19.32 ],
-[ 10 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],    // NO WIKI
-[ 11 , "STAR" , "Hamal" , "Alpha Arietis" , "02:07:10.40 +23:27:44.7" , 31.79 , 23.39 ],
-[ 12 , "STAR" , "Keid - home of Vulcan" , "40 Eridani" , "04:15:16.3 -7:39:10.3" , 63.82 , -6.88 ],
-[ 13 , "STAR" , "Libertas" , "Xi Aquilae" , "19:54:14.88 +08:27:41.2" , 298.56 , 8.14 ],
-[ 14 , "STAR" , "Lilii Borea" , "39 Arietis" , "02:47:54.54 +29:14:49.6" , 41.98 , 29.49 ],
-[ 15 , "STAR" , "Mesarthim" , "Gamma Arietis" , "01:53:31.81 +19:17:37.8" , 28.38 , 19.32 ],
-[ 16 , "STAR" , "Mirach" , "Beta Andromedae" , "01:09:43.92 +35:37:14.0" , 17.43 , 35.59 ],
-[ 17 , "STAR" , "Nembus" , "51 Andromedae" , "01:37:59.55 +48:37:41.5" , 24.50 , 48.81 ],
-[ 18 , "STAR" , "Sadachbia" , "Gamma Aquarii" , "22:21:39.37 -01:23:14.4" , 335.41 , -0.98 ],
-[ 19 , "STAR" , "Sadalmelik" , "Alpha Aquarii" , "22:05:47.03 -00:19:11.4" , 331.45 , 0.00 ],
-[ 20 , "STAR" , "Sadalsuud" , "Beta Aquarii" , "21:31:33.53 -05:34:16.2" , 322.89 , -4.92 ],
-[ 21 , "STAR" , "Sheratan" , "Beta Arietis" , "01:54:38.41 +20:48:28.9" , 28.66 , 20.34 ],
-[ 22 , "STAR" , "Situla" , "Kappa Aquarii" , "22:37:45.38 -04:13:40.9" , 339.44 , -3.93 ],
-[ 23 , "STAR" , "Skat" , "Delta Aquarii" , "22:54:39.01 -15:49:14.8" , 343.66 , -14.75 ],
-[ 24 , "STAR" , "Tarazed" , "Gamma Aquilae" , "19:46:15.58 +10:36:47.7" , 296.56 , 10.17 ],
-[ 25 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],   // NO WIKI
-[ 26 , "STAR" , "Veritate" , "14 Andromedae" , "23:31:17.41 +39:14:10.3" , 352.82 , 39.66 ],
-[ 27 , "DOUBLE STARS" , "Albireo" , "Beta Cygni" , "19:30:43.28 +27:57:34.8" , 292.68 , 27.46 ],
-[ 28 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
-[ 29 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
-[ 30 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
-[ 31 , "SUPERNOVA REMNANTS" , "Veil Nebula East" , "NGC 6992" , "20:56:19.0 +31:44:36" , 314.08 , 31.53 ],
-[ 32 , "SUPERNOVA REMNANTS" , "Veil Nebula West" , "NGC 6960" , "20:45:37.99 +30:42:29.9" , 311.41 , 30.51 ],
-[ 33 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
-[ 34 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
-[ 35 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
-[ 36 , "OPEN CLUSTERS" , "Caroline's Star Cluster" , "M48" , "08:13:43.0 -05:45:00" , 123.43 , -4.92 ],
-[ 37 , "OPEN CLUSTERS" , "Double Cluster" , "NGC 869" , "02:19:00.0 +57:07:42" , 34.75 , 57.97 ],
-[ 38 , "OPEN CLUSTERS" , "E.T. Cluster" , "NGC 457" , "01:19:35.0 +58:17:12" , 19.90 , 58.98 ],
-[ 39 , "OPEN CLUSTERS" , "Ghost's Goblet" , "NGC 559" , "01:29:31.2 +63:18:07" , 22.38 , 64.07 ],
-[ 40 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
-[ 41 , "OPEN CLUSTERS" , "Golf Ball Cluster" , "NGC 752" , "01:57:41.0 +37:47:06" , 29.42 , 37.63 ],
-[ 42 , "OPEN CLUSTERS" , "Horseshoe Cluster" , "NGC 663" , "01:46:09.0 +61:14:06" , 26.54 , 62.03 ],
-[ 43 , "OPEN CLUSTERS" , "Hyades" , "Melotte 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
-[ 44 , "OPEN CLUSTERS" , "Open Star Cluster" , "M103" , "01:33:23.0 +60:39:00" , 23.35 , 61.02 ],
-[ 45 , "OPEN CLUSTERS" , "Open Star Cluster" , "M18" , "18:19:58.0 -17:06:06" , 274.99 , -16.71 ],
-[ 46 , "OPEN CLUSTERS" , "Open Star Cluster" , "M21" , "18:04:13.0 -22:29:24" , 271.05 , -21.63 ],
-[ 47 , "OPEN CLUSTERS" , "Open Star Cluster" , "M23" , "17:57:04.0 -18:59:06" , 269.27 , -17.70 ],
-[ 48 , "OPEN CLUSTERS" , "Open Star Cluster" , "M25" , "18:31:47.0 -19:07:00" , 277.95 , -18.68 ],
-[ 49 , "OPEN CLUSTERS" , "Open Star Cluster" , "M26" , "18:45:18.0 -09:23:00" , 281.32 , -8.85 ],
-[ 50 , "OPEN CLUSTERS" , "Open Star Cluster" , "M29" , "20:23:56.0 +38:31:24" , 305.98 , 38.64 ],
-[ 51 , "OPEN CLUSTERS" , "Open Star Cluster" , "M35" , "06:08:54.0 +24:20:00" , 92.22 , 24.41 ],
-[ 52 , "OPEN CLUSTERS" , "Open Star Cluster" , "M36" , "05:36:18.0 +34:08:24" , 84.08 , 34.58 ],
-[ 53 , "OPEN CLUSTERS" , "Open Star Cluster" , "M47" , "07:36:35.0 -14:29:00" , 114.15 , -13.76 ],
-[ 54 , "OPEN CLUSTERS" , "Open Star Cluster" , "M50" , "07:02:47.50 -08:20:16.0" , 105.70 , -7.86 ],
-[ 55 , "OPEN CLUSTERS" , "Open Star Cluster" , "M73" , "20:59:00 -12:38:01" , 314.75 , -11.80 ],
-[ 56 , "OPEN CLUSTERS" , "Pleiades Star Cluster" , "M45" , "03:47:00.0 +24:07:00" , 56.75 , 24.41 ],
-[ 57 , "OPEN CLUSTERS" , "Salt and Pepper Cluster" , "M52" , "23:24:48.0 +61:35:36" , 351.20 , 62.03 ],
-[ 58 , "OPEN CLUSTERS" , "Starfish Star Cluster" , "M93" , "07:44:30.0 -23:51:24" , 116.12 , -22.61 ],
-[ 59 , "OPEN CLUSTERS" , "Velvet Star Cluster" , "M46" , "07:41:46.0 -14:48:36" , 115.44 , -13.76 ],
-[ 60 , "OPEN CLUSTERS" , "Wild Duck Star Cluster" , "M11" , "18:51:05.0 -06:16:12" , 282.77 , -5.90 ],
-[ 61 , "OPEN CLUSTERS" , "Winnecke 4 Star Cluster" , "M40" , "12:22:12.52 +58:04:58.5" , 185.55 , 58.98 ],
-[ 62 , "OPEN CLUSTERS" , "X Open Star Cluster" , "M34" , "02:42:05.0 +42:45:42" , 40.52 , 42.71 ],
-[ 63 , "GLOBULAR CLUSTERS" , "Baade's Window" , "NGC 6522" , "18:03:31 -30:01:15" , 270.88 , -29.49 ],
-[ 64 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M107" , "16:32:31.86 -13:03:13.6" , 248.13 , -12.78 ],
-[ 65 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M14" , "17:37:36.15 -03:14:45.3" , 264.40 , -2.95 ],
-[ 66 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M15" , "21:29:58.33 +12:10:01.2" , 322.49 , 12.20 ],
-[ 67 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M19" , "17:02:37.69 -26:16:04.5" , 255.66 , -25.56 ],
-[ 68 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M2" , "21:33:27.01 -00:49:23.7" , 323.36 , 0.00 ],
-[ 69 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M22" , "18:36:23.93 -23:54:17.1" , 279.10 , -22.61 ],
-[ 70 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M28" , "18:24:32.89 -24:52:11.3" , 276.14 , -23.59 ],
-[ 71 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M30" , "21:40:22.12 -23:10:47.4" , 325.09 , -22.61 ],
-[ 72 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M4" , "16:23:35.22 -26:31:32.7" , 245.90 , -25.56 ],
-[ 73 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M5" , "15:18:33.22 +02:04:51.7" , 229.64 , 2.03 ],
-[ 74 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M53" , "13:12:55.24 +18:10:05.4" , 198.23 , 18.30 ],
-[ 75 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M55" , "19:39:59.71 -30:57:53.1" , 295.00 , -29.49 ],
-[ 76 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M56" , "19:16:35.56 +30:11:00.4" , 289.15 , 30.51 ],
-[ 77 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M62" , "17:01:12.60 -30:06:44.4" , 255.30 , -29.49 ],
-[ 78 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M68" , "12:39:27.97 -26:44:38.6" , 189.87 , -25.56 ],
-[ 79 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M71" , "19:53:46.48 +18:46:45.0" , 298.44 , 18.30 ],
-[ 80 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M72" , "20:53:27.70 -12:32:14.3" , 313.37 , -11.80 ],
-[ 81 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M79" , "05:24:10.58 -24:31:27.3" , 81.04 , -23.59 ],
-[ 82 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M80" , "16:17:02.41 -22:58:33.8" , 244.26 , -21.63 ],
-[ 83 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M9" , "17:19:11.77 -18:30:58.5" , 259.80 , -17.70 ],
-[ 84 , "GLOBULAR CLUSTERS" , "Great Hercules Cluster" , "M13" , "16:41:41.63 +36:27:40.7" , 250.42 , 36.61 ],
-[ 85 , "GLOBULAR CLUSTERS" , "Intergalactic Wanderer" , "NGC 2419" , "07:38:08.50 +38:52:54.9" , 114.54 , 38.64 ],
-[ 86 , "GLOBULAR CLUSTERS" , "Mirror Ball Star Cluster" , "M10" , "16:57:09.04 -04:06:01.1" , 254.29 , -3.93 ],
-[ 87 , "GLOBULAR CLUSTERS" , "Orb Star Cluster" , "M92" , "17:17:07.39 +43:08:09.3" , 259.28 , 43.73 ],
-[ 88 , "GLOBULAR CLUSTERS" , "Rich Globular Star Cluster" , "M3" , "13:42:11.62 +28:22:38.2" , 205.55 , 28.47 ],
-[ 89 , "GLOBULAR CLUSTERS" , "Snowball Star Cluster" , "M12" , "16:47:14.17 -01:56:54.7" , 251.81 , -0.98 ],
-[ 90 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
-[ 91 , "EMISSION NEBULAE" , "Bubble Nebula" , "NGC 7635" , "23:20:48.30 +61:12:06.0" , 350.20 , 62.03 ],
-[ 92 , "EMISSION NEBULAE" , "Butterfly Nebula" , "IC 1318" , "20:16:48.0 +41:57:24" , 304.20 , 41.96 ],
-[ 93 , "EMISSION NEBULAE" , "California Nebula" , "NGC 1499" , "04:03:18.0 +36:25:18" , 60.82 , 36.61 ],
-[ 94 , "EMISSION NEBULAE" , "Cave Nebula" , "Sh2-155" , "22:13:27.0 +70:15:18" , 333.36 , 71.19 ],
-[ 95 , "EMISSION NEBULAE" , "Cocoon Nebula" , "IC 5146" , "21:53:24.0 +47:16:00" , 328.35 , 47.80 ],
-[ 96 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
-[ 97 , "EMISSION NEBULAE" , "Crescent Nebula" , "NGC 6888" , "20:12:07.0 +38:21:18" , 303.03 , 38.64 ],
-[ 98 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
-[ 99 , "EMISSION NEBULAE" , "Flame Nebula" , "NGC 2024" , "05:41:42.70 -01:54:43.9" , 85.43 , -0.98 ],
-[ 100 , "EMISSION NEBULAE" , "Flaming Star Nebula" , "IC 405" , "05:17:24 +34:23:01" , 79.35 , 34.58 ],
-[ 101 , "EMISSION NEBULAE" , "Heart Nebula" , "IC 1805" , "02:32:42 +61:27:03" , 38.17 , 62.03 ],
-[ 102 , "EMISSION NEBULAE" , "Lagoon Nebula" , "M8" , "18:03:37.0 -24:23:12" , 270.90 , -23.59 ],
-[ 103 , "EMISSION NEBULAE" , "Monkey Head Nebula" , "NGC 2174" , "06:09:42 +20:30:03" , 92.43 , 20.34 ],
-[ 104 , "EMISSION NEBULAE" , "North America Nebula" , "NGC 7000" , "20:58:47.0 +44:19:48" , 314.70 , 44.75 ],
-[ 105 , "EMISSION NEBULAE" , "Orion Nebula" , "M42" , "05:35:17.29 -05:23:27.9" , 83.82 , -4.92 ],
-[ 106 , "EMISSION NEBULAE" , "Pacman Nebula" , "NGC 281" , "00:52:25.09 +56:33:54.0" , 13.10 , 56.95 ],
-[ 107 , "EMISSION NEBULAE" , "Pelican Nebula" , "IC 5070" , "20:51:00 +44:22:04" , 312.75 , 44.75 ],
-[ 108 , "EMISSION NEBULAE" , "Pink and Blue Nebula" , "IC 1284" , "18:17:42 -19:40:04" , 274.43 , -18.68 ],
-[ 109 , "EMISSION NEBULAE" , "Rosette Nebula" , "NGC 2244" , "06:31:40.0 +04:57:48" , 97.92 , 4.07 ],
-[ 110 , "EMISSION NEBULAE" , "Seagull Nebula" , "IC 2177" , "07:04:25.0 -10:27:18" , 106.10 , -9.83 ],
-[ 111 , "EMISSION NEBULAE" , "Stellar Nursery" , "NGC 2467" , "07:52:18.5 -26:25:41" , 118.08 , -25.56 ],
-[ 112 , "EMISSION NEBULAE" , "Strawberry Nebula" , "IC 417" , "05:28:06 +34:25:04" , 82.03 , 34.58 ],
-[ 113 , "EMISSION NEBULAE" , "Swan Nebula" , "M17" , "18:20:47.0 -16:10:18" , 275.20 , -15.73 ],
-[ 114 , "EMISSION NEBULAE" , "Trifid Nebula" , "M20" , "18:02:42.0 -22:58:18" , 270.68 , -21.63 ],
-[ 115 , "REFLECTION NEBULAE" , "Hubble's Variable Nebula" , "NGC 2261" , "06:39:09.51 +08:44:39.5" , 99.79 , 8.14 ],
-[ 116 , "REFLECTION NEBULAE" , "Iris Nebula" , "NGC 7023" , "21:01:35.59 +68:10:09.9" , 315.40 , 69.15 ],
-[ 117 , "REFLECTION NEBULAE" , "Northern Trifid" , "NGC 1579" , "04:30:11.0 +35:16:44" , 67.55 , 35.59 ],
-[ 118 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
-[ 119 , "REFLECTION NEBULAE" , "Rho Ophiuchi Region" , "IC 4603" , "16:26:00.0 -24:24:00" , 246.50 , -23.59 ],
-[ 120 , "REFLECTION NEBULAE" , "Running Man Nebula" , "NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
-[ 121 , "REFLECTION NEBULAE" , "Star Forming Region" , "NGC 1333" , "03:28:55.2 +31:22:12" , 52.23 , 31.53 ],
-[ 122 , "DARK NEBULAE" , "Dark Comet Nebula" , "Barnard 93" , "18:16:54.0 -18:04:00" , 274.23 , -18.07 ], 
-[ 123 , "DARK NEBULAE" , "Horsehead Nebula" , "Barnard 33" , "05:40:58.99 -02:27:29.9" , 85.25 , -1.97 ],
-[ 124 , "DARK NEBULAE" , "Inkspot Nebula" , "Barnard 86" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
-[ 125 , "DARK NEBULAE" , "Molecular Cloud Nebula" , "Barnard 68" , "17:22:38.2 -23:49:34" , 260.66 , -22.61 ],
-[ 126 , "DARK NEBULAE" , "Snake Nebula" , "Barnard 72" , "17:23:30 -23:38:00" , 260.88 , -22.61 ],
-[ 127 , "DARK NEBULAE" , "Van den Bergh 142" , "IC 1396" , "21:39:00.0 +57:29:24" , 324.75 , 57.97 ],
-[ 128 , "PLANETARY NEBULAE" , "Dumbbell Nebula" , "M27" , "19:59:36.36 +22:43:16.3" , 299.90 , 22.37 ],
-[ 129 , "PLANETARY NEBULAE" , "Eskimo Nebula" , "NGC 2392" , "07:29:10.76 +20:54:42.4" , 112.29 , 20.34 ],
-[ 130 , "PLANETARY NEBULAE" , "Helix Nebula" , "NGC 7293" , "22:29:38.54 -20:50:13.7" , 337.41 , -19.66 ],
-[ 131 , "PLANETARY NEBULAE" , "Owl Nebula" , "M97" , "11:14:47.71 +55:01:08.4" , 168.70 , 55.93 ],
-[ 132 , "SPIRAL GALAXIES" , "Andromeda Galaxy" , "M31" , "00:42:44.32 +41:16:07.5" , 10.68 , 41.69 ],
-[ 133 , "SPIRAL GALAXIES" , "Antennae Galaxies" , "NGC 4038" , "12:01:53.00 -18:52:03.3" , 180.47 , -17.70 ],
-[ 134 , "SPIRAL GALAXIES" , "Bennett 41B" , "NGC 2997" , "09:45:38.75 -31:11:27.3" , 146.41 , -30.47 ],
-[ 135 , "SPIRAL GALAXIES" , "Black-Eye Galaxy" , "M64" , "12:56:43.69 +21:40:57.5" , 194.18 , 21.36 ],
-[ 136 , "SPIRAL GALAXIES" , "Bode's Galaxy" , "M81" , "09:55:33.17 +69:03:55.0" , 148.89 , 70.17 ],
-[ 137 , "SPIRAL GALAXIES" , "Caldwell 23" , "NGC 891" , "02:22:32.90 +42:20:53.9" , 35.64 , 42.71 ],
-[ 138 , "SPIRAL GALAXIES" , "Caldwell 30" , "NGC 7331" , "22:37:04.10 +34:24:57.3" , 339.27 , 34.58 ],
-[ 139 , "SPIRAL GALAXIES" , "Caldwell 36" , "NGC 4559" , "12:35:57.63 +27:57:35.8" , 188.99 , 27.46 ],
-[ 140 , "SPIRAL GALAXIES" , "Caldwell 7" , "NGC 2403" , "07:36:51.39 +65:36:09.1" , 114.21 , 66.10 ],
-[ 141 , "SPIRAL GALAXIES" , "Denning's Galaxy" , "IC 342" , "03:46:48.51 +68:05:45.9" , 56.70 , 69.15 ],
-[ 142 , "SPIRAL GALAXIES" , "Edge-On Spiral Galaxy" , "NGC 4565" , "12:36:20.80 +25:59:14.6" , 189.09 , 25.42 ],
-[ 143 , "SPIRAL GALAXIES" , "Fireworks Galaxy" , "NGC 6946" , "20:34:52.33 +60:09:13.2" , 308.72 , 61.02 ],
-[ 144 , "SPIRAL GALAXIES" , "Flocculent Spiral Galaxy" , "NGC 4414" , "12:26:27.08 +31:13:24.7" , 186.61 , 31.53 ],
-[ 145 , "SPIRAL GALAXIES" , "Grand Design Galaxy" , "M74" , "01:36:41.77 +15:47:00.4" , 24.17 , 15.25 ],
-[ 146 , "SPIRAL GALAXIES" , "Hamburger Galaxy" , "NGC 3628" , "11:20:17.01 +13:35:22.1" , 170.07 , 13.22 ],
-[ 147 , "SPIRAL GALAXIES" , "Mechain's Galaxy" , "M106" , "12:18:57.61 +47:18:13.3" , 184.74 , 47.80 ],
-[ 148 , "SPIRAL GALAXIES" , "Oriani's Galaxy" , "M61" , "12:21:54.92 +04:28:25.5" , 185.48 , 4.07 ],
-[ 149 , "SPIRAL GALAXIES" , "Pinwheel Galaxy" , "M101" , "14:03:12.58 +54:20:55.5" , 210.80 , 54.91 ],
-[ 150 , "SPIRAL GALAXIES" , "S Galaxy" , "NGC 2903" , "09:32:10.11 +21:30:02.9" , 143.04 , 21.36 ],
-[ 151 , "SPIRAL GALAXIES" , "Silver Coin Galaxy" , "NGC 253" , "00:47:33.12 -25:17:17.5" , 11.89 , -24.58 ],
-[ 152 , "SPIRAL GALAXIES" , "Silver Needle Galaxy" , "NGC 4244" , "12:17:29.65 +37:48:25.5" , 184.37 , 37.63 ],
-[ 153 , "SPIRAL GALAXIES" , "Sombrero Galaxy" , "M104" , "12:39:59.43 -11:37:22.9" , 190.00 , -10.81 ],
-[ 154 , "SPIRAL GALAXIES" , "Southern Pinwheel Galaxy" , "M83" , "13:37:00.91 -29:51:56.7" , 204.25 , -28.51 ],
-[ 155 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M100" , "12:22:54.93 +15:49:20.2" , 185.73 , 15.25 ],
-[ 156 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M108" , "11:11:30.96 +55:40:26.8" , 167.88 , 55.93 ],
-[ 157 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M109" , "11:57:35.98 +53:22:28.2" , 179.40 , 53.90 ],
-[ 158 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M58" , "12:37:43.59 +11:49:05.1" , 189.43 , 11.19 ],
-[ 159 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M65" , "11:18:55.95 +13:05:31.9" , 169.73 , 13.22 ],
-[ 160 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M66" , "11:20:15.02 +12:59:28.6" , 170.06 , 12.20 ],
-[ 161 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M88" , "12:31:59.21 +14:25:13.4" , 188.00 , 14.24 ],
-[ 162 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M90" , "12:36:49.81 +13:09:46.3" , 189.21 , 13.22 ],
-[ 163 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M91" , "12:35:26.43 +14:29:46.7" , 188.86 , 14.24 ],
-[ 164 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M94" , "12:50:53.14 +41:07:12.5" , 192.72 , 41.69 ],
-[ 165 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M95" , "10:43:57.73 +11:42:12.9" , 160.99 , 11.19 ],
-[ 166 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M96" , "10:46:45.74 +11:49:11.7" , 161.69 , 11.19 ],
-[ 167 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M98" , "12:13:48.29 +14:54:01.6" , 183.45 , 14.24 ],
-[ 168 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M99" , "12:18:49.62 +14:24:59.3" , 184.71 , 14.24 ],
-[ 169 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2146" , "06:18:37.71 +78:21:25.2" , 94.66 , 79.32 ],
-[ 170 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 3938" , "11:52:49.45 +44:07:14.6" , 178.21 , 44.75 ],
-[ 171 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 691" , "01:50:41.70 +21:45:35.8" , 27.67 , 21.36 ],
-[ 172 , "SPIRAL GALAXIES" , "Sunflower Galaxy" , "M63" , "13:15:49.27 +42:01:45.7" , 198.96 , 42.71 ],
-[ 173 , "SPIRAL GALAXIES" , "Triangulum Galaxy" , "M33" , "01:33:50.90 +30:39:35.7" , 23.46 , 30.51 ],
-[ 174 , "SPIRAL GALAXIES" , "Whale Galaxy" , "NGC 4631" , "12:42:08.00 +32:32:29.4" , 190.53 , 32.54 ],
-[ 175 , "SPIRAL GALAXIES" , "Whirlpool Galaxy" , "M51" , "13:29:52.69 +47:11:42.9" , 202.47 , 47.80 ],
-[ 176 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M105" , "10:47:49.60 +12:34:53.8" , 161.96 , 12.20 ],
-[ 177 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M49" , "12:29:46.79 +08:00:01.4" , 187.44 , 8.14 ],
-[ 178 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M59" , "12:42:02.32 +11:38:48.9" , 190.51 , 11.19 ],
-[ 179 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M60" , "12:43:40.00 +11:33:09.3" , 190.92 , 11.19 ],
-[ 180 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M89" , "12:35:39.81 +12:33:22.6" , 188.92 , 12.20 ],
-[ 181 , "ELLIPTICAL GALAXIES" , "Giant Elliptical Galaxy" , "M87" , "12:30:49.42 +12:23:28.0" , 187.71 , 12.20 ],
-[ 182 , "ELLIPTICAL GALAXIES" , "Lenticular Galaxy" , "M86" , "12:26:11.81 +12:56:45.4" , 186.55 , 12.20 ],
-[ 183 , "ELLIPTICAL GALAXIES" , "Satellite Galaxy" , "M110" , "00:40:22.05 +41:41:07.4" , 10.09 , 41.69 ],
-[ 184 , "ELLIPTICAL GALAXIES" , "Satellite Galaxy" , "M32" , "00:42:41.82 +40:51:54.6" , 10.67 , 40.68 ],
-[ 185 , "ACTIVE GALAXIES" , "Cetus A Active Galaxy" , "M77" , "02:42:40.77 -00:00:47.8" , 40.67 , 0.00 ],
-[ 186 , "ACTIVE GALAXIES" , "Exploding Galaxy" , "M82" , "09:55:52.42 +69:40:46.9" , 148.97 , 70.17 ],
-[ 187 , "ACTIVE GALAXIES" , "Tao Galaxy" , "NGC 4535" , "12:34:20.31 +08:11:51.9" , 188.58 , 8.14 ],
-[ 188 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
-[ 189 , "GALAXY CLUSTERS" , "Leo Triplet" , "M66" , "11:20:15.0 +12:59:30" , 170.06 , 12.20 ],
-[ 190 , "GALAXY CLUSTERS" , "Stephan's Quintet" , "NGC 7318" , "22:35:57.49 +33:57:36.0" , 338.99 , 33.56 ],
-[ 191 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
-[ 192 , "OTHER GALAXIES" , "Box Galaxy" , "NGC 4449" , "12:28:11.11 +44:05:36.8" , 187.05 , 44.75 ],
-[ 193 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M84" , "12:25:03.74 +12:53:13.1" , 186.27 , 12.20 ],
-[ 194 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M85" , "12:25:24.05 +18:11:27.8" , 186.35 , 18.30 ],
-[ 195 , "OTHER GALAXIES" , "Spindle Galaxy" , "M102" , "10:05:13.97 -07:43:06.8" , 151.31 , -6.88 ]
-];
+    cat.AladinCatalog = A.catalog({name: cat.name, labelColumn: 'name', displayLabel: true, labelColor: cat.color, labelFont: '12px sans-serif'});
+    cat.AladinCatalog.hide();
 
-slooh500Chile = [
-[ 1 , "STAR" , "Acrux" , "Alpha Crucis" , "12:26:35.89 -63:05:56.7" , 186.65 , -61.93 ],
-[ 2 , "STAR" , "Adhil" , "Xi Andromedae" , "01:22:20.41 +45:31:43.6" , 20.59 , 45.76 ],
-[ 3 , "STAR" , "Al Gieba" , "Gamma Leonis" , "10:19:58.4 +19:50:29.3" , 154.99 , 19.32 ],
-[ 4 , "STAR" , "Al Phaulkah" , "Beta Gruis" , "22:42:40.1 -46:53:04.5" , 340.67 , -45.22 ],
-[ 5 , "STAR" , "Albali" , "Epsilon Aquarii" , "20:47:40.55 -09:29:44.7" , 311.92 , -8.85 ],
-[ 6 , "STAR" , "Aldebaran" , "Alpha Tauri" , "04:35:55.23 +16:30:33.4" , 68.98 , 16.27 ],
-[ 7 , "STAR" , "Almach" , "Gamma Andromedae" , "02:03:53.95 +42:19:47.0" , 30.97 , 42.71 ],
-[ 8 , "STAR" , "Alpheratz" , "Alpha Andromedae" , "00:08:23.25 +29:05:25.5" , 2.10 , 29.49 ],
-[ 9 , "STAR" , "Alshain" , "Beta Aquilae" , "19:55:18.79 +06:24:24.3" , 298.83 , 6.10 ],
-[ 10 , "STAR" , "Altair" , "Alpha Aquilae" , "19:50:46.99 +08:52:05.9" , 297.70 , 8.14 ],
-[ 11 , "STAR" , "Ancha" , "Theta Aquarii" , "22:16:50.03 -07:46:59.8" , 334.21 , -6.88 ],
-[ 12 , "STAR" , "Antares" , "Alpha Scorpii" , "16:29:24.45 -26:25:55.2" , 247.35 , -25.56 ],
-[ 13 , "STAR" , "Arcturus" , "Alpha Bootis" , "14:15:39.67 +19:10:56.6" , 213.92 , 19.32 ],
-[ 14 , "STAR" , "Beta Tucanae" , "SAO 248201" , "00:31:32.7 -62:57:29" , 7.89 , -60.95 ],
-[ 15 , "STAR" , "Betelgeuse" , "Alpha Orionis" , "05:55:10.30 +07:24:25.4" , 88.79 , 7.12 ],
-[ 16 , "STAR" , "Bharani" , "41 Arietis" , "02:49:59.03 +27:15:37.8" , 42.50 , 27.46 ],
-[ 17 , "STAR" , "Botein" , "Delta Arietis" , "03:11:37.76 +19:43:36.0" , 47.91 , 19.32 ],
-[ 18 , "STAR" , "Canopus" , "Alpha Carinae" , "06:23:57.10 -52:41:44.3" , 95.99 , -51.12 ],
-[ 19 , "STAR" , "Cervantes" , "Mu Arae" , "17:44:08.70 -51:50:02.5" , 266.04 , -50.14 ],
-[ 20 , "STAR" , "Ginan" , "Epsilon Crucis" , "12:21:21.60 -60:24:04.1" , 185.34 , -58.98 ],
-[ 21 , "STAR" , "Hamal" , "Alpha Arietis" , "02:07:10.40 +23:27:44.7" , 31.79 , 23.39 ],
-[ 22 , "STAR" , "Kapteyn's Star" , "TYC 8078-01749-1" , "05:11:40.58 -45:01:06.3" , 77.92 , -44.24 ],
-[ 23 , "STAR" , "Keid - home of Vulcan" , "40 Eridani" , "04:15:16.3 -07:39:10.3" , 63.82 , -6.88 ],
-[ 24 , "STAR" , "Libertas" , "Xi Aquilae" , "19:54:14.88 +08:27:41.2" , 298.56 , 8.14 ],
-[ 25 , "STAR" , "Lilii Borea" , "39 Arietis" , "02:47:54.54 +29:14:49.6" , 41.98 , 29.49 ],
-[ 26 , "STAR" , "Mesarthim" , "Gamma Arietis" , "01:53:31.81 +19:17:37.8" , 28.38 , 19.32 ],
-[ 27 , "STAR" , "Mirach" , "Beta Andromedae" , "01:09:43.92 +35:37:14.0" , 17.43 , 35.59 ],
-[ 28 , "STAR" , "Nembus" , "51 Andromedae" , "01:37:59.55 +48:37:41.5" , 24.50 , 48.81 ],
-[ 29 , "STAR" , "Proxima Centauri" , "Alpha Centauri C" , "14:29:42.94 -62:40:46.1" , 217.43 , -60.95 ],
-[ 30 , "STAR" , "Rigil Kentaurus" , "Alpha Centauri" , "14:39:36.5 -60:50:02.4" , 219.90 , -58.98 ],
-[ 31 , "STAR" , "Sadachbia" , "Gamma Aquarii" , "22:21:39.37 -01:23:14.4" , 335.41 , -0.98 ],
-[ 32 , "STAR" , "Sadalmelik" , "Alpha Aquarii" , "22:05:47.03 -00:19:11.4" , 331.45 , 0.00 ],
-[ 33 , "STAR" , "Sadalsuud" , "Beta Aquarii" , "21:31:33.53 -05:34:16.2" , 322.89 , -4.92 ],
-[ 34 , "STAR" , "Sheratan" , "Beta Arietis" , "01:54:38.41 +20:48:28.9" , 28.66 , 20.34 ],
-[ 35 , "STAR" , "Situla" , "Kappa Aquarii" , "22:37:45.38 -04:13:40.9" , 339.44 , -3.93 ],
-[ 36 , "STAR" , "Skat" , "Delta Aquarii" , "22:54:39.01 -15:49:14.8" , 343.66 , -14.75 ],
-[ 37 , "STAR" , "Spica" , "Alpha Virginis" , "13:25:11.57 -11:09:40.7" , 201.30 , -10.81 ],
-[ 38 , "STAR" , "Tarazed" , "Gamma Aquilae" , "19:46:15.58 +10:36:47.7" , 296.56 , 10.17 ],
-[ 39 , "STAR" , "Titawin" , "Upsilon Andromedae A" , "01:36:47.84 +41:24:19.6" , 24.20 , 41.69 ],
-[ 40 , "STAR" , "Veritate" , "14 Andromedae" , "23:31:17.41 +39:14:10.3" , 352.82 , 39.66 ],
-[ 41 , "STAR CLOUDS" , "Galactic Center" , "Sagittarius A" , "17:45:40.03 -29:00:28.1" , 266.42 , -28.51 ],
-[ 42 , "STAR CLOUDS" , "Sagittarius Star Cloud" , "M24" , "18:16:48 -18:33:03" , 274.20 , -17.70 ],
-[ 43 , "SUPERNOVA REMNANTS" , "Crab Nebula" , "M1" , "05:34:31.93 +22:00:52.2" , 83.63 , 22.37 ],
-[ 44 , "SUPERNOVA REMNANTS" , "Jellyfish Nebula" , "IC 443" , "06:18:02.70 +22:39:36.0" , 94.51 , 22.37 ],
-[ 45 , "SUPERNOVA REMNANTS" , "Veil Nebula East" , "NGC 6992" , "20:45:37.99 +30:42:29.9" , 314.08 , 31.53 ],
-[ 46 , "OPEN CLUSTERS" , "Ancient Open Star Cluster" , "M67" , "08:51:18.0 +11:48:00" , 132.83 , 11.19 ],
-[ 47 , "OPEN CLUSTERS" , "Aristotle's Star Cluster" , "M41" , "06:46:01.0 -20:45:24" , 101.50 , -19.66 ],
-[ 48 , "OPEN CLUSTERS" , "Beehive Star Cluster" , "M44" , "08:40:24.0 +19:40:00" , 130.10 , 19.32 ],
-[ 49 , "OPEN CLUSTERS" , "Bennett 40a" , "NGC 2671" , "08:46:12.7 -41:52:01" , 131.55 , -40.31 ],
-[ 50 , "OPEN CLUSTERS" , "Bennett 41a" , "NGC 2972" , "09:40:13.9 -50:19:30" , 145.06 , -49.15 ],
-[ 51 , "OPEN CLUSTERS" , "Bennett 47" , "Melotte 105" , "11:19:42.0 -63:29:00" , 169.93 , -61.93 ],
-[ 52 , "OPEN CLUSTERS" , "Bennett 72" , "NGC 6005" , "15:55:58.8 -57:26:24" , 239.00 , -56.03 ],
-[ 53 , "OPEN CLUSTERS" , "Bennett 76" , "NGC 6134" , "16:27:46.0 -49:09:06" , 246.94 , -48.17 ],
-[ 54 , "OPEN CLUSTERS" , "Bennett 79b" , "NGC 6192" , "16:40:23.0 -43:22:00" , 250.10 , -42.27 ],
-[ 55 , "OPEN CLUSTERS" , "Butterfly Star Cluster" , "M6" , "17:40:20.0 -32:15:12" , 265.08 , -31.46 ],
-[ 56 , "OPEN CLUSTERS" , "Butterfly Star Cluster" , "M6" , "17:40:20.0 -32:15:12" , 265.08 , -31.46 ],
-[ 57 , "OPEN CLUSTERS" , "Caldwell 75" , "NGC 6124" , "16:25:20.0 -40:39:12" , 246.33 , -39.32 ],
-[ 58 , "OPEN CLUSTERS" , "Caldwell 75" , "NGC 6124" , "16:25:20.0 -40:39:12" , 246.33 , -39.32 ],
-[ 59 , "OPEN CLUSTERS" , "Caldwell 89" , "NGC 6067" , "16:13:11.0 -54:13:06" , 243.30 , -53.09 ],
-[ 60 , "OPEN CLUSTERS" , "Caroline's Star Cluster" , "M48" , "08:13:43.0 -05:45:00" , 123.43 , -4.92 ],
-[ 61 , "OPEN CLUSTERS" , "Coalsack Cluster" , "NGC 4609" , "12:42:18.0 -62:59:42" , 190.57 , -60.95 ],
-[ 62 , "OPEN CLUSTERS" , "Dunlop 282" , "NGC 5316" , "13:53:57.0 -61:52:06" , 208.49 , -59.97 ],
-[ 63 , "OPEN CLUSTERS" , "Dunlop 291" , "NGC 4103" , "12:06:39.6 -61:15:00" , 181.67 , -59.97 ],
-[ 64 , "OPEN CLUSTERS" , "Dunlop 302" , "NGC 5617" , "14:29:44.0 -60:42:42" , 217.43 , -58.98 ],
-[ 65 , "OPEN CLUSTERS" , "Dunlop 333" , "NGC 5715" , "14:43:30.0 -57:34:01" , 220.88 , -56.03 ],
-[ 66 , "OPEN CLUSTERS" , "Dunlop 357" , "NGC 5593" , "14:25:37.2 -54:48:00" , 216.41 , -53.09 ],
-[ 67 , "OPEN CLUSTERS" , "Dunlop 386" , "NGC 3228" , "10:21:22.0 -51:43:42" , 155.34 , -50.14 ],
-[ 68 , "OPEN CLUSTERS" , "Dunlop 400" , "NGC 6167" , "16:34:34.0 -49:46:18" , 248.64 , -48.17 ],
-[ 69 , "OPEN CLUSTERS" , "Dunlop 410" , "NGC 2547" , "08:09:54.7 -49:12:18" , 122.48 , -48.17 ],
-[ 70 , "OPEN CLUSTERS" , "Dunlop 454" , "NGC 6216" , "16:49:21.1 -44:43:12" , 252.34 , -43.25 ],
-[ 71 , "OPEN CLUSTERS" , "Dunlop 499" , "NGC 6231" , "16:54:08.50 -41:49:36.0" , 253.54 , -40.31 ],
-[ 72 , "OPEN CLUSTERS" , "Dunlop 499" , "NGC 6231" , "16:54:08.50 -41:49:36.0" , 253.54 , -40.31 ],
-[ 73 , "OPEN CLUSTERS" , "Gliese 581" , "HO Librae" , "15:19:26.82 -07:43:20.1" , 229.86 , -6.88 ],
-[ 74 , "OPEN CLUSTERS" , "Gold Dust Star Cluster" , "M37" , "05:52:18.0 +32:33:12" , 88.08 , 32.54 ],
-[ 75 , "OPEN CLUSTERS" , "Hyades" , "Melotte 25" , "04:26:53.99 +15:52:00.0" , 66.72 , 15.25 ],
-[ 76 , "OPEN CLUSTERS" , "Jewel Box" , "NGC 4755" , "12:53:39.0 -60:21:42" , 193.41 , -58.98 ],
-[ 77 , "OPEN CLUSTERS" , "LMC Cluster Bennett 30" , "NGC 1818" , "05:04:13.30 -66:26:05.4" , 76.06 , -64.88 ],
-[ 78 , "OPEN CLUSTERS" , "LMC Cluster Bennett 33" , "NGC 1866" , "05:13:38.92 -65:27:52.7" , 78.41 , -63.90 ],
-[ 79 , "OPEN CLUSTERS" , "LMC Cluster Bennett 36" , "NGC 2214" , "06:12:57.0 -68:15:36" , 93.24 , -66.85 ],
-[ 80 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 106" , "NGC 2122" , "05:48:55.0 -70:04:06" , 87.23 , -68.81 ],
-[ 81 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 211" , "NGC 1955" , "05:26:12.0 -67:29:54" , 81.55 , -65.86 ],
-[ 82 , "OPEN CLUSTERS" , "LMC Cluster Dunlop 90" , "NGC 1943" , "05:22:30.31 -70:09:18.7" , 80.63 , -68.81 ],
-[ 83 , "OPEN CLUSTERS" , "LMC Cluster" , "NGC 1850" , "05:08:45.79 -68:45:38.5" , 77.19 , -66.85 ],
-[ 84 , "OPEN CLUSTERS" , "LMC Cluster" , "NGC 1962" , "05:27:00.0 -68:51:00" , 81.75 , -66.85 ],
-[ 85 , "OPEN CLUSTERS" , "Melotte 156" , "NGC 6253" , "16:59:04.8 -52:42:00" , 254.77 , -51.12 ],
-[ 86 , "OPEN CLUSTERS" , "Melotte 91" , "NGC 2659" , "08:42:36 -44:59:01" , 130.65 , -43.25 ],
-[ 87 , "OPEN CLUSTERS" , "Melotte 93" , "NGC 2670" , "08:45:30.0 -48:48:00" , 131.38 , -47.19 ],
-[ 88 , "OPEN CLUSTERS" , "Melotte 97" , "IC 2488" , "09:27:38.0 -57:00:00" , 141.91 , -56.03 ],
-[ 89 , "OPEN CLUSTERS" , "Omicron Vela Cluster" , "IC 2391" , "08:40:32.0 -53:02:00" , 130.13 , -52.10 ],
-[ 90 , "OPEN CLUSTERS" , "Open Cluster Harvard 3" , "NGC 2669" , "08:46:22.0 -52:56:54" , 131.59 , -51.12 ],
-[ 91 , "OPEN CLUSTERS" , "Open Cluster Harvard 7" , "Trumpler 20" , "12:39:34 60:37:00" , 189.89 , 61.02 ],
-[ 92 , "OPEN CLUSTERS" , "Open Cluster" , "IC 2581" , "10:27:29.0 -57:37:00" , 156.87 , -56.03 ],
-[ 93 , "OPEN CLUSTERS" , "Open Cluster" , "IC 4651" , "17:24:49.0 -49:56:00" , 261.20 , -48.17 ],
-[ 94 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 2477" , "07:52:10.0 -38:31:48" , 118.04 , -37.36 ],
-[ 95 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 2910" , "09:30:30 -52:55:04" , 142.62 , -51.12 ],
-[ 96 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 3572" , "11:10:23.0 -60:14:54" , 167.60 , -58.98 ],
-[ 97 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4337" , "12:24:00.0 -58:07:01" , 186.00 , -57.02 ],
-[ 98 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4463" , "12:29:56.0 -64:47:24" , 187.48 , -62.92 ],
-[ 99 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 4815" , "12:58:01.2 -64:57:36" , 194.50 , -62.92 ],
-[ 100 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 5281" , "13:46:35.0 -62:55:00" , 206.65 , -60.95 ],
-[ 101 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 6250" , "16:57:58.0 -45:56:36" , 254.49 , -44.24 ],
-[ 102 , "OPEN CLUSTERS" , "Open Cluster" , "NGC 796" , "01:56:44.0 -74:13:12" , 29.18 , -72.75 ],
-[ 103 , "OPEN CLUSTERS" , "Open Star Cluster" , "M18" , "18:19:58.0 -17:06:06" , 274.99 , -16.71 ],
-[ 104 , "OPEN CLUSTERS" , "Open Star Cluster" , "M21" , "18:04:13.0 -22:29:24" , 271.05 , -21.63 ],
-[ 105 , "OPEN CLUSTERS" , "Open Star Cluster" , "M23" , "17:57:04.0 -18:59:06" , 269.27 , -17.70 ],
-[ 106 , "OPEN CLUSTERS" , "Open Star Cluster" , "M25" , "18:31:47.0 -19:07:00" , 277.95 , -18.68 ],
-[ 107 , "OPEN CLUSTERS" , "Open Star Cluster" , "M26" , "18:45:18.0 -09:23:00" , 281.32 , -8.85 ],
-[ 108 , "OPEN CLUSTERS" , "Open Star Cluster" , "M35" , "06:08:54.0 +24:20:00" , 92.22 , 24.41 ],
-[ 109 , "OPEN CLUSTERS" , "Open Star Cluster" , "M47" , "07:36:35.0 -14:29:00" , 114.15 , -13.76 ],
-[ 110 , "OPEN CLUSTERS" , "Open Star Cluster" , "M50" , "07:02:47.50 -08:20:16.0" , 105.70 , -7.86 ],
-[ 111 , "OPEN CLUSTERS" , "Open Star Cluster" , "M73" , "20:59:00 -12:38:01" , 314.75 , -11.80 ],
-[ 112 , "OPEN CLUSTERS" , "Pearl Cluster" , "NGC 3766" , "11:36:18.0 -61:36:54" , 174.08 , -59.97 ],
-[ 113 , "OPEN CLUSTERS" , "Pleiades Star Cluster" , "M45" , "03:47:00.0 +24:07:00" , 56.75 , 24.41 ],
-[ 114 , "OPEN CLUSTERS" , "Ptolemy's Star Cluster" , "M7" , "17:53:51.0 -34:47:36" , 268.46 , -33.42 ],
-[ 115 , "OPEN CLUSTERS" , "Running Man Cluster" , "NGC 1545" , "04:20:57.0 +50:15:12" , 65.24 , 50.85 ],
-[ 116 , "OPEN CLUSTERS" , "S Normae Cluster" , "NGC 6087" , "16:18:50.0 -57:56:06" , 244.71 , -56.03 ],
-[ 117 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 23" , "NGC 330" , "00:56:20.59 -72:27:12.4" , 14.09 , -70.78 ],
-[ 118 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 25" , "NGC 346" , "00:59:05.08 -72:10:33.2" , 14.77 , -70.78 ],
-[ 119 , "OPEN CLUSTERS" , "SMC Cluster Dunlop 31" , "NGC 371" , "01:03:25.0 -72:04:24" , 15.85 , -70.78 ],
-[ 120 , "OPEN CLUSTERS" , "SMC Cluster" , "NGC 602" , "01:29:32.13 -73:33:38.1" , 22.38 , -71.76 ],
-[ 121 , "OPEN CLUSTERS" , "Southern Pleiades" , "IC 2602" , "10:42:58.0 -64:24:00" , 160.74 , -62.92 ],
-[ 122 , "OPEN CLUSTERS" , "Starfish Star Cluster" , "M93" , "07:44:30.0 -23:51:24" , 116.12 , -22.61 ],
-[ 123 , "OPEN CLUSTERS" , "The Gem Cluster" , "NGC 3293" , "10:35:49.2 -58:13:48" , 158.95 , -57.02 ],
-[ 124 , "OPEN CLUSTERS" , "Velvet Star Cluster" , "M46" , "07:41:46.0 -14:48:36" , 115.44 , -13.76 ],
-[ 125 , "OPEN CLUSTERS" , "Westerlund 2" , "NGC 3247" , "10:23:58.09 -57:45:48.9" , 155.99 , -56.03 ],
-[ 126 , "OPEN CLUSTERS" , "Wild Duck Star Cluster" , "M11" , "18:51:05.0 -06:16:12" , 282.77 , -5.90 ],
-[ 127 , "OPEN CLUSTERS" , "Wishing Well Cluster" , "NGC 3532" , "11:05:39.0 -58:45:12" , 166.41 , -57.02 ],
-[ 128 , "OPEN CLUSTERS" , "vdB-Hagen 47" , "IC 2395" , "08:42:31.00 -48:06:00.0" , 130.63 , -47.19 ],
-[ 129 , "GLOBULAR CLUSTERS" , "47 Tucanae" , "NGC 104" , "00:24:05.35 -72:04:53.1" , 6.02 , -70.78 ],
-[ 130 , "GLOBULAR CLUSTERS" , "Baade's Window" , "NGC 6522" , "18:03:31 -30:01:15" , 270.88 , -29.49 ],
-[ 131 , "GLOBULAR CLUSTERS" , "Bennett 32" , "NGC 1851" , "05:14:06.76 -40:02:47.6" , 78.53 , -39.32 ],
-[ 132 , "GLOBULAR CLUSTERS" , "Bennett 41" , "NGC 2808" , "09:12:03.10 -64:51:48.6" , 138.01 , -62.92 ],
-[ 133 , "GLOBULAR CLUSTERS" , "Bennett 44" , "NGC 3201" , "10:17:36.82 -46:24:44.8" , 154.40 , -45.22 ],
-[ 134 , "GLOBULAR CLUSTERS" , "Bennett 74" , "NGC 6101" , "16:25:48.12 -72:12:07.8" , 246.45 , -70.78 ],
-[ 135 , "GLOBULAR CLUSTERS" , "Caldwell 104" , "NGC 362" , "01:03:14.26 -70:50:55.6" , 15.81 , -68.81 ],
-[ 136 , "GLOBULAR CLUSTERS" , "Caldwell 84" , "NGC 5286" , "13:46:26.80 -51:22:27.3" , 206.61 , -50.14 ],
-[ 137 , "GLOBULAR CLUSTERS" , "Caldwell 87" , "NGC 1261" , "03:12:16.21 -55:12:58.3" , 48.07 , -54.07 ],
-[ 138 , "GLOBULAR CLUSTERS" , "Dunlop 164" , "NGC 4833" , "12:59:33.91 -70:52:35.3" , 194.89 , -68.81 ],
-[ 139 , "GLOBULAR CLUSTERS" , "Dunlop 225" , "NGC 6362" , "17:31:54.99 -67:02:53.9" , 262.98 , -65.86 ],
-[ 140 , "GLOBULAR CLUSTERS" , "Dunlop 366" , "NGC 6397" , "17:40:42.08 -53:40:27.5" , 265.18 , -52.10 ],
-[ 141 , "GLOBULAR CLUSTERS" , "Dunlop 376" , "NGC 6584" , "18:18:37.60 -52:12:56.8" , 274.66 , -51.12 ],
-[ 142 , "GLOBULAR CLUSTERS" , "Dunlop 389" , "NGC 5927" , "15:28:00.69 -50:40:22.9" , 232.00 , -49.15 ],
-[ 143 , "GLOBULAR CLUSTERS" , "Dunlop 417" , "NGC 6352" , "17:25:29.11 -48:25:19.8" , 261.37 , -47.19 ],
-[ 144 , "GLOBULAR CLUSTERS" , "Dunlop 457" , "NGC 6388" , "17:36:17.46 -44:44:08.3" , 264.07 , -43.25 ],
-[ 145 , "GLOBULAR CLUSTERS" , "Dunlop 473" , "NGC 6541" , "18:08:02.35 -43:42:53.6" , 272.01 , -42.27 ],
-[ 146 , "GLOBULAR CLUSTERS" , "Dunlop 67" , "NGC 4372" , "12:25:45.43 -72:39:32.6" , 186.44 , -70.78 ],
-[ 147 , "GLOBULAR CLUSTERS" , "Globular Cluster" , "NGC 5946" , "15:35:28.57 -50:39:34.9" , 233.87 , -49.15 ],
-[ 148 , "GLOBULAR CLUSTERS" , "Globular Cluster" , "NGC 6496" , "17:59:03.67 -44:15:57.3" , 269.77 , -43.25 ],
-[ 149 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M107" , "16:32:31.86 -13:03:13.6" , 248.13 , -12.78 ],
-[ 150 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M14" , "17:37:36.15 -03:14:45.3" , 264.40 , -2.95 ],
-[ 151 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M15" , "21:29:58.33 +12:10:01.2" , 322.49 , 12.20 ],
-[ 152 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M19" , "17:02:37.69 -26:16:04.5" , 255.66 , -25.56 ],
-[ 153 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M2" , "21:33:27.01 -00:49:23.7" , 323.36 , 0.00 ],
-[ 154 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M22" , "18:36:23.93 -23:54:17.1" , 279.10 , -22.61 ],
-[ 155 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M28" , "18:24:32.89 -24:52:11.3" , 276.14 , -23.59 ],
-[ 156 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M30" , "21:40:22.12 -23:10:47.4" , 325.09 , -22.61 ],
-[ 157 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M4" , "16:23:35.22 -26:31:32.7" , 245.90 , -25.56 ],
-[ 158 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M5" , "15:18:33.22 +02:04:51.7" , 229.64 , 2.03 ],
-[ 159 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M53" , "13:12:55.24 +18:10:05.4" , 198.23 , 18.30 ],
-[ 160 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M54" , "18:55:03.33 -30:28:47.4" , 283.76 , -29.49 ],
-[ 161 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M55" , "19:39:59.71 -30:57:53.1" , 295.00 , -29.49 ],
-[ 162 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M62" , "17:01:12.60 -30:06:44.4" , 255.30 , -29.49 ],
-[ 163 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M68" , "12:39:27.97 -26:44:38.6" , 189.87 , -25.56 ],
-[ 164 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M69" , "18:31:23.10 -32:20:53.0" , 277.85 , -31.46 ],
-[ 165 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M70" , "18:43:12.76 -32:17:31.5" , 280.80 , -31.46 ],
-[ 166 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M71" , "19:53:46.48 +18:46:45.0" , 298.44 , 18.30 ],
-[ 167 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M72" , "20:53:27.70 -12:32:14.3" , 313.37 , -11.80 ],
-[ 168 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M75" , "20:06:04.84 -21:55:20.1" , 301.52 , -20.64 ],
-[ 169 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M79" , "05:24:10.58 -24:31:27.3" , 81.04 , -23.59 ],
-[ 170 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M80" , "16:17:02.41 -22:58:33.8" , 244.26 , -21.63 ],
-[ 171 , "GLOBULAR CLUSTERS" , "Globular Star Cluster" , "M9" , "17:19:11.77 -18:30:58.5" , 259.80 , -17.70 ],
-[ 172 , "GLOBULAR CLUSTERS" , "LMC Cluster Bennett 28" , "NGC 1783" , "04:59:08.59 -65:59:15.8" , 74.79 , -63.90 ],
-[ 173 , "GLOBULAR CLUSTERS" , "LMC Cluster" , "NGC 1466" , "03:44:33.0 -71:40:18" , 56.14 , -69.80 ],
-[ 174 , "GLOBULAR CLUSTERS" , "Mirror Ball Star Cluster" , "M10" , "16:57:09.04 -04:06:01.1" , 254.29 , -3.93 ],
-[ 175 , "GLOBULAR CLUSTERS" , "Omega Centauri" , "NGC 5139" , "13:26:47.28 -47:28:46.0" , 201.70 , -46.20 ],
-[ 176 , "GLOBULAR CLUSTERS" , "Pavo Globular" , "NGC 6752" , "19:10:52.11 -59:59:04.4" , 287.72 , -58.00 ],
-[ 177 , "GLOBULAR CLUSTERS" , "SMC Cluster" , "NGC 419" , "01:08:17.78 -72:53:02.7" , 17.07 , -70.78 ],
-[ 178 , "GLOBULAR CLUSTERS" , "Snowball Star Cluster" , "M12" , "16:47:14.17 -01:56:54.7" , 251.81 , -0.98 ],
-[ 179 , "GLOBULAR CLUSTERS" , "Virgo Globular" , "NGC 5634" , "14:29:37.27 -05:58:35.1" , 217.41 , -4.92 ],
-[ 180 , "EMISSION NEBULAE" , "Cat's Paw Nebula" , "NGC 6334" , "17:20:50.9 -36:06:54" , 260.21 , -35.39 ],
-[ 181 , "EMISSION NEBULAE" , "Cone Nebula" , "NGC 2264" , "06:41:06 +09:53:01" , 100.28 , 9.15 ],
-[ 182 , "EMISSION NEBULAE" , "De Mairan's Nebula", "M43", "05:35:31.0 -05:16:12" , 83.88 , -4.92 ],
-[ 183 , "EMISSION NEBULAE" , "Eagle Nebula" , "M16" , "18:18:48.0 -13:48:24" , 274.70 , -12.78 ],
-[ 184 , "EMISSION NEBULAE" , "Emission Nebula" , "NGC 3199" , "10:16:32.80 -57:56:02.0" , 154.14 , -56.03 ],
-[ 185 , "EMISSION NEBULAE" , "Eta Carinae Nebula" , "NGC 3372" , "10:44:19.00 -59:53:21.0" , 161.08 , -58.00 ],
-[ 186 , "EMISSION NEBULAE" , "Flame Nebula" , "NGC 2024" , "05:41:42.70 -01:54:43.9" , 85.43 , -0.98 ],
-[ 187 , "EMISSION NEBULAE" , "Flaming Star Nebula" , "IC 405" , "05:17:24 +34:23:01" , 79.35 , 34.58 ],
-[ 188 , "EMISSION NEBULAE" , "Gabriela Mistral Nebula" , "NGC 3324" , "10:37:20 -58:38:30" , 159.33 , -57.02 ],
-[ 189 , "EMISSION NEBULAE" , "LMC Nebula Bennett 27" , "NGC 1763" , "04:56:51.49 -66:24:24.9" , 74.21 , -64.88 ],
-[ 190 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2018" , "05:31:23.99 -71:04:23.9" , 82.85 , -69.80 ],
-[ 191 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2074" , "05:39:03.0 -69:29:54" , 84.76 , -67.83 ],
-[ 192 , "EMISSION NEBULAE" , "LMC Nebula" , "NGC 2075" , "05:38:21.25 -70:41:06.1" , 84.59 , -68.81 ],
-[ 193 , "EMISSION NEBULAE" , "Lagoon Nebula" , "M8" , "18:03:37.0 -24:23:12" , 270.90 , -23.59 ],
-[ 194 , "EMISSION NEBULAE" , "Lambda Centauri Nebula" , "IC 2944" , "11:38:19.99 -63:22:22.0" , 174.58 , -61.93 ],
-[ 195 , "EMISSION NEBULAE" , "Monkey Head Nebula" , "NGC 2174" , "06:09:42 +20:30:03" , 92.43 , 20.34 ],
-[ 196 , "EMISSION NEBULAE" , "Nebulae Complex RCW 57" , "NGC 3576" , "11:11:49.80 -61:18:14.0" , 167.96 , -59.97 ],
-[ 197 , "EMISSION NEBULAE" , "Orion Nebula" , "M42" , "05:35:17.29 -05:23:27.9" , 83.82 , -4.92 ],
-[ 198 , "EMISSION NEBULAE" , "Prawn Nebula" , "IC 4628" , "16:56:54.67 -40:30:44.4" , 254.23 , -39.32 ],
-[ 199 , "EMISSION NEBULAE" , "Rim Nebula" , "NGC 6188" , "16:40:00.0 -48:30:00" , 250.00 , -47.19 ],
-[ 200 , "EMISSION NEBULAE" , "Swan Nebula" , "M17" , "18:20:47.0 -16:10:18" , 275.20 , -15.73 ],
-[ 201 , "EMISSION NEBULAE" , "Tarantula Nebula" , "NGC 2070" , "05:38:36.00 -69:05:11.0" , 84.65 , -67.83 ],
-[ 202 , "EMISSION NEBULAE" , "Trifid Nebula" , "M20" , "18:02:42.0 -22:58:18" , 270.68 , -21.63 ],
-[ 203 , "EMISSION NEBULAE" , "Unusual Nebula" , "NGC 6164" , "16:33:52.38 -48:06:40.4" , 248.47 , -47.19 ],
-[ 204 , "REFLECTION NEBULAE" , "Embedded Reflection Nebula" , "NGC 2626" , "08:35:32.0 -40:40:18" , 128.88 , -39.32 ],
-[ 205 , "REFLECTION NEBULAE" , "Hubble's Variable Nebula" , "NGC 2261" , "06:39:09.95 +08:44:09.5" , 99.79 , 8.14 ],
-[ 206 , "REFLECTION NEBULAE" , "Reflection Nebula" , "IC 2966" , "11:50:12.60 -64:52:18.9" , 177.55 , -62.92 ],
-[ 207 , "REFLECTION NEBULAE" , "Reflection Nebula" , "M78" , "05:46:45.79 +00:04:45.0" , 86.69 , 0.00 ],
-[ 208 , "REFLECTION NEBULAE" , "Reflection Nebula" , "NGC 5367" , "13:57:44.0 -39:58:48" , 209.43 , -38.34 ],
-[ 209 , "REFLECTION NEBULAE" , "Running Man Nebula" , "NGC 1977" , "05:35:16.2 -04:47:07" , 83.82 , -3.93 ],
-[ 210 , "REFLECTION NEBULAE" , "Toby Jug Nebula" , "IC 2220" , "07:56:51.30 -59:07:31.0" , 119.21 , -58.00 ],
-[ 211 , "DARK NEBULAE" , "Coal Sack Nebula" , "Caldwell 99" , "12:52:19 -62:25:28" , 193.08 , -60.95 ],
-[ 212 , "DARK NEBULAE" , "Dark Doodad" , "DCLD 301.0-08.6" , "12:27:31 -71:25:12" , 186.88 , -69.80 ],
-[ 213 , "DARK NEBULAE" , "Horsehead Nebula" , "Barnard 33" , "05:40:58.99 -02:27:29.9" , 85.25 , -1.97 ],
-[ 214 , "DARK NEBULAE" , "Inkspot Nebula" , "Barnard 86" , "18:02:58.0 -27:52:06" , 270.74 , -26.54 ],
-[ 215 , "DARK NEBULAE" , "Molecular Cloud Nebula" , "Barnard 68" , "17:22:38.2 -23:49:34" , 260.66 , -22.61 ],
-[ 216 , "PLANETARY NEBULAE" , "Blue Planetary" , "NGC 3918" , "11:50:17.77 -57:10:57.0" , 177.57 , -56.03 ],
-[ 217 , "PLANETARY NEBULAE" , "Bug Nebula" , "NGC 6302" , "17:13:44.33 -37:06:10.9" , 258.43 , -36.37 ],
-[ 218 , "PLANETARY NEBULAE" , "Caldwell 109" , "NGC 3195" , "10:09:20.90 -80:51:30.7" , 152.34 , -78.64 ],
-[ 219 , "PLANETARY NEBULAE" , "Cetus Bubble Nebula" , "NGC 246" , "00:47:03.33 -11:52:18.9" , 11.76 , -10.81 ],
-[ 220 , "PLANETARY NEBULAE" , "Cleopatra's Eye" , "NGC 1535" , "04:14:15.76 -12:44:21.9" , 63.57 , -11.80 ],
-[ 221 , "PLANETARY NEBULAE" , "Dumbbell Nebula" , "M27" , "19:59:36.36 +22:43:16.3" , 299.90 , 22.37 ],
-[ 222 , "PLANETARY NEBULAE" , "Dunlop 447" , "NGC 5882" , "15:16:49.95 -45:38:58.6" , 229.21 , -44.24 ],
-[ 223 , "PLANETARY NEBULAE" , "Dunlop 564A" , "NGC 2818" , "09:16:01.48 -36:37:37.5" , 139.01 , -35.39 ],
-[ 224 , "PLANETARY NEBULAE" , "Eight-Burst Nebula" , "NGC 3132" , "10:07:01.76 -40:26:11.1" , 151.76 , -39.32 ],
-[ 225 , "PLANETARY NEBULAE" , "Eskimo Nebula" , "NGC 2392" , "07:29:10.76 +20:54:42.4" , 112.29 , 20.34 ],
-[ 226 , "PLANETARY NEBULAE" , "Fleming 96" , "IC 4642" , "17:11:45.20 -55:24:01.6" , 257.94 , -54.07 ],
-[ 227 , "PLANETARY NEBULAE" , "Fleming 98" , "IC 4699" , "18:18:32.04 -45:59:01.7" , 274.63 , -44.24 ],
-[ 228 , "PLANETARY NEBULAE" , "Ghost of Jupiter" , "NGC 3242" , "10:24:46.13 -18:38:32.2" , 156.19 , -17.70 ],
-[ 229 , "PLANETARY NEBULAE" , "Helix Nebula" , "NGC 7293" , "22:29:38.54 -20:50:13.7" , 337.41 , -19.66 ],
-[ 230 , "PLANETARY NEBULAE" , "Little Gem Nebula" , "NGC 6818" , "19:43:58.02 -14:09:13.4" , 295.99 , -13.76 ],
-[ 231 , "PLANETARY NEBULAE" , "Planetary Nebula" , "NGC 2792" , "09:12:26.56 -42:25:38.9" , 138.11 , -41.29 ],
-[ 232 , "PLANETARY NEBULAE" , "Planetary Nebula" , "NGC 6326" , "17:20:46.25 -51:45:15.1" , 260.19 , -50.14 ],
-[ 233 , "PLANETARY NEBULAE" , "Powder Blue Nebula" , "NGC 5979" , "15:47:41.16 -61:13:05.5" , 236.92 , -59.97 ],
-[ 234 , "PLANETARY NEBULAE" , "Retina Nebula" , "IC 4406" , "14:22:26.14 -44:09:02.2" , 215.61 , -43.25 ],
-[ 235 , "PLANETARY NEBULAE" , "Saturn Nebula" , "NGC 7009" , "21:04:10.81 -11:21:48.5" , 316.05 , -10.81 ],
-[ 236 , "PLANETARY NEBULAE" , "Spare Tyre Nebula" , "IC 5148" , "21:59:35.20 -39:23:08.0" , 329.90 , -38.34 ],
-[ 237 , "PLANETARY NEBULAE" , "Spiral Nebula" , "NGC 5189" , "13:33:32.87 -65:58:27.0" , 203.39 , -63.90 ],
-[ 238 , "PLANETARY NEBULAE" , "Thumbprint Nebula" , "NGC 4071" , "12:44:55.60 -78:48:15.9" , 191.23 , -76.68 ],
-[ 239 , "PLANETARY NEBULAE" , "Vela Planetary Nebula" , "NGC 2899" , "09:27:03.01 -56:06:21.0" , 141.76 , -55.05 ],
-[ 240 , "SPIRAL GALAXIES" , "Antennae Galaxies" , "NGC 4038" , "12:01:53.00 -18:52:03.3" , 180.47 , -17.70 ],
-[ 241 , "SPIRAL GALAXIES" , "Bennett 1" , "NGC 55" , "00:14:53.60 -39:11:47.8" , 3.72 , -38.34 ],
-[ 242 , "SPIRAL GALAXIES" , "Bennett 12" , "NGC 1291" , "03:17:18.60 -41:06:29.0" , 49.33 , -40.31 ],
-[ 243 , "SPIRAL GALAXIES" , "Bennett 21" , "NGC 1433" , "03:42:01.55 -47:13:19.4" , 55.51 , -46.20 ],
-[ 244 , "SPIRAL GALAXIES" , "Bennett 21a" , "NGC 1512" , "04:03:54.28 -43:20:55.8" , 60.98 , -42.27 ],
-[ 245 , "SPIRAL GALAXIES" , "Bennett 25" , "NGC 1566" , "04:20:00.40 -54:56:16.5" , 65.00 , -53.09 ],
-[ 246 , "SPIRAL GALAXIES" , "Bennett 25a" , "NGC 1617" , "04:31:39.53 -54:36:08.1" , 67.91 , -53.09 ],
-[ 247 , "SPIRAL GALAXIES" , "Bennett 26" , "NGC 1672" , "04:45:42.55 -59:14:50.6" , 71.43 , -58.00 ],
-[ 248 , "SPIRAL GALAXIES" , "Bennett 41B" , "NGC 2997" , "09:45:38.75 -31:11:27.3" , 146.41 , -30.47 ],
-[ 249 , "SPIRAL GALAXIES" , "Black-Eye Galaxy" , "M64" , "12:56:43.69 +21:40:57.5" , 194.18 , 21.36 ],
-[ 250 , "SPIRAL GALAXIES" , "Blue Spiral Galaxy" , "NGC 1232" , "03:09:45.51 -20:34:45.4" , 47.44 , -19.66 ],
-[ 251 , "SPIRAL GALAXIES" , "Butterfly Galaxies" , "NGC 4568" , "12:36:34.3 +11:14:19.1" , 189.14 , 11.19 ],
-[ 252 , "SPIRAL GALAXIES" , "Caldwell 36" , "NGC 4559" , "12:35:57.63 +27:57:35.8" , 188.99 , 27.46 ],
-[ 253 , "SPIRAL GALAXIES" , "Caldwell 83" , "NGC 4945" , "13:05:27.27 -49:28:04.4" , 196.36 , -48.17 ],
-[ 254 , "SPIRAL GALAXIES" , "Discus Galaxy" , "NGC 4216" , "12:15:54.44 +13:08:57.8" , 183.98 , 13.22 ],
-[ 255 , "SPIRAL GALAXIES" , "Dunlop 262" , "NGC 6744" , "19:09:46.09 -63:51:27.1" , 287.44 , -61.93 ],
-[ 256 , "SPIRAL GALAXIES" , "Dunlop 469" , "NGC 5643" , "14:32:40.77 -44:10:28.5" , 218.17 , -43.25 ],
-[ 257 , "SPIRAL GALAXIES" , "Dunlop 475" , "NGC 7552" , "23:16:10.76 -42:35:05.3" , 349.04 , -41.29 ],
-[ 258 , "SPIRAL GALAXIES" , "Edge-On Spiral Galaxy" , "NGC 4565" , "12:36:20.80 +25:59:14.6" , 189.09 , 25.42 ],
-[ 259 , "SPIRAL GALAXIES" , "Flocculent Spiral Galaxy" , "NGC 4414" , "12:26:27.08 +31:13:24.7" , 186.61 , 31.53 ],
-[ 260 , "SPIRAL GALAXIES" , "Grand Design Galaxy" , "M74" , "01:36:41.77 +15:47:00.4" , 24.17 , 15.25 ],
-[ 261 , "SPIRAL GALAXIES" , "Great Barred Spiral Galaxy" , "NGC 1365" , "03:33:36.45 -36:08:26.3" , 53.40 , -35.39 ],
-[ 262 , "SPIRAL GALAXIES" , "Grus Quartet" , "NGC 7582" , "23:16:10.80 -42:35:04.9" , 349.04 , -41.29 ],
-[ 263 , "SPIRAL GALAXIES" , "Meathook Galaxy" , "NGC 2442" , "07:36:23.84 -69:31:50.9" , 114.10 , -67.83 ],
-[ 264 , "SPIRAL GALAXIES" , "Oriani's Galaxy" , "M61" , "12:21:54.92 +04:28:25.5" , 185.48 , 4.07 ],
-[ 265 , "SPIRAL GALAXIES" , "S Galaxy" , "NGC 2903" , "09:32:10.11 +21:30:02.9" , 143.04 , 21.36 ],
-[ 266 , "SPIRAL GALAXIES" , "Sculptor Spiral Galaxy" , "NGC 300" , "00:54:53.44 -37:41:03.1" , 13.72 , -36.37 ],
-[ 267 , "SPIRAL GALAXIES" , "Silver Coin Galaxy" , "NGC 253" , "00:47:33.13 -25:17:19.6" , 11.89 , -24.58 ],
-[ 268 , "SPIRAL GALAXIES" , "Sombrero Galaxy" , "M104" , "12:39:59.43 -11:37:22.9" , 190.00 , -10.81 ],
-[ 269 , "SPIRAL GALAXIES" , "Southern Pinwheel Galaxy" , "M83" , "13:37:00.91 -29:51:56.7" , 204.25 , -28.51 ],
-[ 270 , "SPIRAL GALAXIES" , "Spider Web Galaxy" , "NGC 3521" , "11:05:48.56 -00:02:09.2" , 166.45 , 0.00 ],
-[ 271 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "IC 5052" , "20:52:01.63 -69:11:35.9" , 313.01 , -67.83 ],
-[ 272 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M100" , "12:22:54.93 +15:49:20.2" , 185.73 , 15.25 ],
-[ 273 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M58" , "12:37:43.59 +11:49:05.1" , 189.43 , 11.19 ],
-[ 274 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M65" , "11:18:55.95 +13:05:31.9" , 169.73 , 13.22 ],
-[ 275 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M66" , "11:20:15.02 +12:59:28.6" , 170.06 , 12.20 ],
-[ 276 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M88" , "12:31:59.21 +14:25:13.4" , 188.00 , 14.24 ],
-[ 277 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M90" , "12:36:49.81 +13:09:46.3" , 189.21 , 13.22 ],
-[ 278 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M91" , "12:35:26.43 +14:29:46.7" , 188.86 , 14.24 ],
-[ 279 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M95" , "10:43:57.73 +11:42:12.9" , 160.99 , 11.19 ],
-[ 280 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M96" , "10:46:45.74 +11:49:11.7" , 161.69 , 11.19 ],
-[ 281 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M98" , "12:13:48.29 +14:54:01.6" , 183.45 , 14.24 ],
-[ 282 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "M99" , "12:18:49.62 +14:24:59.3" , 184.71 , 14.24 ],
-[ 283 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1249" , "03:10:01.21 -53:20:09.0" , 47.51 , -52.10 ],
-[ 284 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1448" , "03:44:31.91 -44:38:41.3" , 56.13 , -43.25 ],
-[ 285 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1515" , "04:04:02.67 -54:06:00.5" , 61.01 , -53.09 ],
-[ 286 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 1559" , "04:17:35.75 -62:47:01.2" , 64.40 , -60.95 ],
-[ 287 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2310" , "06:53:53.98 -40:51:45.7" , 103.47 , -39.32 ],
-[ 288 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 2397" , "07:21:19.89 -69:00:05.0" , 110.33 , -67.83 ],
-[ 289 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 5833" , "15:11:53.76 -72:51:33.6" , 227.97 , -70.78 ],
-[ 290 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 5967" , "15:48:15.85 -75:40:22.4" , 237.07 , -73.73 ],
-[ 291 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 691" , "01:50:41.70 +21:45:35.8" , 27.67 , 21.36 ],
-[ 292 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 7090" , "21:36:28.86 -54:33:26.3" , 324.12 , -53.09 ],
-[ 293 , "SPIRAL GALAXIES" , "Spiral Galaxy" , "NGC 7205" , "22:08:34.27 -57:26:33.1" , 332.14 , -56.03 ],
-[ 294 , "SPIRAL GALAXIES" , "Topsy-Turvy Galaxy" , "NGC 1313" , "03:18:16.04 -66:29:53.7" , 49.57 , -64.88 ],
-[ 295 , "SPIRAL GALAXIES" , "UFO Galaxy" , "NGC 2683" , "08:52:41.34 +33:25:18.4" , 133.17 , 33.56 ],
-[ 296 , "SPIRAL GALAXIES" , "Whale Galaxy" , "NGC 4631" , "12:42:08.00 +32:32:29.4" , 190.53 , 32.54 ],
-[ 297 , "ELLIPTICAL GALAXIES" , "Bennett 23" , "NGC 1549" , "04:15:45.22 -55:35:32.4" , 63.94 , -54.07 ],
-[ 298 , "ELLIPTICAL GALAXIES" , "Bennett 24" , "NGC 1553" , "04:16:10.47 -55:46:48.1" , 64.04 , -54.07 ],
-[ 299 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M105" , "10:47:49.60 +12:34:53.8" , 161.96 , 12.20 ],
-[ 300 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M49" , "12:29:46.79 +08:00:01.4" , 187.44 , 8.14 ],
-[ 301 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M59" , "12:42:02.32 +11:38:48.9" , 190.51 , 11.19 ],
-[ 302 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M60" , "12:43:40.00 +11:33:09.3" , 190.92 , 11.19 ],
-[ 303 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "M89" , "12:35:39.81 +12:33:22.6" , 188.92 , 12.20 ],
-[ 304 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "NGC 4976" , "13:08:37.52 -49:30:23.0" , 197.16 , -48.17 ],
-[ 305 , "ELLIPTICAL GALAXIES" , "Elliptical Galaxy" , "NGC 5102" , "13:21:57.60 -36:37:48.3" , 200.49 , -35.39 ],
-[ 306 , "ELLIPTICAL GALAXIES" , "Giant Elliptical Galaxy" , "M87" , "12:30:49.42 +12:23:28.0" , 187.71 , 12.20 ],
-[ 307 , "ELLIPTICAL GALAXIES" , "Lenticular Galaxy" , "M86" , "12:26:11.81 +12:56:45.4" , 186.55 , 12.20 ],
-[ 308 , "ACTIVE GALAXIES" , "Centaurus A" , "NGC 5128" , "13:25:27.61 -43:01:08.8" , 201.37 , -42.27 ],
-[ 309 , "ACTIVE GALAXIES" , "Cetus A Active Galaxy" , "M77" , "02:42:40.77 -00:00:47.8" , 40.67 , 0.00 ],
-[ 310 , "ACTIVE GALAXIES" , "X Ray Galaxy" , "NGC 1097" , "02:46:19.05 -30:16:29.6" , 41.58 , -29.49 ],
-[ 311 , "Galaxy Cluster Abell 3925" , "Abell 2877 Cluster" , "IC 1633" , "01:09:49.3 -45:54:02" , 17.46 , -44.24 ],
-[ 312 , "Galaxy Cluster Abell 3925" , "Leo I Galaxy Group" , "M96" , "10:48:00 +13:18:00" , 162.00 , 13.22 ],
-[ 313 , "Galaxy Cluster Abell 3925" , "Leo Triplet" , "M66" , "10:48:00.0 +13:18:00" , 162.00 , 13.22 ],
-[ 314 , "Galaxy Cluster Abell 3925" , "Abell 3389 Cluster" , "NGC 2230" , "06:21:27.6 -64:59:34.10" , 95.37 , -62.92 ],
-[ 315 , "NGC 6769 Trio" , "Robert's Quartet" , "NGC 88" , "00:21:22.13 -48:38:24.2" , 5.34 , -47.19 ],
-[ 316 , "OTHER GALAXIES" , "Barnard's Galaxy" , "NGC 6822" , "19:44:56.19 -14:47:51.2" , 296.23 , -13.76 ],
-[ 317 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M84" , "12:25:03.74 +12:53:13.1" , 186.27 , 12.20 ],
-[ 318 , "OTHER GALAXIES" , "Lenticular Galaxy" , "M85" , "12:25:24.05 +18:11:27.8" , 186.35 , 18.30 ],
-[ 319 , "OTHER GALAXIES" , "Merging Galaxies" , "NGC 1487" , "03:55:46.50 -42:22:00.9" , 58.94 , -41.29 ]
-];
-
-    function addOpenNGCToAladinCatalog(cat, list)
-    {
-        for (var i = 0; i < list.length; i++) {
-            var catname = list[i][0];
-            var extname = list[i][7];
-            var dispname;
-            if (extname != "") {
-                dispname = catname + ', ' + extname;
-            } else {
-                dispname = catname;
-            }
-
-            cat.addSources(A.source(list[i][1] * hoursToDeg, list[i][2], 
-                            {
-                                name: dispname, 
-                                wikiname: catname,
-                                info: { 
-                                        list: 'N',
-                                        type: list[i][3],
-                                        constellation: list[i][4],
-                                        mag: list[i][5],
-                                        distance: list[i][6],
-                                        notes: list[i][8]
-                                }
-                            } ));
-        }
-    }
-
-    if (catNGC == null && A) {
-        console.log("Init NGC catalog");
-        catNGC = A.catalog({name: 'NGC', labelColumn: 'name', displayLabel: true, labelColor: '#cccccc', labelFont: '12px sans-serif'});
-        catNGC.hide();
-
-        NGCxmlhttp = new XMLHttpRequest();
-        NGCxmlhttp.onreadystatechange = function()
-        {
-            if (NGCxmlhttp.readyState == 4 && NGCxmlhttp.status == 200) {
-                console.log("NGC catalog loaded", NGCxmlhttp.responseText.substr(30200, 30300));
-                var NGCobjects = JSON.parse(NGCxmlhttp.responseText);
-                addOpenNGCToAladinCatalog(catNGC, NGCobjects.data);
-            }
-        }
-        NGCxmlhttp.open("GET", "https://ruuth.xyz/OpenNGC.txt", true);
-        NGCxmlhttp.send();
-    }
-
-    /* Add generic Json catalog. */
-    function addJsonToAladinCatalog(cat, list)
-    {
-        /* "format" : ["CAT", "RA", "DEC", "INFO", "TYPE"] */
-        for (var i = 0; i < list.length; i++) {
-            var catname = list[i][0];
-            cat.addSources(A.source(list[i][1] * hoursToDeg, list[i][2], 
-                            {
-                                name: catname, 
-                                wikiname: catname,
-                                info: { 
-                                        list: 'J',
-                                        notes: list[i][3]
-                                }
-                            } ));
-        }
-    }
-
-    function loadJsonCatalog(name, cat)
-    {
-        console.log("´Load Json catalog " + name);
-        cat.hide();
-
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function()
-        {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                console.log("Catalog " + name + " loaded", xmlhttp.responseText.substr(30200, 30300));
-                var jsonObjects = JSON.parse(xmlhttp.responseText);
-                addJsonToAladinCatalog(cat, jsonObjects.data);
-            }
-        }
-        xmlhttp.open("GET", "https://ruuth.xyz/" + name, true);
-        xmlhttp.send();
-    }
-
-    if (catRCW == null && A) {
-        // Green 3
-        catRCW = A.catalog({name: 'RCW', labelColumn: 'name', displayLabel: true, labelColor: '00af00', labelFont: '12px sans-serif'});
-        loadJsonCatalog('RCW.json', catRCW);
-    }
-    if (catSh == null && A) {
-        // DeepSkyBlue1
-        catSh = A.catalog({name: 'Sharpless', labelColumn: 'name', displayLabel: true, labelColor: '#00afff', labelFont: '12px sans-serif'});
-        loadJsonCatalog('Sharpless.json', catSh);
-    }
-}
-
-function addSloohToAladinCatalog(cat, list)
-{
-    for (var i = 0; i < list.length; i++) {
-        var radec = get_ra_dec(list[i][4]);
-        var dispname = list[i][2] + ' ' + list[i][3];
-        if (A) {
-            cat.addSources(A.source(radec[0], radec[1], 
-                            { 
-                                name: dispname, 
-                                wikiname: list[i][3], 
-                                info: { 
-                                        list: 'S',
-                                        type: list[i][1],
-                                }
-                            } ));
-        }
-        list[i][5] = radec[0];
-        list[i][6] = radec[1];
-    }
-}
-
-function createSlooh500Catalog(isTeide)
-{
-        var name;
-        var slooh500;
-        if (isTeide) {
-            name = 'Slooh 500 Teide';
-            slooh500 = slooh500teidelist;
+    for (var i = 0; i < cat.targets.length; i++) {
+        //   0      1     2      3       4      5       6      7       8
+        // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+        var catname = cat.targets[i][0];    // CAT
+        var extname = cat.targets[i][7];    // NAME
+        var dispname;
+        if (extname != "") {
+            dispname = catname + ', ' + extname;
         } else {
-            name = 'Slooh 500 Chile';
-            slooh500 = slooh500chilelist;
+            dispname = catname;
+        }
+        if (i == 0) {
+            console.log("addJsonToAladinCatalog:add", cat.targets[i], name);
         }
 
-        console.log("Create slooh500 catalog");
-        var catSlooh500visible = null;
-        var catSlooh500notvisible = null;
-        if (A) {
-            catSlooh500visible = A.catalog({name: name + ' visible', labelColumn: 'name', displayLabel: true, labelColor: '#29a329', labelFont: '12px sans-serif'});
-            catSlooh500notvisible = A.catalog({name: name + ' not visible', labelColumn: 'name', displayLabel: true, labelColor: '#ff9999', labelFont: '12px sans-serif'});
-            addSloohToAladinCatalog(catSlooh500visible, slooh500.visible);
-            addSloohToAladinCatalog(catSlooh500notvisible, slooh500.notvisible);
+        cat.AladinCatalog.addSources(A.source(cat.targets[i][1] * hoursToDeg, cat.targets[i][2], 
+                        {
+                            name: dispname, 
+                            wikiname: catname,
+                            info: { 
+                                    type: cat.targets[i][3],
+                                    constellation: cat.targets[i][4],
+                                    mag: cat.targets[i][5],
+                                    distance: cat.targets[i][6],
+                                    notes: cat.targets[i][8]
+                            }
+                        } ));
+    }
+}
+
+function processJsonCatalog(cat, json)
+{
+    console.log("Create " + cat.name + " catalog");
+
+    cat.targets = json.data;
+
+    addJsonToAladinCatalog(cat);
+}
+
+function loadCatalog(cat)
+{
+    console.log("Load catalog " + cat.name + " from " + cat.url);
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function()
+    {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            console.log("Catalog " + cat.name + " loaded ", xmlhttp.responseText.substr(0, 256));
+            var jsonObjects = JSON.parse(xmlhttp.responseText);
+            processJsonCatalog(cat, jsonObjects);
+            update_catalog_list();
         }
-        return { visible: catSlooh500visible, notvisible: catSlooh500notvisible};
+    }
+    xmlhttp.open("GET", cat.url, true);
+    xmlhttp.send();
+}
+
+function load_and_init_catalogs()
+{
+    if (!A) {
+        console.log("load_and_init_catalogs:Aladin not available");
+        return;
+    }
+
+    console.log("load_and_init_catalogs");
+
+    for (var i = 0; i < catalogs.length; i++) {
+        if (catalogs[i].targets == null) {
+            loadCatalog(catalogs[i]);
+        }
+    }
 }
 
 // create select object
-function createslooh500select(name, list)
+function create_catalog_select_list(name, list)
 {
-    console.log("createslooh500select");
+    console.log("create_catalog_select_list");
     
     var x = document.createElement("SELECT");
     x.setAttribute("id", name);
 
     for (var i = 0; i < list.length; i++) {
-        if (i < 10) {
+        if (i < 3) {
             console.log("list[i]", list[i]);
         }
         var y = document.createElement("option");
@@ -2741,7 +2437,7 @@ function createslooh500select(name, list)
 }
 
 // create list filtered by visibility during the night
-function filtervisibleslooh500(list, lat, lng)
+function filter_visible_catalog_items(cat, lat, lng)
 {
     var midnight;
     var aa1;
@@ -2749,28 +2445,30 @@ function filtervisibleslooh500(list, lat, lng)
     var aa3;
     var aa4;
     var aa5;
-    var moonFilter = slooh500moonFilter;
+    var moonFilter = catalogFilterMoon;
 
-    if (slooh500time == null) {
-        console.log("filtervisibleslooh500:use whole night");
+    if (cat == null || cat.targets == null) {
+        console.log("filter_visible_catalog_items:cat == null or cat.targets == null");
+        return { list: [['', ''], ['', 'No data loaded']] };
+    }
+
+    if (catalog_filter_time == null) {
+        console.log("filter_visible_catalog_items:use whole night");
         var midday = UTCdate_ms + day_ms/2;
         var suntimes = sun_rise_set(midday, lat, lng, 0);
         midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
     } else {
-        console.log("filtervisibleslooh500:use specific time");
-        midnight = UTCdate_ms + slooh500time;
+        console.log("filter_visible_catalog_items:use specific time");
+        midnight = UTCdate_ms + catalog_filter_time;
     }
     var fl = [];
-    var visible = [];
-    var notvisible = [];
-    var idx = [];
     fl[fl.length] = ['', ''];
 
-    // if object altitude is above slooh500filter degrees in any of the following
+    // if object altitude is above catalogFilterDegrees degrees in any of the following
     // points during the night we add it to list
     aa1 = object_altitude_init(midnight, lat, lng);
     var thisfilterdate = new Date(midnight);
-    console.log("slooh500 filter date 1:", thisfilterdate.toUTCString());
+    console.log("filter date 1:", thisfilterdate.toUTCString());
     var moonpos = moon_position(midnight);
     // Check moon altitude at given time. If it is below horizon we do not filter with moon.
     var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
@@ -2778,7 +2476,7 @@ function filtervisibleslooh500(list, lat, lng)
     if (moonalt < 0) {
         moonFilter = null;
     }
-    if (slooh500time == null) {
+    if (catalog_filter_time == null) {
         // no time filter, use also times 2 and 4 hours before and after midnight
         var d = midnight+2*hour_ms;
         aa2 = object_altitude_init(d, lat, lng);
@@ -2788,7 +2486,7 @@ function filtervisibleslooh500(list, lat, lng)
         if (moonalt < 0) {
             moonFilter = null;
         }
-        console.log("slooh500 filter date 2:", thisfilterdate.toUTCString());
+        console.log("filter date 2:", thisfilterdate.toUTCString());
         d = midnight-2*hour_ms;
         aa3 = object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
@@ -2798,7 +2496,7 @@ function filtervisibleslooh500(list, lat, lng)
         if (moonalt < 0) {
             moonFilter = null;
         }
-        console.log("slooh500 filter date 3:", thisfilterdate.toUTCString());
+        console.log("filter date 3:", thisfilterdate.toUTCString());
         var d = midnight+4*hour_ms;
         aa4 = object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
@@ -2807,7 +2505,7 @@ function filtervisibleslooh500(list, lat, lng)
         if (moonalt < 0) {
             moonFilter = null;
         }
-        console.log("slooh500 filter date 4:", thisfilterdate.toUTCString());
+        console.log("filter date 4:", thisfilterdate.toUTCString());
         d = midnight-4*hour_ms;
         aa5 = object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
@@ -2816,32 +2514,34 @@ function filtervisibleslooh500(list, lat, lng)
         if (moonalt < 0) {
             moonFilter = null;
         }
-        console.log("slooh500 filter date 5:", thisfilterdate.toUTCString());
+        console.log("filter date 5:", thisfilterdate.toUTCString());
     }
-    for (var i = 0; i < list.length; i++) {
-        var ra = list[i][5];
-        var dec = list[i][6];
+    for (var i = 0; i < cat.targets.length; i++) {
+        //   0      1     2      3       4      5       6      7       8
+        // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+        var ra = cat.targets[i][1];
+        var dec = cat.targets[i][2];
         var alt;
         var addToList = false;
-        if (slooh500filter != null) {
+        if (catalogFilterDegrees != null) {
             alt = object_altitude_get(aa1, ra, dec);
-            if (slooh500time == null) {
+            if (catalog_filter_time == null) {
                 // no time filter, use also times 2 and 4 hours before and after midnight
-                if (alt < slooh500filter) {
+                if (alt < catalogFilterDegrees) {
                     alt = object_altitude_get(aa2, ra, dec);
                 }
-                if (alt < slooh500filter) {
+                if (alt < catalogFilterDegrees) {
                     alt = object_altitude_get(aa3, ra, dec);
                 }
-                if (alt < slooh500filter) {
+                if (alt < catalogFilterDegrees) {
                     alt = object_altitude_get(aa4, ra, dec);
                 }
-                if (alt < slooh500filter) {
+                if (alt < catalogFilterDegrees) {
                     alt = object_altitude_get(aa5, ra, dec);
                 }
             }
         }
-        if (slooh500filter == null || alt >= slooh500filter) {
+        if (catalogFilterDegrees == null || alt >= catalogFilterDegrees) {
             // we passed altitude filter
             addToList = true;
             if (moonFilter != null) {
@@ -2853,122 +2553,131 @@ function filtervisibleslooh500(list, lat, lng)
             }
         }
         if (addToList) {
-            var item = [ list[i][4], list[i][1] + ' ' + list[i][2] + ' ' + list[i][3] ];
-            fl[fl.length] = item;
-            idx[idx.length] = i;
-            visible[visible.length] = list[i];
-        } else {
-            notvisible[notvisible.length] = list[i];
+            //   0      1     2      3       4      5       6      7       8
+            // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+            // -> RA DEC, CAT+NAME+TYPE
+            var name = cat.targets[i][0];                   // CAT
+            if (cat.targets[i][7] != "") {
+                name = name + ', ' + cat.targets[i][7];     // NAME
+            }
+            if (cat.targets[i][3] != "") {
+                name = name + ', ' + cat.targets[i][3];     // TYPE
+            }
+            if (fl.length == 0) {
+                console.log("filter_visible_catalog_items:add", cat.targets[i], name);
+            }
+            fl[fl.length] = [ 
+                cat.targets[i][1].toFixed(5) + ' ' +  + cat.targets[i][2].toFixed(5),
+                name
+            ];
         }
     }
-    return { list: fl, index: idx, visible: visible, notvisible: notvisible};
+    return { list: fl };
 }
 
-function initslooh500()
+function init_catalog_view_list()
 {
-    var totalcount;
-
-    console.log("initslooh500", telescope_location, slooh500location);
-
-    if (telescope_location == slooh500location) {
-        // no change
-        console.log("initslooh500:no change");
+    if (!catalog_filters_changed) {
+        console.log("init_catalog_view_list:no change");
         return;
     }
 
+    console.log("init_catalog_view_list", current_catalog.name);
+
     wikiReset();
-    slooh500_index = null;
+    catalog_index = null;
 
-    slooh500location = telescope_location;
-
-    if (slooh500Teide == null) {
-        console.log("initslooh500:not initialized");
-        slooh500initlists();
-    }
-
-    if (slooh500select != null) {
+    if (catalogDiv_select != null) {
         // remove old list
-        console.log("initslooh500:remove old select list");
-        document.getElementById("slooh500Div").removeChild(slooh500select);
-        document.getElementById("slooh500Div").removeChild(slooh500text);
+        console.log("init_catalog_view_list:remove old select list");
+        document.getElementById("catalogDiv").removeChild(catalogDiv_select);
+        document.getElementById("catalogDiv").removeChild(catalog_text);
     }
 
-    var list;
-    if (slooh500location == 'teide') {
-        console.log("initslooh500:teide");
-        if (slooh500teidelist == null) {
-            slooh500teidelist = filtervisibleslooh500(slooh500Teide, teide_location_lat, teide_location_lng);
+    current_catalog_filtered_list = filter_visible_catalog_items(current_catalog, location_lat, location_lng);
+    if (current_catalog_filtered_list != null) {
+
+        catalogDiv_select = create_catalog_select_list('catalogDiv_select', current_catalog_filtered_list.list);
+        catalogDiv_select.onchange = function() { 
+                                    // Get coordinates from catalogDiv_select.value and put them
+                                    // to target box so we will show the target
+                                    document.getElementById("target").value = catalogDiv_select.value;
+                                    catalog_index = catalogDiv_select.selectedIndex;
+                                    if (catalog_index == 0) {
+                                        catalog_index = null;
+                                    } else {
+                                        catalog_index = catalog_index - 1;
+                                    }
+                                    ViewImage(0);
+                                };
+
+        document.getElementById("catalogDiv").appendChild(catalogDiv_select);
+
+        if (current_catalog.targets == null) {
+            catalog_text = document.createTextNode(' 0/0');
+        } else {
+            catalog_text = document.createTextNode(' ' + (current_catalog_filtered_list.list.length-1).toString() + 
+                                                    '/' + current_catalog.targets.length.toString());
         }
-        list = slooh500teidelist.list;
-        totalcount = slooh500Teide.length;
-    } else {
-        console.log("initslooh500:chile");
-        if (slooh500chilelist == null) {
-            slooh500chilelist = filtervisibleslooh500(slooh500Chile, chile_location_lat, chile_location_lng);
-        }
-        list = slooh500chilelist.list;
-        totalcount = slooh500Chile.length;
+        document.getElementById("catalogDiv").appendChild(catalog_text);
+
+        catalog_filters_changed = false;
     }
-
-    slooh500select = createslooh500select('slooh500_select', list);
-    slooh500select.onchange = function() { 
-                                document.getElementById("target").value = slooh500select.value;
-                                slooh500_index = slooh500select.selectedIndex;
-                                if (slooh500_index == 0) {
-                                    slooh500_index = null;
-                                } else {
-                                    slooh500_index = slooh500_index - 1;
-                                }
-                                ViewImage();
-                            };
-
-    document.getElementById("slooh500Div").appendChild(slooh500select);
-
-    slooh500text = document.createTextNode(' ' + (list.length-1).toString() + '/' + totalcount.toString());
-    document.getElementById("slooh500Div").appendChild(slooh500text);
 }
 
 function checkFilterChanged()
 {
     var ret = false;
-    var newvalue = document.getElementById("slooh500filter").value;
+    var newcatalog = document.getElementById("catalog-selection").value;
+    var newvalue = document.getElementById("catalogFilterDegrees").value;
     var newfilter;
+    if (current_catalog.name != newcatalog) {
+        console.log("checkFilterChanged:catalog changed to", newcatalog);
+        for (var i = 0; i < catalogs.length; i++) {
+            if (catalogs[i].name == newcatalog) {
+                current_catalog = catalogs[i];
+            }
+        }
+        ret = true;
+    }
     if (newvalue == 'all') {
         newfilter = null;
     } else {
         newfilter = parseInt(newvalue);
     }
-    if (slooh500filter != newfilter) {
-        slooh500reset();
-        slooh500filter = newfilter;
-        console.log("filterChanged:slooh500filter", slooh500filter);
+    if (catalogFilterDegrees != newfilter) {
+        catalogFilterDegrees = newfilter;
+        console.log("checkFilterChanged:catalogFilterDegrees", catalogFilterDegrees);
         ret = true;
     }
-    newvalue = document.getElementById("slooh500moonFilter").value;
+    newvalue = document.getElementById("catalogFilterMoon").value;
     if (newvalue == 'all') {
         newfilter = null;
     } else {
         newfilter = parseInt(newvalue);
     }
-    if (slooh500moonFilter != newfilter) {
-        slooh500reset();
-        slooh500moonFilter = newfilter;
-        console.log("filterChanged:slooh500moonFilter", slooh500moonFilter);
+    if (catalogFilterMoon != newfilter) {
+        catalogFilterMoon = newfilter;
+        console.log("checkFilterChanged:catalogFilterMoon", catalogFilterMoon);
         ret = true;
+    }
+    if (ret) {
+        catalog_reset();
     }
     return ret;
 }
 
 function filterChanged()
 {
+    console.log("checkFifilterChanged");
     if (checkFilterChanged()) {
-        ViewImage();
+        ViewImage(0);
     }
 }
 
 function checkFilterTimeChanged()
 {
-    var newvalue = document.getElementById("filter_time").value;
+    var newvalue = document.getElementById("catalogFilterTime").value;
     var UTCtime_ms;
     console.log("checkFilterTimeChanged, time value", newvalue);
     if (newvalue == '') {
@@ -2987,11 +2696,11 @@ function checkFilterTimeChanged()
         }
         console.log("checkFilterTimeChanged, time ", UTCtime_ms);
     }
-    if (slooh500time != UTCtime_ms) {
-        // time changed, reset slooh500 list
-        console.log("checkFilterTimeChanged, time changed, reset slooh500");
-        slooh500time = UTCtime_ms;
-        slooh500reset();
+    if (catalog_filter_time != UTCtime_ms) {
+        // time changed, reset view list
+        console.log("checkFilterTimeChanged, time changed, reset catalog view");
+        catalog_filter_time = UTCtime_ms;
+        catalog_reset();
         return true;
     } else {
         return false;
@@ -3000,17 +2709,16 @@ function checkFilterTimeChanged()
 
 function filterTimeChanged()
 {
+    console.log("filterTimeChanged");
     if (checkFilterTimeChanged()) {
-        ViewImage();
+        ViewImage(0);
     }
 }
 
-function slooh500reset()
+function catalog_reset()
 {
-    slooh500location = '';
-    slooh500teidelist = null;
-    slooh500chilelist = null;
-    slooh500_index = null;
+    catalog_filters_changed = true;
+    catalog_index = null;
 
     wikiReset();
 }
@@ -3115,7 +2823,7 @@ function showWikiTarget(wiki_target)
     wiki_target = reformatTargetName(wiki_target);
     console.log("showWikiTarget", wiki_target);
 
-    xmlhttp=new XMLHttpRequest();
+    var xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange=function()
     {
         if (xmlhttp.readyState==4 && xmlhttp.status==200) {
@@ -3152,18 +2860,13 @@ function showWiki()
     var c = image_target.substr(0,1);
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
         // numeric target, check if we have slooh target selected
-        console.log("showWiki, numeric, try slooh500");
-        if (slooh500_index != null) {
-            var item;
-            if (slooh500location == 'teide') {
-                list = slooh500Teide[slooh500teidelist.index[slooh500_index]];
-            } else {
-                list = slooh500Chile[slooh500chilelist.index[slooh500_index]];
-            }
-            console.log("showWiki, use Slooh 500", list[3]);
-            wiki_target = reformatTargetName(list[3]);
+        console.log("showWiki, numeric, try current_catalog");
+        if (catalog_index != null && current_catalog_filtered_list != null) {
+            var name = current_catalog_filtered_list.list[catalog_index][0];
+            console.log("showWiki, use current_catalog_filtered_list", name);
+            wiki_target = reformatTargetName(name);
         } else {
-            console.log("showWiki, no slooh500 target, remove wiki");
+            console.log("showWiki, no current catalog target, remove wiki");
             if (wikiIframe != null) {
                 //document.getElementById(wiki_panel).removeChild(wikiIframe);
                 wikiIframe = null;
@@ -3178,26 +2881,25 @@ function showWiki()
     showWikiTarget(wiki_target);
 }
 
-// Seeing widget from 
-// https://www.meteoblue.com/
+// Seeing widget from https://www.meteoblue.com/
 function showWeatherForecast(telescope_location_chile)
 {
-    var s;
-    if (telescope_location_chile) {
-        s = '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/la-dehesa_chile_3886112?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/la-dehesa_chile_3886112?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>';
-    } else {
-        s = '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  '+
-            'frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" '+
-            'style="width: 520px; height: 695px"></iframe>'+
-            '<div><!-- DO NOT REMOVE THIS LINK -->'+
-            '<a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue'+
-            '</a></div>';
+    if (current_telescope.weather == null) {
+        return;
     }
-
+    if (current_telescope.weather_url == null) {
+        for (var i = 0; i < weather_services.length; i++) {
+            if (weather_services[i].name == current_telescope.weather) {
+                current_telescope.weather_url = weather_services[i].url;
+            }
+        }
+    }
+    // Add a delay before showing weather, otherwise it will be shown
+    // first and screen jumps up and down
     setTimeout(function(){ 
         document.getElementById(weather_panel).style.height = "700px";
         document.getElementById(weather_panel).style.width = "600px";
-        document.getElementById(weather_panel).innerHTML = s;
+        document.getElementById(weather_panel).innerHTML = current_telescope.weather_url;
     }, 1000);
 }
 
