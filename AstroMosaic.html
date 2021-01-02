@@ -13,16 +13,9 @@
 }
 
 .h2text {
-  padding: 20px;
+  padding-bottom: 20px;
   text-align: left;
-  margin-left: 60px;
-}
-
-.homebutton {
-    float:left;
-    padding: 5px;
-    margin: 5px;
-    background:grey;
+  margin-left: 80px;
 }
 
 .banner {
@@ -75,6 +68,49 @@ p {
   background: whitesmoke;
 }
 
+/* Dropdown Button */
+.dropbtn {
+  background-color: lightgray;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  padding: 5px;
+  margin: 5px;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd;}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {display: block;}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
 </style>
     <title>AstroMosaic</title>
     <meta charset = "UTF-8" />
@@ -85,14 +121,19 @@ p {
 <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
 
 <div class="header">
-        <div class="homebutton">
-            <a href="https://ruuth.xyz/AstroImageTools.html">
-                <img src="AMT-favicon.png" alt="Home" >
-            </a>        
+    <div class="dropdown">
+        <button class="dropbtn"><img src="menu-24px.svg" alt="Home" height="16"></button>
+        <div class="dropdown-content">
+            <a href="AstroImageTools.html">Home</a>
+            <a href="AstroMosaicInfo.html">Astro Mosaic</a>
+            <a href="AutoIntegrateInfo.html">AutoIntegrate</a>
+            <a href="DownloadFitInfo.html">Download .fit</a>
+            <a href="FitsPyInfo.html">FITS utility</a>
         </div>
-        <div class="h2text">
-            <h2 id="astro_mosaic_title" >Astro Mosaic Telescope Planner</h2>
-        </div>
+    </div>
+    <div class="h2text">
+        <h2 id="astro_mosaic_title" >Astro Mosaic Telescope Planner</h2>
+    </div>
 </div>
     
 <div id="firstDiv" class="flex-container-top">
@@ -341,7 +382,7 @@ p {
 
 <div class="footer">
     <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a>
-        <br><a href="https://ruuth.xyz/AstroMosaicInfo.html#credits">Credits</a></small></p>
+        <br><a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -732,27 +773,48 @@ if (url_target) {
 }
 if (url_new_service) {
     console.log("url_new_service", url_new_service);
-    var params = url_new_service.split(',');
-    if (params.length < 6) {
-        alert("Too few parameters in url-parameter new_service! Ignoring new_service.");
-    } else {
-        var new_telescope = {
-            name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), lat: parseFloat(params[4]), lng: parseFloat(params[5]),
-            alt: 0, weather: null, weather_url: null, horizonHard: horizon0, horizonSoft: horizon0
-        };
-        if (params.length >= 7) {
-            for (var i = 0; i < weather_services.length; i++) {
-                if (weather_services[i].name == params[6]) {
-                    new_telescope.weather = params[6];
+    var url_service_list = url_new_service.split(';');
+    for (var n = 0; n < url_service_list.length; n++) {
+        var params = url_service_list[n].split(',');
+        if (params.length < 6) {
+            alert("Too few parameters in url-parameter new_service! Ignoring new_service " + params[0] + ".");
+        } else {
+            var new_telescope = {
+                name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), lat: parseFloat(params[4]), lng: parseFloat(params[5]),
+                alt: 0, weather: null, weather_url: null, horizonHard: horizon0, horizonSoft: horizon0
+            };
+            if (params.length >= 7) {
+                for (var i = 0; i < weather_services.length; i++) {
+                    if (weather_services[i].name == params[6]) {
+                        new_telescope.weather = params[6];
+                        break;
+                    }
+                }
+            }
+            for (var i = 0; i < telescope_services.length; i++) {
+                if (telescope_services[i].name == params[0]) {
+                    // add new telescopy to existing service
+                    telescope_services[i].telescopes[telescope_services[i].telescopes.length] = new_telescope;
+                    if (n == 0) {
+                        current_telescope_service = telescope_services[i];
+                        current_telescope_service_selected_index = i;
+                        current_telescope = current_telescope_service.telescopes[current_telescope_service.telescopes.length - 1];
+                        current_telescope_service_selected_index = telescope_services.length - 1;
+                    }
                     break;
                 }
             }
+            if (i == telescope_services.length) {
+                // add a new telescope service
+                var new_service = { name: params[0], telescopes: [ new_telescope ] };
+                telescope_services[telescope_services.length] = new_service;
+                if (n == 0) {
+                    current_telescope_service = new_service;
+                    current_telescope = current_telescope_service.telescopes[0];
+                    current_telescope_service_selected_index = telescope_services.length - 1;
+                }
+            }
         }
-        var new_service = { name: params[0], telescopes: [ new_telescope ] };
-        telescope_services[telescope_services.length] = new_service;
-        current_telescope_service = new_service;
-        current_telescope = current_telescope_service.telescopes[0];
-        current_telescope_service_selected_index = telescope_services.length - 1;
     }
 }
 if (url_service) {
