@@ -389,6 +389,8 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.31\n"+
+    "- Fix to mosaic coordinate format for Telescope Live"
     "Version 1.30\n"+
     "- Added Telescope Live telescopes\n"+
     "- Added more catalogs to filtered view list\n"+
@@ -662,8 +664,8 @@ var catalogs = [
 ];
 
 var telescope_services = [
-    { name: "Slooh", telescopes: slooh_telescopes },
-    { name: "Telescope Live", telescopes: telescope_live_telescopes }
+    { name: "Slooh", radec: 0, telescopes: slooh_telescopes },
+    { name: "Telescope Live", radec: 1, telescopes: telescope_live_telescopes }
 ];
 
 // screen location for some items
@@ -806,7 +808,7 @@ if (url_new_service) {
             }
             if (i == telescope_services.length) {
                 // add a new telescope service
-                var new_service = { name: params[0], telescopes: [ new_telescope ] };
+                var new_service = { name: params[0], radec: 1, telescopes: [ new_telescope ] };
                 telescope_services[telescope_services.length] = new_service;
                 if (n == 0) {
                     current_telescope_service = new_service;
@@ -1695,7 +1697,7 @@ function decimal_to_mmss(v)
     secs = secs - mins*60;
     console.log("decimal_to_mmss, secs", secs);
 
-    var ret = v.substr(0, index) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
+    var ret = ("0" + v.substr(0, index)).slice(-2) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
     console.log("decimal_to_mmss, ret", ret);
 
     return ret;
@@ -2192,8 +2194,13 @@ function ViewGrid()
             var col_ra_hours = col_ra * degToHours;
 
             if (grid_type == "mosaic") {
-                panel_radec[x][y] = col_ra_hours.toFixed(5) + 
-                                    " " + row_dec.toFixed(5);
+                if (current_telescope_service.radec == 0) {
+                    panel_radec[x][y] = col_ra_hours.toFixed(5) + 
+                                        " " + row_dec.toFixed(5);
+                } else {
+                    panel_radec[x][y] = reformat_coordinates(
+                                            col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5));
+                }
             } else {
                 /* We show only one scope FoV (default) so show
                  * coordinates in different formats.
