@@ -389,6 +389,9 @@ p {
 <script type="text/javascript">
 
 var version_text = 
+    "Version 1.32\n"+
+    "- Started using fetch API instead of XMLHttpRequest\n" +
+    "- Another fix to mosaic coordinate format for Telescope Live\n" +
     "Version 1.31\n"+
     "- Fix to mosaic coordinate format for Telescope Live\n" +
     "Version 1.30\n"+
@@ -664,8 +667,8 @@ var catalogs = [
 ];
 
 var telescope_services = [
-    { name: "Slooh", radec: 0, telescopes: slooh_telescopes },
-    { name: "Telescope Live", radec: 1, telescopes: telescope_live_telescopes }
+    { name: "Slooh", radec_format: 0, telescopes: slooh_telescopes },
+    { name: "Telescope Live", radec_format: 1, telescopes: telescope_live_telescopes }
 ];
 
 // screen location for some items
@@ -808,7 +811,7 @@ if (url_new_service) {
             }
             if (i == telescope_services.length) {
                 // add a new telescope service
-                var new_service = { name: params[0], radec: 1, telescopes: [ new_telescope ] };
+                var new_service = { name: params[0], radec_format: 1, telescopes: [ new_telescope ] };
                 telescope_services[telescope_services.length] = new_service;
                 if (n == 0) {
                     current_telescope_service = new_service;
@@ -1647,22 +1650,36 @@ function ViewImageByName()
     // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
     var resolver_url = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
 
-    var xmlhttp=new XMLHttpRequest();
-    xmlhttp.onreadystatechange=function()
-    {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            console.log('simbad_resolve, got response from HTTP GET: ', xmlhttp.responseText.substr(0, 40));
-            if (find_coordinates(xmlhttp.responseText)) {
-                ViewImageByType();
-            } else {
-                document.getElementById(error_text).innerHTML = "Failed to resolve name " + image_target;
-            }
-        }
-    }
     resolver_url = resolver_url + image_target.replace(/ /g, "+");
-    console.log('ViewImageByName, send HTTP GET(' + resolver_url + ')');
-    xmlhttp.open("GET", resolver_url, false);
-    xmlhttp.send();    
+
+    var waitingTimeout = setTimeout(function() { document.getElementById(error_text).innerHTML = "Resolving name..."; }, 1000);
+
+    fetch(resolver_url)
+        .then(
+            function(response) {
+                if (response.status !== 200) {
+                    clearTimeout(waitingTimeout);
+                    var txt = 'Problem accessing Sesame name resolver. Status Code: ' + response.status;
+                    console.log(txt);
+                    document.getElementById(error_text).innerHTML = txt;
+                    return;
+                }
+                response.text().then(function(text) {
+                    clearTimeout(waitingTimeout);
+                    if (find_coordinates(text)) {
+                        ViewImageByType();
+                    } else {
+                        document.getElementById(error_text).innerHTML = "Failed to resolve name " + image_target;
+                    }
+                })
+            }
+        )
+        .catch(function(err) {
+            clearTimeout(waitingTimeout);
+            console.log('Problem accessing Sesame name resolver. Fetch Error :', err);
+            document.getElementById(error_text).innerHTML = 'Problem accessing Sesame name resolver. Fetch Error :' + err;
+        }
+    );
 }
 
 // Remove leading, trailing and duplicate spaces
@@ -1681,24 +1698,24 @@ function trim_spaces(str)
 
 function decimal_to_mmss(v)
 {
-    console.log("decimal_to_mmss, v", v);
+    //console.log("decimal_to_mmss, v", v);
     var index = v.indexOf('.');
     if (index == -1) {
-        console.log("decimal_to_mmss, no dot found", v);
+        //console.log("decimal_to_mmss, no dot found", v);
         return v;
     }
     var vd = v.substring(index+1);
-    console.log("decimal_to_mmss, vd", vd);
+    //console.log("decimal_to_mmss, vd", vd);
     var d = parseFloat("0."+vd);
-    console.log("decimal_to_mmss, d", d);
+    //console.log("decimal_to_mmss, d", d);
     var secs = d * 3600;
     var mins = Math.floor(secs / 60);
-    console.log("decimal_to_mmss, mins", mins);
+    //console.log("decimal_to_mmss, mins", mins);
     secs = secs - mins*60;
-    console.log("decimal_to_mmss, secs", secs);
+    //console.log("decimal_to_mmss, secs", secs);
 
     var ret = ("0" + v.substr(0, index)).slice(-2) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
-    console.log("decimal_to_mmss, ret", ret);
+    //console.log("decimal_to_mmss, ret", ret);
 
     return ret;
 }
@@ -1713,6 +1730,44 @@ function split_coord(coord)
                    coord.substring(2, 4) + ':' +
                    coord.substring(4); 
         }
+}
+
+function fix_field_lenght(fld)
+{
+    var sign;
+
+    //console.log("fix_field_lenght:in", fld)
+
+    if (fld.charAt(0) == '-') {
+        sign = '-';
+        fld = fld.substring(1);
+    } else {
+        sign = '';
+    }
+    var s = fld.split('.');
+    if (s.length > 1) {
+        // We have decimals
+        fld = sign + ("0" + s[0]).slice(-2) + '.' + (s[1] + "0").slice(0, 2);
+    } else {
+        fld = sign + ("0" + fld).slice(-2);
+    }
+    //console.log("fix_field_lenght:out", fld)
+    return fld;
+}
+
+// Ensure that format is HH:MM:SS DD:MM:SS, that is,
+// two numbers on each field.
+function reformat_coordinates_field_lenghts(coord)
+{
+    var radec = coord.split(" ");
+    for (var i = 0; i < radec.length; i++) {
+        var fields = radec[i].split(":");
+        for (var j = 0; j < fields.length; j++) {
+            fields[j] = fix_field_lenght(fields[j]);
+        }
+        radec[i] = fields[0] + ':' + fields[1] + ':' + fields[2];
+    }
+    return radec[0] + ' ' + radec[1];
 }
 
 // Reformat coordinates to a format HH:MM:SS DD:MM:SS
@@ -1764,6 +1819,8 @@ function reformat_coordinates(coord)
         // use as-is
         console.log('reformat_coordinates, length 6, reformat', coord);
     }
+    coord = reformat_coordinates_field_lenghts(coord);
+    console.log('reformat_coordinates, field lengths fixed', coord);
     return coord;
 }
 
@@ -2194,7 +2251,7 @@ function ViewGrid()
             var col_ra_hours = col_ra * degToHours;
 
             if (grid_type == "mosaic") {
-                if (current_telescope_service.radec == 0) {
+                if (current_telescope_service.radec_format == 0) {
                     panel_radec[x][y] = col_ra_hours.toFixed(5) + 
                                         " " + row_dec.toFixed(5);
                 } else {
@@ -2454,18 +2511,23 @@ function loadCatalog(cat)
 {
     console.log("Load catalog " + cat.name + " from " + cat.url);
 
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function()
-    {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            console.log("Catalog " + cat.name + " loaded ", xmlhttp.responseText.substr(0, 256));
-            var jsonObjects = JSON.parse(xmlhttp.responseText);
-            processJsonCatalog(cat, jsonObjects);
-            update_catalog_list();
+    fetch(cat.url)
+        .then(
+            function(response) {
+                if (response.status !== 200) {
+                    console.log('Problem accessing catalog ' + cat.name + '. Status Code: ' + response.status);
+                    return;
+                }
+                response.json().then(function(jsonData) {
+                    processJsonCatalog(cat, jsonData);
+                    update_catalog_list();
+                })
+            }
+        )
+        .catch(function(err) {
+            console.log('Problem accessing catalog ' + cat.name + '. Fetch Error :', err);
         }
-    }
-    xmlhttp.open("GET", cat.url, true);
-    xmlhttp.send();
+    );
 }
 
 function load_and_init_catalogs()
@@ -2890,28 +2952,34 @@ function showWikiTarget(wiki_target)
               "format=json&formatversion=2&prop=revisions&origin=*&titles=";
 
     wiki_target = reformatTargetName(wiki_target);
-    console.log("showWikiTarget", wiki_target);
+    var wiki_url = url + wiki_target.replace(/ /g, "%20");
 
-    var xmlhttp=new XMLHttpRequest();
-    xmlhttp.onreadystatechange=function()
-    {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            console.log('showWiki, get page id, response from HTTP GET: ', xmlhttp.responseText.substr(0, 80));
-            var json = JSON.parse(xmlhttp.responseText);
-            var pageid = json.query.pages[0].pageid;
-            if (pageid) {
-                getWikiContent(pageid);
-            } else {
-                console.log("Failed to get Wiki page id from json");
-                wikiReset();
-                noWikiAvailable();
+    console.log("showWikiTarget", wiki_target, wiki_url);
+
+    fetch(wiki_url)
+        .then(
+            function(response) {
+                if (response.status !== 200) {
+                    console.log('Problem accessing Wiki. Status Code: ' + response.status);
+                    return;
+                }
+                response.json().then(function(jsonData) {
+                    console.log('showWiki, get page id, got response from HTTP GET');
+                    var pageid = jsonData.query.pages[0].pageid;
+                    if (pageid) {
+                        getWikiContent(pageid);
+                    } else {
+                        console.log("Failed to get Wiki page id from json");
+                        wikiReset();
+                        noWikiAvailable();
+                    }
+                })
             }
+        )
+        .catch(function(err) {
+            console.log('Problem accessing Wiki. Fetch Error :', err);
         }
-    }
-    var resolver_url = url + wiki_target.replace(/ /g, "%20");
-    console.log('showWiki, send HTTP GET(' + resolver_url + ')');
-    xmlhttp.open("GET", resolver_url, false);
-    xmlhttp.send(); 
+    );
 }
 
 function showWiki()
