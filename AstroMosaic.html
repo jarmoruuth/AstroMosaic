@@ -58,6 +58,16 @@
   padding: 2px;
 }
 
+.fixed-container {
+  background: gray;
+  display: flex;
+}
+
+.fixed-container > div {
+  margin: 2px;
+  padding: 2px;
+}
+
 p {
     margin: 0px;
     padding: 0px;
@@ -103,6 +113,10 @@ p {
   display: block;
 }
 
+.all_div {
+    visibility: hidden;
+}
+
 /* Change color of dropdown links on hover */
 .dropdown-content a:hover {background-color: #ddd;}
 
@@ -120,7 +134,8 @@ p {
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
 
-<div class="header">
+<div id="allDiv" class="all_div">
+<div id="headerDiv" class="header">
     <div class="dropdown">
         <button class="dropbtn"><img src="menu-24px.svg" alt="Home" height="16"></button>
         <div class="dropdown-content">
@@ -244,7 +259,7 @@ p {
     </div>
 </div>
 
-<div class="flex-container">
+<div id="targetDiv" class="flex-container">
     <div id="target-image-div">
     <div id="aladin-lite-div-00" style="width:300px;height:300px;"></div>
     <br>
@@ -271,7 +286,7 @@ p {
     <p id="panel-text-04"></p>
     </div>
 </div>
-<div class="flex-container">
+<div id="dayDiv" class="flex-container">
     <div  id="day-visibility-div">
     <div id="aladin-lite-div-10" style="width:300px;height:300px;"></div>
     <br>
@@ -298,7 +313,7 @@ p {
     <p id="panel-text-14"></p>
     </div>
 </div>
-<div class="flex-container">
+<div id="yearDiv" class="flex-container">
     <div id="year-visibility-div">
     <div id="aladin-lite-div-20" style="width:300px;height:300px;"></div>
     <br>
@@ -325,7 +340,7 @@ p {
     <p id="panel-text-24"></p>
     </div>
 </div>
-<div class="flex-container">
+<div id="panelDiv30" class="flex-container">
     <div>
     <div id="aladin-lite-div-30" style="width:300px;height:300px;"></div>
     <br>
@@ -352,7 +367,7 @@ p {
     <p id="panel-text-34"></p>
     </div>
 </div>
-<div class="flex-container">
+<div id="panelDiv40" class="flex-container">
     <div>
     <div id="aladin-lite-div-40" style="width:300px;height:300px;"></div>
     <br>
@@ -380,15 +395,24 @@ p {
     </div>
 </div>
 
-<div class="footer">
+<div id="footerDiv" class="footer">
     <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a>
         <br><a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
+</div>
+
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
+var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
+
 var version_text = 
+    "Version 1.33\n"+
+    "- Reworked internal data structures\n" +
+    "- Url parameter services_json=url to give services and telescopes in a json file\n" +
+    "- Url parameter view=target|day|year to show only one element, useful for embedding\n" +
+    "- Fix to Slooh Chile horizon limits\n" +
     "Version 1.32\n"+
     "- Started using fetch API instead of XMLHttpRequest\n" +
     "- Another fix to mosaic coordinate format for Telescope Live\n" +
@@ -572,90 +596,6 @@ var messier_catalog = {
 ]
 };
 
-var chile1Hard = [
-7.75,5.75,3.5,1.75,1.75,1.75,6.75,1.5,1,0.75,0.5,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0.75,1.25,0.75,0.5,0.5,4,13.5,11,
-8.5,6,2.25,0,0.25,1.25,4,5.25,6.5,7.5,8.25,9.25,10,10.25,10.5,10.75,11,11.25,11.25,11,11.75,12.25,13,13.5,32.5,16.75,11.5,12,
-12.75,13.25,13,12.75,11.75,10.75
-];
-var chileSoft = [
-18,18,18,18,18,18,18,18,18,20,22,24,25,30,35,42,47,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,
-50,50,50,47,40,35,30,25,24,22,20,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18
-];
-var teide1Hard = [
-27,25,24,23,21.5,20,18,16,13.5,11,10,9,9,9,9,9,9,9,9,9,10,11,11.5,12,13.5,15,17,19,22,25,26.5,28,29.5,31,32,33,32,31,29.5,
-28,26.5,25,22,19,18,15,14,13,13,13,13.5,14,14,14,12,12,12.5,13,12.5,12,12,12,15,16,18.5,21,22,23,23.5,24,26
-];
-var teide2Hard = [
-30,26.6,24.8,23.8,22.7,21.2,19.6,17.6,15.5,13,10.8,9.8,9,9,9,9,9,9,9,9,9.2,10.2,11.1,11.6,12.3,13.8,15.4,17.4,19.6,33,33,33,
-33,33,33,33,33,33,33,33,33,26.2,24.4,21.4,18.8,17.4,14.8,13.8,13,13,13.1,13.6,14,14,13.6,12,12.1,12.6,12.9,12.4,12,12,12.6,
-15.2,16.5,19,21.2,22.2,23.1,23.6,24.4
-];
-var teide3Hard = [
-10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
-10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
-];
-var teide4Hard = [
-10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
-10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
-];
-var teideSoft = [
-30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
-30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
-];
-
-var horizon0 = [
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-];
-
-var horizon20 = [
-20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,
-20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
-];
-
-var horizon30 = [
-30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,
-30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
-];
-
-// Seeing widget from https://www.meteoblue.com/
-var weather_services = [
-    { name: "slooh-teide", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>' },
-    { name: "slooh-chile", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/la-dehesa_chile_3886112?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/la-dehesa_chile_3886112?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
-    { name: "tl-chi", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/portezuelo-del-chaco_chile_3895723?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/portezuelo-del-chaco_chile_3895723?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
-    { name: "tl-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/el-chaparral-alto_spain_2518568?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/el-chaparral-alto_spain_2518568?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
-    { name: "tl-aus", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/mount-manton_australia_8167256?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/mount-manton_australia_8167256?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
-    { name: "detect_location", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing?geoloc=detect&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'}
-];
-
-var slooh_telescopes = [
-    { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
-    { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide2Hard, horizonSoft: teideSoft }, 
-    { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide2Hard, horizonSoft: teideSoft }, 
-    { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide3Hard, horizonSoft: teideSoft }, 
-    { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", weather_url: null, horizonHard: teide4Hard, horizonSoft: teideSoft }, 
-
-    { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
-    { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
-    { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
-    { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }, 
-    { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", weather_url: null, horizonHard: teide1Hard, horizonSoft: teideSoft }
-];
-
-var telescope_live_telescopes = [
-    { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    
-    { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 }, 
-    { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", weather_url: null, horizonHard: horizon30, horizonSoft: horizon30 },
-
-    { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, alt: 648, weather: "tl-aus", weather_url: null, horizonHard: horizon20, horizonSoft: horizon20 }   
-];
-
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: "https://ruuth.xyz/Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
     { name: "Slooh 500 Teide", targets: null, url: "https://ruuth.xyz/Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
@@ -666,12 +606,97 @@ var catalogs = [
     { name: "Sharpless", targets: null, url: "https://ruuth.xyz/Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' }
 ];
 
-var telescope_services = [
-    { name: "Slooh", radec_format: 0, telescopes: slooh_telescopes },
-    { name: "Telescope Live", radec_format: 1, telescopes: telescope_live_telescopes }
-];
+// zero horizon if nothing else is specified
+var horizon_0 = {   
+    name: "horizon-0",
+    hard: [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    soft: null
+};
+
+var all_services = {
+    telescope_services: [
+        { 
+            name: "Slooh", 
+            radec_format: 0, 
+            telescopes: [
+                { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide1", meridian_transit: 60 }, 
+                { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide3", meridian_transit: 60  }, 
+                { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide4", meridian_transit: 60  }, 
+
+                { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }
+            ]
+        },
+        { 
+            name: "Telescope Live", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60  },
+                
+                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+            
+                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+            ] 
+        }
+    ],
+    weather_services: [ // Seeing widgets from https://www.meteoblue.com/
+        { name: "slooh-teide", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>' },
+        { name: "slooh-chile", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/la-dehesa_chile_3886112?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/la-dehesa_chile_3886112?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+        { name: "tl-chi", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/portezuelo-del-chaco_chile_3895723?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/portezuelo-del-chaco_chile_3895723?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+        { name: "tl-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/el-chaparral-alto_spain_2518568?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/el-chaparral-alto_spain_2518568?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+        { name: "tl-aus", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/mount-manton_australia_8167256?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/mount-manton_australia_8167256?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
+        { name: "detect_location", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing?geoloc=detect&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'}
+    ],
+    horizon_limits: [
+        {   name: "slooh-chile",
+            hard: [ 7.75,5.75,3.5,1.75,1.75,1.75,6.75,1.5,1,0.75,0.5,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0.75,1.25,0.75,0.5,0.5,4,13.5,11,
+                    8.5,6,2.25,0,0.25,1.25,4,5.25,6.5,7.5,8.25,9.25,10,10.25,10.5,10.75,11,11.25,11.25,11,11.75,12.25,13,13.5,32.5,16.75,11.5,12,
+                    12.75,13.25,13,12.75,11.75,10.75],
+            soft: [ 18,18,18,18,18,18,18,18,18,20,22,24,25,30,35,42,47,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,
+                    50,50,50,47,40,35,30,25,24,22,20,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18]
+        },
+        {   name: "slooh-teide1",
+            hard: [ 27,25,24,23,21.5,20,18,16,13.5,11,10,9,9,9,9,9,9,9,9,9,10,11,11.5,12,13.5,15,17,19,22,25,26.5,28,29.5,31,32,33,32,31,29.5,
+                   28,26.5,25,22,19,18,15,14,13,13,13,13.5,14,14,14,12,12,12.5,13,12.5,12,12,12,15,16,18.5,21,22,23,23.5,24,26],
+            soft: [ 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
+                    30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30 ]
+        },
+        {   name: "slooh-teide2",
+            hard: [ 30,26.6,24.8,23.8,22.7,21.2,19.6,17.6,15.5,13,10.8,9.8,9,9,9,9,9,9,9,9,9.2,10.2,11.1,11.6,12.3,13.8,15.4,17.4,19.6,33,33,33,
+                    33,33,33,33,33,33,33,33,33,26.2,24.4,21.4,18.8,17.4,14.8,13.8,13,13,13.1,13.6,14,14,13.6,12,12.1,12.6,12.9,12.4,12,12,12.6,
+                    15.2,16.5,19,21.2,22.2,23.1,23.6,24.4 ],
+            soft: [ 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
+                    30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30 ]
+        },
+        {   name: "slooh-teide3",
+            hard: [ 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+                    10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10 ],
+            soft: [ 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
+                    30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30 ]
+        },
+        {   name: "slooh-teide4",
+            hard: [ 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+                    10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10 ],
+            soft: [ 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,33,33,33,33,33,33,33,33,33,33,33,33,33,30,
+                    30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30 ]
+        }
+    ]
+};
 
 // screen location for some items
+var aladin_panel = "aladin-lite-div-00";
 var image_panel = "aladin-lite-div-00";
 var image_panel_text = "panel-text-00";
 var wiki_panel = "aladin-lite-div-01";
@@ -702,14 +727,16 @@ if (screen.height > screen.width) {
 var size_x = 1;
 var size_y = 1;
 
-var current_telescope_service = telescope_services[0];
-var current_telescope = current_telescope_service.telescopes[0];
-var current_telescope_service_selected_index = 0;   // for init
-var current_telescope_selected_index = 0;           // for init
+// Most of these are init in initAstroMosaic()
+var telescope_services;
+var current_telescope_service;
+var current_telescope;
+var current_telescope_service_selected_index;
+var current_telescope_selected_index;
 var fov_x;
 var fov_y;
+var aladin_fov_extra = 1;
 var img_fov = 0.8;  // field of view for single image considering the overlap
-var img_size = 300;
 var image_target;
 var image_target_list = [];
 
@@ -748,143 +775,345 @@ var catalog_index = null;
 var wikiChecked = false;
 
 // Hard and soft limits for current telecope
-var horizonHard = [];
-var horizonSoft = [];
+var horizonHard;
+var horizonSoft;
+var meridian_transit;
 
 var url_target = null;
-var url_new_service = null;
+var url_add_service = null;
+var url_set_service = null;
 var url_service = null;
 var url_telescope = null;
 var url_name = null;
 var url_grid_type = null;
 var url_overlap = null;
 var url_date = null;
+var url_services_json = null;
+var url_view = "all";
 
 if (typeof URLSearchParams === "function") {
     searchParams = new URLSearchParams(url.search.slice(1));
-    url_target = searchParams.get('target');
-    url_new_service = searchParams.get('new_service');
-    url_service = searchParams.get('service');
-    url_telescope = searchParams.get('telescope');
-    url_name = searchParams.get('name');
-    url_grid_type = searchParams.get('grid_type');
-    url_overlap = searchParams.get('overlap');
-    url_date = searchParams.get('date');
-}
-
-if (url_target) {
-    console.log("url_target", url_target);
-    startup_image = url_target;
-}
-if (url_new_service) {
-    console.log("url_new_service", url_new_service);
-    var url_service_list = url_new_service.split(';');
-    for (var n = 0; n < url_service_list.length; n++) {
-        var params = url_service_list[n].split(',');
-        if (params.length < 6) {
-            alert("Too few parameters in url-parameter new_service! Ignoring new_service " + params[0] + ".");
-        } else {
-            var new_telescope = {
-                name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), lat: parseFloat(params[4]), lng: parseFloat(params[5]),
-                alt: 0, weather: null, weather_url: null, horizonHard: horizon0, horizonSoft: horizon0
-            };
-            if (params.length >= 7) {
-                for (var i = 0; i < weather_services.length; i++) {
-                    if (weather_services[i].name == params[6]) {
-                        new_telescope.weather = params[6];
-                        break;
-                    }
-                }
-            }
-            for (var i = 0; i < telescope_services.length; i++) {
-                if (telescope_services[i].name == params[0]) {
-                    // add new telescopy to existing service
-                    telescope_services[i].telescopes[telescope_services[i].telescopes.length] = new_telescope;
-                    if (n == 0) {
-                        current_telescope_service = telescope_services[i];
-                        current_telescope_service_selected_index = i;
-                        current_telescope = current_telescope_service.telescopes[current_telescope_service.telescopes.length - 1];
-                        current_telescope_service_selected_index = telescope_services.length - 1;
-                    }
-                    break;
-                }
-            }
-            if (i == telescope_services.length) {
-                // add a new telescope service
-                var new_service = { name: params[0], radec_format: 1, telescopes: [ new_telescope ] };
-                telescope_services[telescope_services.length] = new_service;
-                if (n == 0) {
-                    current_telescope_service = new_service;
-                    current_telescope = current_telescope_service.telescopes[0];
-                    current_telescope_service_selected_index = telescope_services.length - 1;
-                }
-            }
-        }
+    parse_url(searchParams);
+    if (url_services_json != null) {
+        // load services json and start astro mosaic when load completes
+        load_services_json(url_services_json);
     }
 }
-if (url_service) {
-    console.log("url_service", url_service);
-    for (var i = 0; i < telescope_services.length; i++) {
-        if (telescope_services[i].name == url_service) {
-            current_telescope_service = telescope_services[i];
-            current_telescope = current_telescope_service.telescopes[0];
-            current_telescope_service_selected_index = i;
-            break;
-        }
-    }
-}
-if (url_telescope) {
-    console.log("url_telescope", url_telescope);
-    for (var i = 0; i < current_telescope_service.telescopes.length; i++) {
-        if (current_telescope_service.telescopes[i].name == url_telescope) {
-            current_telescope = current_telescope_service.telescopes[i];
-            current_telescope_selected_index = i;
-            break;
-        }
-    }
-}
-if (url_name) {
-    document.getElementById("astro_mosaic_title").innerHTML = url_name;
-}
-if (url_grid_type) {
-    document.getElementById("grid_type").value = url_grid_type;
-}
-if (url_overlap) {
-    document.getElementById("overlap_percentage").value = url_overlap;
-} else {
-    document.getElementById("overlap_percentage").value = 20;
-}
-if (url_date) {
-    document.getElementById("view_date").value = url_date;
-} else {
-    var d = new Date();
-    document.getElementById("view_date").value = d.toISOString().substr(0, 10);
+
+
+if (url_services_json == null) {
+    // Start astro mosaic. We may also start after loading
+    // json services file
+    startAstroMosaic("normal start");
 }
 
-// initialization
-initAstroMosaic();
+function startAstroMosaic(txt)
+{
+    console.log("startAstroMosaic", txt);
 
-if (startup_image) {
-    document.getElementById("target").value = startup_image;
+    apply_url();
+
+    // initialization
+    initAstroMosaic();
+
+    // setup done, show target image
+    if (url_view == "all") {
+        document.getElementById("target").value = startup_image;
+    }
     ViewImage(0);
 }
 
-document.getElementById("size_x").value = 3;
-document.getElementById("size_y").value = 3;
+//document.getElementById("size_x").value = 3;
+//document.getElementById("size_y").value = 3;
 
 function initAstroMosaic()
 {
+    console.log("initAstroMosaic");
+
+    init_all_services();
+
+    telescope_services = all_services.telescope_services;
+    current_telescope_service = telescope_services[0];
+    current_telescope = current_telescope_service.telescopes[0];
+    current_telescope_service_selected_index = 0;
+    current_telescope_selected_index = 0;
+
     load_and_init_catalogs();
     update_telescope_service_list();
     update_telescope_list(current_telescope_service.name);
     update_catalog_list();
     init_catalog_view_list();
 
+}
+
+function init_all_services()
+{
+    console.log("init_all_services");
+
     // Update telescope FoV values.
-    for (var i = 0; i < telescope_services.length; i++) {
-        for (var j = 0; j < telescope_services[i].telescopes.length; j++) {
-            telescope_services[i].telescopes[j].fov_x = getFov(telescope_services[i].telescopes[j].fov_x);
-            telescope_services[i].telescopes[j].fov_y = getFov(telescope_services[i].telescopes[j].fov_y);
+    for (var i = 0; i < all_services.telescope_services.length; i++) {
+        for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
+            all_services.telescope_services[i].telescopes[j].fov_x = getFov(all_services.telescope_services[i].telescopes[j].fov_x);
+            all_services.telescope_services[i].telescopes[j].fov_y = getFov(all_services.telescope_services[i].telescopes[j].fov_y);
+            if (Array.isArray(all_services.telescope_services[i].telescopes[j].horizon_limits)) {
+                // Already array. Check if it is has enough enties. If not, repeat last item.
+                console.log("init_all_services", "horizon_limits is array");
+                var len = all_services.telescope_services[i].telescopes[j].horizon_limits.length;
+                if (len == 0) {
+                    all_services.telescope_services[i].telescopes[j].horizon_limits = horizon_0;
+                } else if (len < 71) {
+                    // we need limit for every 5 arcminutes
+                    var horizon = { 
+                            name: "horizon limits",
+                            hard: all_services.telescope_services[i].telescopes[j].horizon_limits,
+                            soft: null 
+                    };
+                    var last = horizon.hard[len-1];
+                    for (var k = len; k < 71; k++) {
+                        horizon.hard[k] = last;
+                    }
+                    all_services.telescope_services[i].telescopes[j].horizon_limits = horizon;
+                }
+            } else {
+                // Try to find horizon limits by name
+                console.log("init_all_services", "horizon_limits is name");
+                for (var k = 0; k < all_services.horizon_limits.length; k++) {
+                    if (all_services.horizon_limits[k].name == all_services.telescope_services[i].telescopes[j].horizon_limits) {
+                        all_services.telescope_services[i].telescopes[j].horizon_limits = all_services.horizon_limits[k];
+                        break;
+                    }
+                }
+            }
+            if (all_services.telescope_services[i].telescopes[j].horizon_limits == null) {
+                // not found
+                all_services.telescope_services[i].telescopes[j].horizon_limits = horizon_0;
+            }
+            if (all_services.telescope_services[i].telescopes[j].horizon_limits.soft == null) {
+                all_services.telescope_services[i].telescopes[j].horizon_limits.soft =
+                    all_services.telescope_services[i].telescopes[j].horizon_limits.hard;
+            }
+        }
+    }
+}
+
+// Load json services file
+function load_services_json(url)
+{
+    console.log("Load services from " + url);
+
+    fetch(url)
+        .then(
+            function(response) {
+                if (response.status !== 200) {
+                    alert('Problem accessing service ' + url + '. Status Code: ' + response.status);
+                    return;
+                }
+                response.json().then(function(jsonData) {
+                    console.log("Load services jsonData", jsonData);
+                    all_services = jsonData;
+                    startAstroMosaic("from load_services_json");
+                })
+            }
+        )
+        .catch(function(err) {
+            alert('Problem accessing service ' + url + '. Fetch Error :', err);
+        }
+    );
+}
+
+// parse parameters from url
+function parse_url(searchParams)
+{
+    console.log("parse_url");
+
+    url_target = searchParams.get('target');
+    url_add_service = searchParams.get('add_service');
+    url_set_service = searchParams.get('set_service');
+    url_service = searchParams.get('service');
+    url_telescope = searchParams.get('telescope');
+    url_name = searchParams.get('name');
+    url_grid_type = searchParams.get('grid_type');
+    url_overlap = searchParams.get('overlap');
+    url_date = searchParams.get('date');
+    url_services_json = searchParams.get('services_json');
+    url_view = searchParams.get('view');
+}
+
+// apply url parameters, if there are any
+function apply_url()
+{
+    console.log("apply_url");
+    if (url_target) {
+        console.log("url_target", url_target);
+        startup_image = url_target;
+    }
+    if (url_set_service) {
+        set_url_add_service(url_set_service, true);
+    }
+    if (url_add_service) {
+        set_url_add_service(url_add_service, false);
+    }
+    if (url_service) {
+        // set default service
+        console.log("url_service", url_service);
+        for (var i = 0; i < telescope_services.length; i++) {
+            if (telescope_services[i].name == url_service) {
+                current_telescope_service = all_services.telescope_services[i];
+                current_telescope = current_telescope_service.telescopes[0];
+                current_telescope_service_selected_index = i;
+                break;
+            }
+        }
+    }
+    if (url_telescope) {
+        // set default telescope in current_telescope_service
+        console.log("url_telescope", url_telescope);
+        for (var i = 0; i < current_telescope_service.telescopes.length; i++) {
+            if (current_telescope_service.telescopes[i].name == url_telescope) {
+                current_telescope = current_telescope_service.telescopes[i];
+                current_telescope_selected_index = i;
+                break;
+            }
+        }
+    }
+    if (url_name) {
+        document.getElementById("astro_mosaic_title").innerHTML = url_name;
+    }
+    if (url_grid_type) {
+        document.getElementById("grid_type").value = url_grid_type;
+    }
+    if (url_overlap) {
+        document.getElementById("overlap_percentage").value = url_overlap;
+    } else {
+        document.getElementById("overlap_percentage").value = 20;
+    }
+    if (url_date) {
+        document.getElementById("view_date").value = url_date;
+    } else {
+        var d = new Date();
+        url_date = d.toISOString().substr(0, 10);
+        document.getElementById("view_date").value = url_date;
+    }
+    if (url_view) {
+        var view_size_h = null;
+        var view_size_w = null;
+        var font_size = 10;
+        var margin = 10;
+        var url_view_split = url_view.split(',');
+        url_view = url_view_split[0];
+        if (url_view_split.length > 1) {
+            view_size_w = url_view_split[1];
+        }
+        if (url_view_split.length > 2) {
+            view_size_h = url_view_split[2];
+        }
+        if (view_size_w != null && view_size_h == null) {
+            view_size_h = view_size_w;
+        }
+        if (view_size_w == null) {
+            view_size_w = window.innerWidth;
+            view_size_h = window.innerHeight;
+        }
+        view_size_w = view_size_w - 2 * margin;
+        view_size_h = view_size_h - 2 * margin;
+        if (view_size_w > view_size_h) {
+            aladin_fov_extra = view_size_w / view_size_h;
+        } else {
+            aladin_fov_extra = view_size_h / view_size_w;
+        }
+        console.log("apply_url:url_view", url_view, "view_size_h", view_size_h, "view_size_w", view_size_w);
+
+        var allDiv = document.getElementById("allDiv");
+        allDiv.innerHTML = "";
+
+        allDiv.style.height = view_size_h + "px";
+        allDiv.style.width = view_size_w + "px";
+
+        var x = document.createElement("DIV");
+        x.id = "imageDiv";
+        x.style.height = (view_size_h - font_size - margin) + "px";
+        x.style.width = (view_size_w - 2 * margin) + "px";
+        console.log("x.style.height", x.style.height, "x.style.width", x.style.width);
+        allDiv.appendChild(x);
+
+        x = document.createElement("DIV");
+        x.id = "textDiv";
+        x.style.fontSize = font_size + "px";
+        allDiv.appendChild(x);
+
+        aladin_panel = "imageDiv";
+        image_panel = "imageDiv";
+        image_panel_text = "textDiv";
+        dayvisibility_panel = "imageDiv";
+        dayvisibility_panel_text = "textDiv";
+        yearvisibility_panel = "imageDiv";
+        yearvisibility_panel_text = "textDiv";
+        status_text = "textDiv";
+        error_text = "textDiv";
+    } else {
+        url_view = "all";
+        astro_mosaic_link = "";
+    }
+    document.getElementById("allDiv").style.visibility = "visible";
+}
+
+// Add a new service from url, old services are not removed. 
+// If service exists, only new telescopes are added to that service.
+// New service is set as default.
+// Format is: service_name, telescope_name, fov_x, fov_y, lat, lng [, weather_service_name]
+function set_url_add_service(url_add_service, clear_old_services)
+{
+    console.log("set_url_add_service", url_add_service);
+    var url_service_list = url_add_service.split(';');
+    for (var n = 0; n < url_service_list.length; n++) {
+        var params = url_service_list[n].split(',');
+        if (params.length < 6) {
+            alert("Too few parameters in url-parameter add_service or set_service! Ignoring service " + params[0] + ".");
+        } else {
+            if (clear_old_services) {
+                console.log("set_url_add_service", "clear old service");
+                all_services.telescope_services = [];
+                clear_old_services = false;
+            }
+            var new_telescope = {
+                name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), 
+                lat: parseFloat(params[4]), lng: parseFloat(params[5]),
+                alt: 0, weather: null, 
+                horizon_limits: horizon_0, meridian_transit: 0
+            };
+            if (params.length >= 7) {
+                for (var i = 0; i < all_services.weather_services.length; i++) {
+                    if (all_services.weather_services[i].name == params[6]) {
+                        new_telescope.weather = params[6];
+                        break;
+                    }
+                }
+            }
+            for (var i = 0; i < all_services.telescope_services.length; i++) {
+                if (all_services.telescope_services[i].name == params[0]) {
+                    // add new telescope to existing service
+                    console.log("set_url_add_service", "add new telescope to existing service");
+                    all_services.telescope_services[i].telescopes[telescope_services[i].telescopes.length] = new_telescope;
+                    if (n == 0) {
+                        current_telescope_service = all_services.telescope_services[i];
+                        current_telescope_service_selected_index = i;
+                        current_telescope = current_telescope_service.telescopes[current_telescope_service.telescopes.length - 1];
+                        current_telescope_service_selected_index = all_services.telescope_services.length - 1;
+                    }
+                    break;
+                }
+            }
+            if (i == all_services.telescope_services.length) {
+                // add a new telescope service
+                console.log("set_url_add_service", "add a new telescope service");
+                var add_service = { name: params[0], radec_format: 1, telescopes: [ new_telescope ] };
+                all_services.telescope_services[all_services.telescope_services.length] = add_service;
+                if (n == 0) {
+                    current_telescope_service = add_service;
+                    current_telescope = current_telescope_service.telescopes[0];
+                    current_telescope_service_selected_index = all_services.telescope_services.length - 1;
+                }
+            }
         }
     }
 }
@@ -1277,9 +1506,11 @@ function toDateString(num)
 
 function setGridBackgroundStyle(panel)
 {
-    document.getElementById(panel).style.background = "white";
-    document.getElementById(panel).style.padding = "10px";
-    document.getElementById(panel).style.margin = "10px";
+    if (url_view == "all") {
+        document.getElementById(panel).style.background = "white";
+        document.getElementById(panel).style.padding = "10px";
+        document.getElementById(panel).style.margin = "10px";
+    }
 }
 
 function setHiddenBackgroundStyle(panel)
@@ -1300,12 +1531,13 @@ function drawDayVisibilityandGrid()
 {
     console.log("drawDayVisibilityandGrid, image_target_list.length", image_target_list.length);
 
-    if (image_target_list.length > 1) {
-        ViewGridFromList(image_target_list);
-    } else {
-        ViewGrid();
+    if (url_view == "all") {
+        if (image_target_list.length > 1) {
+            ViewGridFromList(image_target_list);
+        } else {
+            ViewGrid();
+        }
     }
-
     var data = new google.visualization.DataTable();
     // get midday in UTC time in ms
     var midday = UTCdate_ms + day_ms/2;
@@ -1404,10 +1636,10 @@ function drawDayVisibilityandGrid()
         rowdata[rowdata.length] = row;
     }
 
-    if (meridian_index != null) {
+    if (meridian_index != null && meridian_transit > 0) {
         // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
         // Maybe it could be done some other way...
-        var timer = Math.round((30 * 60 * 1000) / interval);
+        var timer = Math.round(((meridian_transit / 2) * 60 * 1000) / interval);
         var begin = Math.max(meridian_index - timer, 0);
         var end = Math.min(meridian_index + timer, rowdata.length);
         for (var i = begin; i < end; i++) {
@@ -1452,8 +1684,11 @@ function drawDayVisibilityandGrid()
         }
     };
 
-    document.getElementById(dayvisibility_panel).style.height = "400px";
-    document.getElementById(dayvisibility_panel).style.width = "700px";
+    if (url_view == "all") {
+        console.log("dayvisibility_panel", dayvisibility_panel);
+        document.getElementById(dayvisibility_panel).style.height = "400px";
+        document.getElementById(dayvisibility_panel).style.width = "700px";
+    }
     setGridBackgroundStyle("day-visibility-div");
 
     // material var chart = new google.charts.Line(document.getElementById(dayvisibility_panel));
@@ -1472,11 +1707,15 @@ function drawDayVisibilityandGrid()
     var moonpos_midnight = moon_position(midnight);
     var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
 
-    document.getElementById(dayvisibility_panel_text).innerHTML = 
-        //"Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
-        //"Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
-        "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
-        "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
+    if (url_view == "all") {
+        document.getElementById(dayvisibility_panel_text).innerHTML = 
+            //"Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
+            //"Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
+            "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
+            "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
+    } else {
+        document.getElementById(dayvisibility_panel_text).innerHTML = astro_mosaic_link;
+    }
 
     //console.log("TEST 1990-04-19");
     //moon_position(Date.UTC(1990, 3, 19));
@@ -1561,13 +1800,17 @@ function drawYearVisibility()
         }
     };
 
-    document.getElementById(yearvisibility_panel).style.height = "400px";
-    document.getElementById(yearvisibility_panel).style.width = "700px";
+    if (url_view == "all") {
+        document.getElementById(yearvisibility_panel).style.height = "400px";
+        document.getElementById(yearvisibility_panel).style.width = "700px";
+    }
     setGridBackgroundStyle("year-visibility-div");
 
     var chart = new google.visualization.LineChart(document.getElementById(yearvisibility_panel));
 
     chart.draw(data, options);
+
+    document.getElementById(yearvisibility_panel_text).innerHTML = astro_mosaic_link;
 }
 
 // Find coordinates from Sesame XML output
@@ -1621,7 +1864,9 @@ function find_coordinates(str)
     console.log("find_coordinates:image_target=", image_target);
     image_target = reformat_coordinates(image_target);
     //document.getElementById(status_text).innerHTML = "Resolved RA/DEC " + image_target;
-    document.getElementById(status_text).innerHTML = "";
+    if (url_view == "all") {
+        document.getElementById(status_text).innerHTML = "";
+    }
 
     resolved_coordinates = image_target;
 
@@ -1836,6 +2081,10 @@ function update_telescope_service_list()
 {
     console.log('update_telescope_service_list');
 
+    if (url_view != "all") {
+        return;
+    }
+
     var x = document.getElementById("current-telescope-service");
     while (x.length > 0) {
         x.remove(0);
@@ -1856,6 +2105,10 @@ function update_telescope_service_list()
 function update_telescope_list(new_name)
 {
     console.log('update_telescope_list');
+
+    if (url_view != "all") {
+        return;
+    }
 
     var x = document.getElementById("current-telescope");
     while (x.length > 0) {
@@ -1891,6 +2144,10 @@ function skip_slooh_catalog(service, catalog)
 function update_catalog_list()
 {
     console.log('update_catalog_list');
+
+    if (url_view != "all") {
+        return;
+    }
 
     var x = document.getElementById("catalog-selection");
     while (x.length > 0) {
@@ -1928,13 +2185,19 @@ function ViewImage(oper)
 {
     console.log('ViewImage', oper);
 
-    document.getElementById(status_text).innerHTML = "";
-    document.getElementById(error_text).innerHTML = "";
-
-    clearOldImage();
+    if (url_view == "all") {
+        document.getElementById(status_text).innerHTML = "";
+        document.getElementById(error_text).innerHTML = "";
+        clearOldImage();
+    }
 
     // get current date
-    var view_date = document.getElementById("view_date").value;
+    var view_date;
+    if (url_view == "all") {
+        view_date = document.getElementById("view_date").value;
+    } else {
+        view_date = url_date;
+    }
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
         document.getElementById(error_text).innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
@@ -1973,7 +2236,11 @@ function ViewImage(oper)
         }
     }
 
-    img_fov = document.getElementById("overlap_percentage").value;
+    if (url_view == "all") {
+        img_fov = document.getElementById("overlap_percentage").value;
+    } else {
+        img_fov = 20;
+    }
     img_fov = 1 - img_fov / 100;
 
     // Update processing variables based on telescope
@@ -1981,8 +2248,9 @@ function ViewImage(oper)
     fov_y = current_telescope.fov_y;
     location_lat = current_telescope.lat;
     location_lng = current_telescope.lng;
-    horizonHard = current_telescope.horizonHard;
-    horizonSoft = current_telescope.horizonSoft;
+    horizonHard = current_telescope.horizon_limits.hard;
+    horizonSoft = current_telescope.horizon_limits.soft;
+    meridian_transit = current_telescope.meridian_transit;
     telescope_location = current_telescope.name;
 
     var target_name;
@@ -1991,7 +2259,11 @@ function ViewImage(oper)
 
     console.log("horizonHard[0]", horizonHard[0]);
 
-    image_target = document.getElementById("target").value;
+    if (url_view == "all") {
+        image_target = document.getElementById("target").value;
+    } else {
+        image_target = startup_image;
+    }
     image_target = trim_spaces(image_target);
     console.log('image_target=', image_target);
     image_target_list = [];
@@ -2014,7 +2286,9 @@ function ViewImage(oper)
         ViewImageByName();
     }
 
-    showWeatherForecast();
+    if (url_view == "all" || url_view == "weather") {
+        showWeatherForecast();
+    }
 }
 
 function ViewImageByType()
@@ -2024,13 +2298,21 @@ function ViewImageByType()
         document.getElementById(error_text).innerHTML = "Failed to parse target RA/DEC";
         return;
     }
-    if (document.getElementById("grid_type").value == 'panels') {
+    if (url_view == "all" && document.getElementById("grid_type").value == 'panels') {
         ViewPanels();
     } else {
         // material google.charts.load('current', {'packages':['line']});
-        google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawDayVisibilityandGrid);
-        google.charts.setOnLoadCallback(drawYearVisibility);
+        if (url_view == "target") {
+            ViewGrid();
+        } else {
+            google.charts.load('current', {'packages':['corechart']});
+            if (url_view == "all" || url_view == "day") {
+                google.charts.setOnLoadCallback(drawDayVisibilityandGrid);
+            }
+            if (url_view == "all" || url_view == "year") {
+                google.charts.setOnLoadCallback(drawYearVisibility);
+            }
+        }
     }
 }
 
@@ -2098,12 +2380,21 @@ function addTabRow(tab, v1, v2)
 
 function initAladin(aladin_fov, aladin_target)
 {
-    console.log('initAladin', aladin_target);
+    console.log('initAladin', aladin_target, aladin_panel);
     var aladin = null;
+    var layers;
+    var fullscreen;
+    if (url_view == "all") {
+        layers = true;
+        fullscreen = true;
+    } else {
+        layers = false;
+        fullscreen = false;
+    }
     if (A) {
-        aladin = A.aladin('#aladin-lite-div-00', {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
-                           showReticle:false, showZoomControl:false, showFullscreenControl:true, 
-                           showLayersControl:true, showGotoControl:false, 
+        aladin = A.aladin('#'+aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
+                           showReticle:false, showZoomControl:false, showFullscreenControl:fullscreen, 
+                           showLayersControl:layers, showGotoControl:false, 
                            showControl: false, cooFrame: "J2000", showFrame: false});
     } else {
         document.getElementById(image_panel).style.height = "50px";
@@ -2121,7 +2412,7 @@ function initAladin(aladin_fov, aladin_target)
 
     // define function triggered when an object is clicked
     var objClicked;
-    if (aladin) {
+    if (aladin && url_view == "all") {
         aladin.on('objectClicked', function(object) {
             if (object) {
                 objClicked = object;
@@ -2154,16 +2445,27 @@ function initAladin(aladin_fov, aladin_target)
 
 function ViewGrid()
 {
+    var grid_size_x;
+    var grid_size_y;
+
     console.log('ViewGrid');
 
-    document.getElementById(image_panel).style.height = "700px";
-    document.getElementById(image_panel).style.width = "700px";
+    if (url_view == "all") {
+        document.getElementById(image_panel).style.height = "700px";
+        document.getElementById(image_panel).style.width = "700px";
+    }
     setGridBackgroundStyle("target-image-div");
 
-    grid_type = document.getElementById("grid_type").value;
+    if (url_view == "all") {
+        grid_type = document.getElementById("grid_type").value;
+        grid_size_x = parseInt(document.getElementById("size_x").value);
+        grid_size_y = parseInt(document.getElementById("size_y").value);
+    } else {
+        grid_type = "fov";
+        grid_size_x = 1;
+        grid_size_y = 1;
+    }
 
-    var grid_size_x = parseInt(document.getElementById("size_x").value);
-    var grid_size_y = parseInt(document.getElementById("size_y").value);
     if (grid_size_x == 1 && grid_size_y == 1) {
         grid_type = "fov";
     }
@@ -2182,12 +2484,12 @@ function ViewGrid()
     var aladin_fov;
     if (grid_type == "mosaic") {
         if (grid_size_x > grid_size_y) {
-            aladin_fov = (grid_size_x+0.2)*fov_x;
+            aladin_fov = (grid_size_x+0.2)*Math.max(fov_x, fov_y)*aladin_fov_extra;
         } else {
-            aladin_fov = (grid_size_y+0.2)*fov_x;
+            aladin_fov = (grid_size_y+0.2)*Math.max(fov_x, fov_y)*aladin_fov_extra;
         }
     } else {
-        aladin_fov = 1.2*fov_x;
+        aladin_fov = 1.2*Math.max(fov_x, fov_y)*aladin_fov_extra;
     }
 
     var aladin = initAladin(aladin_fov, image_target);
@@ -2290,9 +2592,13 @@ function ViewGrid()
         }
         document.getElementById(image_panel_text).appendChild(tab);
     } else {
-        document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
+        if (url_view == "all") {
+            document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
+        } else {
+            document.getElementById(image_panel_text).innerHTML = astro_mosaic_link;
+        }
     }
-    if (version_text) {
+    if (version_text && url_view == "all") {
         // use wiki panel to show version info
         var lines = version_text.split('\n');
         var visible_text = '<br>';
@@ -2532,6 +2838,9 @@ function loadCatalog(cat)
 
 function load_and_init_catalogs()
 {
+    if (url_view != "all") {
+        return;
+    }
     if (!A) {
         console.log("load_and_init_catalogs:Aladin not available");
         return;
@@ -2708,6 +3017,9 @@ function filter_visible_catalog_items(cat, lat, lng)
 
 function init_catalog_view_list()
 {
+    if (url_view != "all") {
+        return;
+    }
     if (!catalog_filters_changed) {
         console.log("init_catalog_view_list:no change");
         return;
@@ -2758,6 +3070,9 @@ function init_catalog_view_list()
 
 function checkFilterChanged()
 {
+    if (url_view != "all") {
+        return;
+    }
     var ret = false;
     var newcatalog = document.getElementById("catalog-selection").value;
     var newvalue = document.getElementById("catalogFilterDegrees").value;
@@ -2808,6 +3123,9 @@ function filterChanged()
 
 function checkFilterTimeChanged()
 {
+    if (url_view != "all") {
+        return;
+    }
     var newvalue = document.getElementById("catalogFilterTime").value;
     var UTCtime_ms;
     console.log("checkFilterTimeChanged, time value", newvalue);
@@ -2984,6 +3302,9 @@ function showWikiTarget(wiki_target)
 
 function showWiki()
 {
+    if (url_view != "all") {
+        return;
+    }
     if (!document.getElementById("wikiCheckbox").checked) {
         console.log("showWiki:do not show");
         document.getElementById(wiki_panel).style.height = "0px";
@@ -3024,11 +3345,18 @@ function showWeatherForecast(telescope_location_chile)
     if (current_telescope.weather == null) {
         return;
     }
-    if (current_telescope.weather_url == null) {
-        for (var i = 0; i < weather_services.length; i++) {
-            if (weather_services[i].name == current_telescope.weather) {
-                current_telescope.weather_url = weather_services[i].url;
+    if (current_telescope.weather.substring(0, 4) != 'http') {
+        console.log("showWeatherForecast", "find service", current_telescope.weather);
+        for (var i = 0; i < all_services.weather_services.length; i++) {
+            if (all_services.weather_services[i].name == current_telescope.weather) {
+                current_telescope.weather_url = all_services.weather_services[i].url;
+                break;
             }
+        }
+        if (i == all_services.weather_services.length) {
+            console.log("showWeatherForecast", "service not found", current_telescope.weather);
+            current_telescope.weather = null;
+            return;
         }
     }
     // Add a delay before showing weather, otherwise it will be shown
