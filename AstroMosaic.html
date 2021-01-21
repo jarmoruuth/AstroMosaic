@@ -2244,6 +2244,12 @@ function ViewImage(oper)
         var telescope_name = document.getElementById("current-telescope").value;
         for (var i = 0; i < current_telescope_service.telescopes.length; i++) {
             if (telescope_name == current_telescope_service.telescopes[i].name) {
+                if (current_telescope.lat != current_telescope_service.telescopes[i].lat
+                    || current_telescope.lng != current_telescope_service.telescopes[i].lng)
+                {
+                    // when location chnages also filtering changes
+                    catalog_filters_changed = true;
+                }
                 current_telescope = current_telescope_service.telescopes[i];
             }
         }
