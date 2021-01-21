@@ -408,6 +408,8 @@ p {
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.34\n"+
+    "-Fix to catalog filtering\n" +
     "Version 1.33\n"+
     "- Reworked internal data structures\n" +
     "- Url parameter services_json=url to give services and telescopes in a json file\n" +
@@ -1419,6 +1421,11 @@ function sun_position(date)
 // Simplified version of rise and set times.
 // - we do not correct for altitude
 // - we use current day rise time as next day rise time
+// - h is altide in degrees from horizon
+//   0      center of sun's disk on horizon
+//   -12    nautical twilight
+//   -15    Amateur astronomical twilight
+//   -18    Astronomical twilight
 // Links:
 //      http://www.stjarnhimlen.se/comp/tutorial.html
 function sun_rise_set(midday, lat, lon, h)
@@ -1565,7 +1572,7 @@ function drawDayVisibilityandGrid()
 
     var draw_full_day = 0;  // if 0 draw only during astronomical twilight
 
-    // sun rise and set times that close match Slloh dome open times
+    // sun rise and set times that close match dome open times
     var suntimes = sun_rise_set(midday, lat, lng, -12);
 
     var UTCsunset = new Date(suntimes.sunset);
@@ -1714,6 +1721,7 @@ function drawDayVisibilityandGrid()
             "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
             "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
     } else {
+        document.getElementById(dayvisibility_panel_text).style.marginTop = "1px";
         document.getElementById(dayvisibility_panel_text).innerHTML = astro_mosaic_link;
     }
 
@@ -1810,7 +1818,12 @@ function drawYearVisibility()
 
     chart.draw(data, options);
 
-    document.getElementById(yearvisibility_panel_text).innerHTML = astro_mosaic_link;
+    if (url_view == "all") {
+        document.getElementById(yearvisibility_panel_text).innerHTML = "";
+    } else {
+        document.getElementById(yearvisibility_panel_text).style.marginTop = "1px";
+        document.getElementById(yearvisibility_panel_text).innerHTML = astro_mosaic_link;
+    }
 }
 
 // Find coordinates from Sesame XML output
@@ -2595,6 +2608,7 @@ function ViewGrid()
         if (url_view == "all") {
             document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
         } else {
+            document.getElementById(image_panel_text).style.marginTop = "1px";
             document.getElementById(image_panel_text).innerHTML = astro_mosaic_link;
         }
     }
@@ -2959,7 +2973,7 @@ function filter_visible_catalog_items(cat, lat, lng)
     for (var i = 0; i < cat.targets.length; i++) {
         //   0      1     2      3       4      5       6      7       8
         // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
-        var ra = cat.targets[i][1];
+        var ra = cat.targets[i][1] * hoursToDeg;
         var dec = cat.targets[i][2];
         var alt;
         var addToList = false;
