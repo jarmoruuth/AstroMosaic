@@ -793,6 +793,9 @@ var url_date = null;
 var url_services_json = null;
 var url_view = "all";
 
+document.getElementById("size_x").value = 3;
+document.getElementById("size_y").value = 3;
+
 if (typeof URLSearchParams === "function") {
     searchParams = new URLSearchParams(url.search.slice(1));
     parse_url(searchParams);
@@ -824,9 +827,6 @@ function startAstroMosaic(txt)
     }
     ViewImage(0);
 }
-
-//document.getElementById("size_x").value = 3;
-//document.getElementById("size_y").value = 3;
 
 function initAstroMosaic()
 {
