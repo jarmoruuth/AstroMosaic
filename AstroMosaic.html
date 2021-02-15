@@ -408,6 +408,8 @@ p {
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.36\n"+
+    "-Fix to coordinate handling, format like 05:41.0 -02:30 was not handled correctly\n" +
     "Version 1.35\n"+
     "-Fix to decimal number handling, sign was sometimes dropped\n" +
     "Version 1.34\n"+
@@ -1836,8 +1838,9 @@ function find_coordinates(str)
 
     var idx = str.indexOf("<jpos>");
     if (idx > 0) {
-        // Assume Sesame XML format
+        console.log('Assume Sesame XML format');
         var coord = str.substr(idx+6, 100);
+        console.log("find_coordinates:get coordinates from '", coord, "'");
         var idx2 = coord.indexOf("</jpos>");
         if (idx2 == -1) {
             console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
@@ -1845,7 +1848,7 @@ function find_coordinates(str)
         }
         image_target = coord.substr(0, idx2);
     } else {
-        // Simbad ascii output
+        console.log('Simbad ascii output');
         idx = str.indexOf("J2000");
         if (idx == -1) {
             console.log("find_coordinates:could not find 'J2000'");
@@ -2035,7 +2038,18 @@ function reformat_coordinates_field_lenghts(coord)
         for (var j = 0; j < fields.length; j++) {
             fields[j] = fix_field_lenght(fields[j]);
         }
-        radec[i] = fields[0] + ':' + fields[1] + ':' + fields[2];
+        if (fields.length == 3) {
+            radec[i] = fields[0] + ':' + fields[1] + ':' + fields[2];
+        } else if (fields.length == 2) {
+            var mmsplit = fields[1].split('.');
+            if (mmsplit.length == 2) {
+                // we have decimals in minutes
+                radec[i] = fields[0] + ':' + mmsplit[0] + ':' + mmsplit[1];
+            } else {
+                radec[i] = fields[0] + ':' + fields[1] + ':00';
+            }
+            
+        }
     }
     return radec[0] + ' ' + radec[1];
 }
@@ -2063,30 +2077,29 @@ function reformat_coordinates(coord)
         var dec = numbers[1];
         if (ra.split(':').length == 1) {
             if (ra.indexOf('.') == -1 && dec.indexOf('.') == -1) {
-                // no dots, assume HHMMSS DDMMSS
+                console.log('no dots, assume HHMMSS DDMMSS');
                 coord = split_coord(ra) + ' ' + split_coord(dec);
                 console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
             } else {
-                // assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS
+                console.log('assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
                 coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
                 console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
             }
         } else {
-            // assume already correct format HH:MM:SS DD:MM:SS
-            console.log('reformat_coordinates, length 2, assume correct format HH:MM:SS DD:MM:SS', coord);
+            console.log('reformat_coordinates, length 2 and we have :, assume correct format HH:MM:SS DD:MM:SS', coord);
         }
     } else if (numbers.length == 6) {
-        // separated by space, add colons
+        console.log('separated by space, add colons');
         coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                 numbers[3] + ':' + numbers[4] + ':' + numbers[5];
         console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
     } else if (numbers.length == 5) {
-        // badly formatted SIMBAD case, assume zero last number, separated by space, add colons
+        console.log('badly formatted SIMBAD case, assume zero last number, separated by space, add colons');
         coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                 numbers[3] + ':' + numbers[4] + ':' + 0;
         console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
     } else {
-        // use as-is
+        console.log('use as-is');
         console.log('reformat_coordinates, length 6, reformat', coord);
     }
     coord = reformat_coordinates_field_lenghts(coord);
