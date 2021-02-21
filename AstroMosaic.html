@@ -408,6 +408,8 @@ p {
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.37\n"+
+    "-Added add_catalog URL parameter to add your own catalog\n" +
     "Version 1.36\n"+
     "-Fix to coordinate handling, format like 05:41.0 -02:30 was not handled correctly\n" +
     "Version 1.35\n"+
@@ -786,6 +788,7 @@ var horizonSoft;
 var meridian_transit;
 
 var url_target = null;
+var url_add_catalog = null;
 var url_add_service = null;
 var url_set_service = null;
 var url_service = null;
@@ -933,6 +936,7 @@ function parse_url(searchParams)
     console.log("parse_url");
 
     url_target = searchParams.get('target');
+    url_add_catalog = searchParams.get('add_catalog');
     url_add_service = searchParams.get('add_service');
     url_set_service = searchParams.get('set_service');
     url_service = searchParams.get('service');
@@ -952,6 +956,9 @@ function apply_url()
     if (url_target) {
         console.log("url_target", url_target);
         startup_image = url_target;
+    }
+    if (url_add_catalog) {
+        set_url_add_catalog(url_add_catalog);
     }
     if (url_set_service) {
         set_url_add_service(url_set_service, true);
@@ -1120,6 +1127,26 @@ function set_url_add_service(url_add_service, clear_old_services)
                     current_telescope_service_selected_index = all_services.telescope_services.length - 1;
                 }
             }
+        }
+    }
+}
+
+function set_url_add_catalog(url_add_catalog)
+{
+    console.log("set_url_add_catalog", url_add_catalog);
+    var url_catalog_list = url_add_catalog.split(';');
+    for (var n = 0; n < url_catalog_list.length; n++) {
+        var params = url_catalog_list[n].split(',');
+        if (params.length < 2) {
+            alert("Too few parameters in url-parameter add_catalog! Ignoring catalog " + params[0] + ".");
+        } else {
+            var new_catalog = {
+                name: params[0], targets: null, url: params[1], 
+                source: "", AladinCatalog: null, color: '#29a329'
+            };
+            // add a new catalog
+            console.log("set_url_add_catalog", "add a new catalog");
+            catalogs[catalogs.length] = new_catalog;
         }
     }
 }
@@ -3415,4 +3442,4 @@ function showWeatherForecast(telescope_location_chile)
 
 </script>
 </body>
-</html>
+</html>params[0]
