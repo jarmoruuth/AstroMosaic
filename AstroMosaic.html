@@ -408,6 +408,8 @@ p {
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.38\n"+
+    "-Fixed URL parameter handling\n" +
     "Version 1.37\n"+
     "-Added add_catalog URL parameter to add your own catalog\n" +
     "Version 1.36\n"+
@@ -823,7 +825,7 @@ function startAstroMosaic(txt)
 {
     console.log("startAstroMosaic", txt);
 
-    apply_url();
+    apply_url_add();
 
     // initialization
     initAstroMosaic();
@@ -846,6 +848,8 @@ function initAstroMosaic()
     current_telescope = current_telescope_service.telescopes[0];
     current_telescope_service_selected_index = 0;
     current_telescope_selected_index = 0;
+
+    apply_url_set();
 
     load_and_init_catalogs();
     update_telescope_service_list();
@@ -949,14 +953,10 @@ function parse_url(searchParams)
     url_view = searchParams.get('view');
 }
 
-// apply url parameters, if there are any
-function apply_url()
+// apply url add parameters, if there are any
+function apply_url_add()
 {
-    console.log("apply_url");
-    if (url_target) {
-        console.log("url_target", url_target);
-        startup_image = url_target;
-    }
+    console.log("apply_url_add");
     if (url_add_catalog) {
         set_url_add_catalog(url_add_catalog);
     }
@@ -966,11 +966,21 @@ function apply_url()
     if (url_add_service) {
         set_url_add_service(url_add_service, false);
     }
+}
+
+// apply url set parameters, if there are any
+function apply_url_set()
+{
+    console.log("apply_url_set");
+    if (url_target) {
+        console.log("url_target", url_target);
+        startup_image = url_target;
+    }
     if (url_service) {
         // set default service
         console.log("url_service", url_service);
-        for (var i = 0; i < telescope_services.length; i++) {
-            if (telescope_services[i].name == url_service) {
+        for (var i = 0; i < all_services.telescope_services.length; i++) {
+            if (all_services.telescope_services[i].name == url_service) {
                 current_telescope_service = all_services.telescope_services[i];
                 current_telescope = current_telescope_service.telescopes[0];
                 current_telescope_service_selected_index = i;
@@ -3442,4 +3452,4 @@ function showWeatherForecast(telescope_location_chile)
 
 </script>
 </body>
-</html>params[0]
+</html>
