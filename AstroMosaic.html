@@ -408,6 +408,8 @@ p {
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.37\n"+
+    "-Added Telescope Live CHI-6 telescope\n" +
     "Version 1.38\n"+
     "-Fixed URL parameter handling\n" +
     "Version 1.37\n"+
@@ -657,7 +659,8 @@ var all_services = {
                 { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                { name: "CHI-6", fov_x: 155, fov_y: 124, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
             ] 
         }
     ],
@@ -2461,7 +2464,7 @@ function addTabRow(tab, v1, v2)
 
 function initAladin(aladin_fov, aladin_target)
 {
-    console.log('initAladin', aladin_target, aladin_panel);
+    console.log('initAladin', aladin_target, aladin_panel, url_view);
     var aladin = null;
     var layers;
     var fullscreen;
@@ -2494,8 +2497,10 @@ function initAladin(aladin_fov, aladin_target)
     // define function triggered when an object is clicked
     var objClicked;
     if (aladin && url_view == "all") {
+        console.log('initAladin, set objectClicked');
         aladin.on('objectClicked', function(object) {
             if (object) {
+                console.log('aladin objectClicked, show object');
                 objClicked = object;
                 object.select();
                 var tab = "<BR><TABLE>";
