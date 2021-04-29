@@ -1681,10 +1681,10 @@ function drawDayVisibilityandGrid()
         var row = [
                     toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
                     //UTCdate,
-                    visiblealt,
-                    softalt,
-                    hardalt,
-                    moonalt];
+                    getAltitudeCellObject(visiblealt),
+                    getAltitudeCellObject(softalt),
+                    getAltitudeCellObject(hardalt),
+                    getAltitudeCellObject(moonalt)];
         //console.log("row", row);
         rowdata[rowdata.length] = row;
     }
@@ -1775,6 +1775,15 @@ function drawDayVisibilityandGrid()
     //moon_position(Date.UTC(1990, 3, 19));
 }
 
+function getAltitudeCellObject(val)
+{
+        if (val == null) {
+            return null;
+        } else {
+            return { v: val, f: val.toFixed(0) + "°" };
+        }
+}
+
 function drawYearVisibility() 
 {
     console.log("drawYearVisibility");
@@ -1827,9 +1836,9 @@ function drawYearVisibility()
         }
         var row = [
                 new Date(d),
-                    visiblealt,
-                    hardalt,
-                    moonalt];
+                getAltitudeCellObject(visiblealt),
+                getAltitudeCellObject(hardalt),
+                getAltitudeCellObject(moonalt)];
         rowdata[rowdata.length] = row;
     }
 
