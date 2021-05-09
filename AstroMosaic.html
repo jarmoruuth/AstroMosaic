@@ -58,16 +58,6 @@
   padding: 2px;
 }
 
-.fixed-container {
-  background: gray;
-  display: flex;
-}
-
-.fixed-container > div {
-  margin: 2px;
-  padding: 2px;
-}
-
 p {
     margin: 0px;
     padding: 0px;
@@ -257,157 +247,34 @@ p {
             <input type="checkbox" id="wikiCheckbox">Wiki
         </form>    
     </div>
+    <div>
+        <form action="javascript:ViewImage(0)">
+            <input type="checkbox" id="weatherCheckbox">Weather
+        </form>    
+    </div>
 </div>
 
-<div id="targetDiv" class="flex-container">
-    <div id="target-image-div">
-    <div id="aladin-lite-div-00" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-00"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-01" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-01"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-02" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-02"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-03" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-03"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-04" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-04"></p>
-    </div>
-</div>
-<div id="dayDiv" class="flex-container">
-    <div  id="day-visibility-div">
-    <div id="aladin-lite-div-10" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-10"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-11" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-11"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-12" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-12"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-13" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-13"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-14" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-14"></p>
-    </div>
-</div>
-<div id="yearDiv" class="flex-container">
-    <div id="year-visibility-div">
-    <div id="aladin-lite-div-20" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-20"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-21" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-21"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-22" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-22"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-23" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-23"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-24" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-24"></p>
-    </div>
-</div>
-<div id="panelDiv30" class="flex-container">
-    <div>
-    <div id="aladin-lite-div-30" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-30"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-31" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-31"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-32" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-32"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-33" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-33"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-34" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-34"></p>
-    </div>
-</div>
-<div id="panelDiv40" class="flex-container">
-    <div>
-    <div id="aladin-lite-div-40" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-40"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-41" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-41"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-42" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-42"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-43" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-43"></p>
-    </div>
-    <div>
-    <div id="aladin-lite-div-44" style="width:300px;height:300px;"></div>
-    <br>
-    <p id="panel-text-44"></p>
-    </div>
+<div id="panels-div">
 </div>
 
 <div id="footerDiv" class="footer">
-    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a>
-        <br><a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
+    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a></p>
+    <p><button style="background-color:white" onclick="alert(version_text)">Version info</button>
+    <a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
 </div>
 
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript" src="AstroMosaicEngine.js"></script>
 <script type="text/javascript">
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_text = 
+    "Version 1.50\n"+
+    "-Separated AstroMosaic engine to a separate AstroMosaicEngine.js file\n" +
+    "-Interface reorganizations\n" +
     "Version 1.40\n"+
     "-Fixed CHI-6 FoV\n" +
     "Version 1.39\n"+
@@ -488,7 +355,11 @@ var version_text =
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
 
-var startup_image = "Horsehead nebula";
+var startup_image = "Crescent nebula";
+
+var hoursToDeg = 15;
+var hour_ms = 60*60*1000;
+var day_ms = 24*hour_ms;
 
 // Messier cata log is in the source as a dedault catalog (altough
 // not that useful for southern sky). But we need to have some
@@ -710,37 +581,75 @@ var all_services = {
     ]
 };
 
-// screen location for some items
-var aladin_panel = "aladin-lite-div-00";
-var image_panel = "aladin-lite-div-00";
-var image_panel_text = "panel-text-00";
-var wiki_panel = "aladin-lite-div-01";
-var dayvisibility_panel = "aladin-lite-div-10";
-var dayvisibility_panel_text = "panel-text-10";
-var yearvisibility_panel = "aladin-lite-div-20";
-var yearvisibility_panel_text = "panel-text-20";
-var weather_panel = "aladin-lite-div-30";
-var wiki_panel_width = "500px";
-var wiki_frame_width = 500;
-var status_text = "error_text";
-var error_text = "error_text";
-var alt_wikitext = null;
+// screen location for generic engine
+var viewer_panels = {
+    aladin_panel : "aladin-div",                // show Aladin Lite
+    aladin_panel_text : "aladin-div-text",
+    dayvisibility_panel : "day-div",            // show day visibility
+    dayvisibility_panel_text : "day-div-text",
+    yearvisibility_panel : "year-div",          // show year visibility
+    yearvisibility_panel_text : "year-div-text",
+    status_text : "error_text",
+    error_text : "error_text",
+    panel_view_x : 5,
+    panel_view_y : 5,
+    panel_view_div : "panel-view-div-",
+    panel_view_text : "panel-text-div-"
+};
+
+var viewer_params = {
+    fov_x : null,
+    fov_y : null,
+    location_lat : null,
+    location_lng : null,
+    horizonSoft : null,
+    horizonHard : null,
+    meridian_transit : null,
+    UTCdate_ms : null,
+    grid_type : null,
+    grid_size_x : null,
+    grid_size_y : null,
+    isCustomMode : false
+};
+
+var element_div_size = "700px";      // for height and width
+var element_div_size_int = 700;
+var element_div_size2_h = "350px";   // half of element_div_size
+var element_div_size2_w = "600px";
+
+// screen locations for viewer
+var info_panels = {
+    weather_panel : "weather-div",
+    wiki_panel : "wiki-div",
+    wiki_panel_width : element_div_size,
+    wiki_frame_width : element_div_size_int
+};
+
+var engine_native_resources = {
+    show_wiki_target : function(){},
+    wiki_reset : function(){},
+    sun_rise_set : function(){},
+    object_altitude_init : function(){},
+    object_altaz : function(){},
+    object_altitude_get : function(){},
+    moon_position : function(){},
+    moon_topocentric_correction : function(){},
+    moon_distance : function(){}
+};
+
+var engine_data = null;
+
+var screen_setup = null;
+var mobile_screen = false;
 
 if (screen.height > screen.width) {
     // screen is taller than it is wide
-    wiki_panel = "aladin-lite-div-30";
-    wiki_panel_width = "700px";
-    wiki_frame_width = 700;
-    version_text = null;
-    var weather_panel = "aladin-lite-div-40";
+    console.log("mobile_screen", screen.height, screen.width);
+    mobile_screen = true;
+} else {
+    console.log("not mobile_screen", screen.height, screen.width);
+    mobile_screen = false;
 }
-
-// size means number of panels on each side
-// 0.5 means 2 panels
-// 1 means 3 panels
-// 1.5 means 4 panes etc.
-var size_x = 1;
-var size_y = 1;
 
 // Most of these are init in initAstroMosaic()
 var telescope_services;
@@ -748,33 +657,9 @@ var current_telescope_service;
 var current_telescope;
 var current_telescope_service_selected_index;
 var current_telescope_selected_index;
-var fov_x;
-var fov_y;
-var aladin_fov_extra = 1;
-var img_fov = 0.8;  // field of view for single image considering the overlap
-var image_target;
-var image_target_list = [];
-
-var UTCdate_ms;
 
 var url = new URL(window.location);
 console.log(url);
-
-var resolved_name = null;
-var resolved_coordinates = null;
-
-var target_ra;
-var target_dec;
-var location_lat;
-var location_lng;
-
-var hour_ms = 60*60*1000;
-var day_ms = 24*hour_ms;
-var degToRad = Math.PI/180.0;
-var radToDeg = 180.0/Math.PI;
-var degToHours = 1/15;
-var hoursToDeg = 15;
-var JD1970 = 2440587.5;     // JD 1970-01-01 00:00 - Javascript zero time
 
 var current_catalog = null;                 // current visible catalog
 var current_catalog_filtered_list = null;   // filtered list of catalog items
@@ -788,11 +673,6 @@ var catalogFilterMoon = null;
 var catalog_index = null;
 
 var wikiChecked = false;
-
-// Hard and soft limits for current telecope
-var horizonHard;
-var horizonSoft;
-var meridian_transit;
 
 var url_target = null;
 var url_add_catalog = null;
@@ -824,6 +704,107 @@ if (url_services_json == null) {
     // Start astro mosaic. We may also start after loading
     // json services file
     startAstroMosaic("normal start");
+}
+
+function createRowDiv(rownum)
+{
+    var row = document.createElement("DIV");
+    row.id = "row-" + rownum.toString();
+    row.className = "flex-container";
+    return row;
+}
+
+function appendCellDiv(col, id, height, width, add_text)
+{
+    var margin = "10px";
+    var x = document.createElement("DIV");
+    x.id = id;
+    x.style.height = height;
+    x.style.width = width;
+    x.style.margin = margin;
+    //x.style.color = "white";
+    col.appendChild(x);
+    if (add_text) {
+        x.id = id;
+        var x = document.createElement("P");
+        x.id = id + "-text";
+        x.style.margin = margin;
+        col.appendChild(x);
+    }
+}
+
+function createDefaultPanels(mobile_screen)
+{
+    if (url_view != 'all') {
+        return;
+    }
+    console.log("createDefaultPanels", mobile_screen);
+
+    var panels = document.getElementById("panels-div");
+    var i = 0;
+    var size1 = element_div_size;
+    var size2_h = element_div_size2_h;
+    var size2_w = element_div_size2_w;
+
+    panels.innerHTML = "";
+
+    if (mobile_screen) {
+        appendCellDiv(panels, "aladin-div", size1, size1, true);
+        appendCellDiv(panels, "day-div", size2_h, size2_w, true);
+        appendCellDiv(panels, "year-div", size2_h, size2_w, url_view != "all");
+        appendCellDiv(panels, "weather-div", "0px", "0px", false);
+        appendCellDiv(panels, "wiki-div", "0px", "0px", false);
+    } else {
+        var row = createRowDiv(i++);
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "aladin-div", size1, size1, true);
+        row.appendChild(col);
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "day-div", size2_h, size2_w, true);
+        appendCellDiv(col, "year-div", size2_h, size2_w, url_view != "all");
+        row.appendChild(col);
+        panels.appendChild(row);
+
+        var row = createRowDiv(i++);
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "weather-div", "0px", "0px", false);
+        row.appendChild(col);
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "wiki-div", "0px", "0px", false);
+        row.appendChild(col);
+        panels.appendChild(row);
+    }
+}
+
+function createMosaicPanels()
+{
+    console.log("createMosaicPanels");
+
+    var panels = document.getElementById("panels-div");
+
+    panels.innerHTML = "";
+
+    for (var i = 0; i < 5; i++) {
+        // row
+        var row = document.createElement("DIV");
+        row.className = "flex-container";
+        for (var j = 0; j < 4; j++) {
+            var col = document.createElement("DIV");
+            var x = document.createElement("DIV");
+            x.id = "panel-view-div-" + i.toString() + j.toString();
+            x.style.height = "300px";
+            x.style.width = "300px";
+            x.style.padding = "2px";
+            x.style.margin = "2px";
+            x.style.color = "white";
+            col.appendChild(x);
+            var x = document.createElement("P");
+            x.id = "panel-text-div-" + i.toString() + j.toString();
+            col.appendChild(x);
+            row.appendChild(col);
+        }
+        panels.appendChild(row);
+    }
 }
 
 function startAstroMosaic(txt)
@@ -860,8 +841,9 @@ function initAstroMosaic()
     update_telescope_service_list();
     update_telescope_list(current_telescope_service.name);
     update_catalog_list();
-    init_catalog_view_list();
 
+    engine_native_resources.show_wiki_target = showWikiTarget;
+    engine_native_resources.wiki_reset = wikiReset;
 }
 
 function init_all_services()
@@ -871,27 +853,17 @@ function init_all_services()
     // Update telescope FoV values.
     for (var i = 0; i < all_services.telescope_services.length; i++) {
         for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
-            all_services.telescope_services[i].telescopes[j].fov_x = getFov(all_services.telescope_services[i].telescopes[j].fov_x);
-            all_services.telescope_services[i].telescopes[j].fov_y = getFov(all_services.telescope_services[i].telescopes[j].fov_y);
+            all_services.telescope_services[i].telescopes[j].fov_x = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].fov_x);
+            all_services.telescope_services[i].telescopes[j].fov_y = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].fov_y);
             if (Array.isArray(all_services.telescope_services[i].telescopes[j].horizon_limits)) {
                 // Already array. Check if it is has enough enties. If not, repeat last item.
                 console.log("init_all_services", "horizon_limits is array");
-                var len = all_services.telescope_services[i].telescopes[j].horizon_limits.length;
-                if (len == 0) {
-                    all_services.telescope_services[i].telescopes[j].horizon_limits = horizon_0;
-                } else if (len < 71) {
-                    // we need limit for every 5 arcminutes
-                    var horizon = { 
-                            name: "horizon limits",
-                            hard: all_services.telescope_services[i].telescopes[j].horizon_limits,
-                            soft: null 
-                    };
-                    var last = horizon.hard[len-1];
-                    for (var k = len; k < 71; k++) {
-                        horizon.hard[k] = last;
-                    }
-                    all_services.telescope_services[i].telescopes[j].horizon_limits = horizon;
-                }
+                var horizon = { 
+                        name: "horizon limits",
+                        hard: fillHorizonLimits(all_services.telescope_services[i].telescopes[j].horizon_limits),
+                        soft: null 
+                };
+                all_services.telescope_services[i].telescopes[j].horizon_limits = horizon;
             } else {
                 // Try to find horizon limits by name
                 console.log("init_all_services", "horizon_limits is name");
@@ -905,10 +877,6 @@ function init_all_services()
             if (all_services.telescope_services[i].telescopes[j].horizon_limits == null) {
                 // not found
                 all_services.telescope_services[i].telescopes[j].horizon_limits = horizon_0;
-            }
-            if (all_services.telescope_services[i].telescopes[j].horizon_limits.soft == null) {
-                all_services.telescope_services[i].telescopes[j].horizon_limits.soft =
-                    all_services.telescope_services[i].telescopes[j].horizon_limits.hard;
             }
         }
     }
@@ -1069,15 +1037,14 @@ function apply_url_set()
         x.style.fontSize = font_size + "px";
         allDiv.appendChild(x);
 
-        aladin_panel = "imageDiv";
-        image_panel = "imageDiv";
-        image_panel_text = "textDiv";
-        dayvisibility_panel = "imageDiv";
-        dayvisibility_panel_text = "textDiv";
-        yearvisibility_panel = "imageDiv";
-        yearvisibility_panel_text = "textDiv";
-        status_text = "textDiv";
-        error_text = "textDiv";
+        viewer_panels.aladin_panel = "imageDiv";
+        viewer_panels.aladin_panel_text = "textDiv";
+        viewer_panels.dayvisibility_panel = "imageDiv";
+        viewer_panels.dayvisibility_panel_text = "textDiv";
+        viewer_panels.yearvisibility_panel = "imageDiv";
+        viewer_panels.yearvisibility_panel_text = "textDiv";
+        viewer_panels.status_text = "textDiv";
+        viewer_panels.error_text = "textDiv";
     } else {
         url_view = "all";
         astro_mosaic_link = "";
@@ -1164,998 +1131,6 @@ function set_url_add_catalog(url_add_catalog)
             catalogs[catalogs.length] = new_catalog;
         }
     }
-}
-
-// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees
-function get_ra_dec(target)
-{
-    var radec = [];
-
-    // assume format HH:MM:SS DEG:HH:MM
-    var radec = target.split(' ');
-    
-    var raparts = radec[0].split(':');
-    var decparts = radec[1].split(':');
-
-    radec[0] = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60 + parseFloat(raparts[2])) / 3600;
-    if (isNaN(radec[0])) {
-        // assume seconds are missing
-        radec[0] = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60) / 3600;
-    }
-    if (isNaN(radec[0])) {
-        return [];
-    }
-    // convert from hours to degrees
-    radec[0] = radec[0] * hoursToDeg;
-    if (parseFloat(raparts[0]) < 0) {
-        radec[0] = -radec[0];
-    }
-    radec[1] = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60 + parseFloat(decparts[2])) / 3600;
-    if (isNaN(radec[1])) {
-        // assume seconds are missing
-        radec[1] = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60) / 3600;
-    }
-    if (isNaN(radec[1])) {
-        return [];
-    }
-    if (parseFloat(decparts[0]) < 0) {
-        radec[1] = -radec[1];
-    }
-    return radec;
-}
-
-// convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
-function get_image_target_ra_dec()
-{
-    var radec = get_ra_dec(image_target);
-    if (radec.length != 2) {
-        return false;
-    }
-    target_ra = radec[0];
-    target_dec = radec[1];
-
-    return true;
-}
-
-// scale degrees to 0-360
-function scale_to_360(v)
-{
-    while (v < 0) {
-        v = v + 360;
-    }
-    return v - Math.floor(v/360)*360;
-}
-
-// sin from decimal degrees
-function sind(deg)
-{
-    return Math.sin(deg*degToRad);
-}
-
-// cos from decimal regrees
-function cosd(deg)
-{
-    return Math.cos(deg*degToRad);
-}
-
-// Julian Days from 2000, including fraction, used by sun and moon calculations
-function getJD(d)
-{
-    var days = JD1970 + d / day_ms - 2451543.5;
-    return days;
-}
-
-// Days from J2000, including fraction, used by altitude calculations
-function getJ2000_2(d)
-{
-    var days = JD1970 + d / day_ms - 2451545.0;
-    return days;
-}
-
-// Calculate object altitude. 
-// Useful links:
-//      https://astronomy.stackexchange.com/questions/24859/local-sidereal-time
-//      https://observability.date/notes
-//      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
-//      http://www.stjarnhimlen.se/comp/tutorial.html
-//      http://www.stargazing.net/kepler/altaz.html
-function object_altaz(date, ra, dec, lat, lng)
-{
-    // universal time in decimal hours
-    var H = (date % day_ms) / hour_ms;
-
-    // Julian date including fraction - 2451545.0,
-    // that is days from J2000
-    var D = getJ2000_2(date);
-
-    // calculate local sidereal time in degrees
-    var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
-
-    // get hours
-    LST = LST % 360;
-
-    // calculate local hour angle in degrees
-    var LHA = LST - ra;
-
-    // calculate sin(altitude) in radian
-    var sin_altitude = sind(lat) * sind(dec) + cosd(lat) * cosd(dec) * cosd(LHA);
-
-    var altitude = Math.asin(sin_altitude) * radToDeg;
-
-    // calculate AZ
-    var cos_A = (sind(dec) - sind(altitude)*sind(lat)) / (cosd(altitude)*cosd(lat));
-
-    var A = Math.acos(cos_A) * radToDeg;
-
-    var AZ;
-    if (sind(LHA) < 0) {
-        AZ = A;
-    } else {
-        AZ = 360 - A;
-    }
-
-    //console.log("object_altaz, last=",LST*degToHours,",lha=",LHA*degToHours,",sinalt=",sin_altitude,",alt=",altitude,",H=",H);
-
-    return {alt:altitude, az:AZ};
-}
-
-// Do calculations that are not based on RA/DEC
-function object_altitude_init(date, lat, lng)
-{
-    // universal time in decimal hours
-    var H = (date % day_ms) / hour_ms;
-
-    // Julian date including fraction - 2451545.0,
-    // that is days from J2000
-    var D = getJ2000_2(date);
-
-    // calculate local sidereal time in degrees
-    var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
-
-    // get hours
-    LST = LST % 360;
-
-
-    var aa =  {Lst: LST, Sinlat: sind(lat), Coslat: cosd(lat)}
-
-    console.log("object_altitude_init, aa", aa);
-
-    return aa;
-}
-
-// Calculate altidude on given RA/DEC
-function object_altitude_get(aa, ra, dec)
-{
-    // calculate local hour angle in degrees
-    var LHA = aa.Lst - ra;
-
-    // calculate sin(altitude) in radian
-    var sin_altitude = aa.Sinlat * sind(dec) + aa.Coslat * cosd(dec) * cosd(LHA);
-
-    var altitude = Math.asin(sin_altitude) * radToDeg;
-
-    return altitude;
-}
-
-// Simplified version of moon position at given time.
-// - there are a lot of variables that affect correct moon position that
-//    are ignored here
-// - we do not correct for altitude
-// Links:
-//      http://www.stjarnhimlen.se/comp/tutorial.html
-function moon_position(date)
-{
-    // Days from J2000
-    var d = getJD(date);
-    var pi = Math.PI;
-    var nloop;
-    //console.log("moon position d=",d,"JD=",JD1970+d/day_ms);
-
-    var N = scale_to_360(125.1228 - 0.0529538083 * d);
-    var i = 5.1454;
-    var w = scale_to_360(318.0634 + 0.1643573223 * d);
-    var a = 60.2666;
-    var e = 0.054900;
-    var M = scale_to_360(115.3654 + 13.0649929509 * d);
-    //console.log("N",N,"i",i,"w",w,"a",a,"e",e,"M",M);
-
-    var E = M + e*(180/pi) * sind(M) * ( 1.0 + e * cosd(M) );
-    for (nloop = 0; nloop < 100; nloop++) {
-        var E0 = E;
-        E = E0 - (E0 - e * (180/pi) * sind(E0) - M) / (1- e * cosd(E0));
-        if (Math.abs(E-E0) <= 0.001) {
-            break;
-        }
-    }
-    //console.log("E", E, "nloop", nloop);
-
-    var x = a * ( cosd(E) - e );
-    var y = a * Math.sqrt(1.0 - e*e) * sind(E);
-    //console.log("x,y",x,y);
-
-    var r = Math.sqrt( x*x + y*y );
-    var v = scale_to_360(Math.atan2( y, x ) * radToDeg);
-    //console.log("r,v",r,v);
-
-    // moon geocentric position in ecliptic coordinates
-    var xeclip = r * ( cosd(N) * cosd(v+w) - sind(N) * sind(v+w) * cosd(i) );
-    var yeclip = r * ( sind(N) * cosd(v+w) + cosd(N) * sind(v+w) * cosd(i) );
-    var zeclip = r * ( sind(v+w) * sind(i) );
-    //console.log("moon xeclip=",xeclip,",yeclip=",yeclip,",zeclip=",zeclip);
-
-    // ecliptic longitude and latitude
-    //var lonecl = scale_to_360(Math.atan2( yeclip, xeclip ) * radToDeg);
-    //var latecl = Math.atan2( zeclip, Math.sqrt(xeclip*xeclip+yeclip*yeclip) ) * radToDeg;
-    //console.log("lonecl,latecl",lonecl,latecl);
-
-    var oblecl = 23.4;
-
-    // rotate ecliptic coordinates to equatorial coordinates
-    var xequat = xeclip;
-    var yequat = yeclip * cosd(oblecl) - zeclip * sind(oblecl);
-    var zequat = yeclip * sind(oblecl) + zeclip * cosd(oblecl);
-    //console.log("moon xequat=",xequat,",yequat=",yequat,",zequat=",zequat);
-
-    // calculate RA and Dec
-    var RA  = scale_to_360(Math.atan2( yequat, xequat ) * radToDeg);
-    var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
-
-    //console.log("moon ra",RA,",dec",Dec);
-
-    return {ra:RA, dec:Dec};
-}
-
-// a simple version for topocentric correction
-function moon_topocentric_correction(alt)
-{
-    var r = 60.336;
-    return alt - Math.asin(1/r) * cosd(alt);
-}
-
-// Sun position at given time.
-// Links:
-//      http://www.stjarnhimlen.se/comp/tutorial.html
-function sun_position(date)
-{
-    // Days from J2000
-    var d = getJD(date);
-    var pi = Math.PI;
-    //console.log("sun_position d", d);
-
-    var w = scale_to_360(282.9404 + 4.70935E-5 * d);
-    var a = 1.0;
-    var e = 0.016709 - 1.151E-9 * d;
-    var M = scale_to_360(356.0470 + 0.9856002585 * d);
-
-    //console.log(w,a,e,M);
-
-    var oblecl = scale_to_360(23.4393 - 3.563E-7 * d);
-    var L = scale_to_360(w + M);
-    //console.log("L", L,"oblecl", oblecl);
-
-    var E = scale_to_360((M + (180/pi) * e * sind(M) * (1 + e * cosd(M))));
-    //console.log("E", E);
-
-    var x = cosd(E) - e;
-    var y = sind(E) * Math.sqrt(1 - e*e);
-    //console.log("x,y", x,y);
-
-    var r = Math.sqrt(x*x + y*y);
-    var v = Math.atan2( y, x ) * radToDeg;
-    //console.log("r,v", r,v);
-
-    var lon = scale_to_360(v + w);
-    //console.log("lon", lon);
-
-    x = r * cosd(lon);
-    y = r * sind(lon);
-    //console.log("x,y", x,y);
-
-    var xequat = x;
-    var yequat = y * cosd(oblecl);
-    var zequat = y * sind(oblecl);
-    //console.log("xequat,yequat", xequat,yequat);
-
-    var RA  = Math.atan2( yequat, xequat ) * radToDeg;
-    var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
-
-    //console.log("Sun_position", RA, Dec);
-
-    return {ra:RA, dec:Dec};
-}
-
-// Simplified version of rise and set times.
-// - we do not correct for altitude
-// - we use current day rise time as next day rise time
-// - h is altide in degrees from horizon
-//   0      center of sun's disk on horizon
-//   -12    nautical twilight
-//   -15    Amateur astronomical twilight
-//   -18    Astronomical twilight
-// Links:
-//      http://www.stjarnhimlen.se/comp/tutorial.html
-function sun_rise_set(midday, lat, lon, h)
-{
-    var d = getJD(midday);
-    
-    var sun_pos = sun_position(midday);
-    var LST = sun_pos.ra;
-
-    var w = scale_to_360(282.9404 + 4.70935E-5 * d);
-    var M = scale_to_360(356.0470 + 0.9856002585 * d);
-    var L = M + w;
-    var GMST0 = scale_to_360(L + 180);
-
-    var UT_sun = (LST - GMST0 - lon) * degToHours;
-    if (UT_sun < 0) {
-        UT_sun = UT_sun + 24;
-    }
-    //console.log("Sun_rise_set UT_sun", UT_sun);
-
-    // calculate midday at location
-    midday = midday - 12 * hour_ms + UT_sun * hour_ms;
-
-    var cos_LHA = (sind(h) - sind(lat)*sind(sun_pos.dec)) / (cosd(lat) * cosd(sun_pos.dec));
-
-    var LHA = (Math.acos(cos_LHA) * radToDeg) * degToHours;
-    //console.log("Sun_rise_set LHA", LHA);
-
-    //console.log("Sun_rise_set set rise", 12+LHA, 12-LHA);
-
-    // we use the current day sunrise as the next sunrise which is not exactly correct
-    return {sunset: midday + LHA*hour_ms, sunrise: midday - LHA*hour_ms + day_ms};
-}
-
-// Calculate distance in degrees between two (ra,dec) positions
-function moon_distance(ra1, dec1, ra2, dec2)
-{
-    var cos_A = sind(dec1) * sind(dec2) + cosd(dec1) * cosd(dec2) * cosd(ra1 - ra2);
-    var A = Math.acos(cos_A) * radToDeg;
-    if (A < 0) {
-        A = -A;
-    }
-    if (A > 180) {
-        A = 360 - A;
-    }
-    return A;
-}
-
-// This method can be found in many places, somwhow
-// it gives weird results
-function get_moon_phase2(date)
-{
-    var d = getJD(date);
-
-    var v = (d-2451550.1) / 29.530588853;
-    v = v - Math.floor(v);
-    if (v < 0) {
-        v = v + 1;
-    }
-
-    var age = v * 29.53;
-    return age;
-}
-
-// My own version, calcuate sun-moon angle to get
-// approximate "phase" in percentages
-function get_moon_phase(d)
-{
-    var sunpos = sun_position(d);
-    var moonpos = moon_position(d);
-    var dist = moon_distance(sunpos.ra, sunpos.dec, moonpos.ra, moonpos.dec);
-    //console.log("get_moon_phase dist", dist);
-    return (scale_to_360(dist) / 180) * 100;
-}
-
-// Convert to dtate string to that e.g. 1:0 becomes 01:00
-function toDateString(num)
-{
-    if (num < 10) {
-        return '0' + num.toString();
-    } else {
-        return num.toString();
-    }
-}
-
-function setGridBackgroundStyle(panel)
-{
-    if (url_view == "all") {
-        document.getElementById(panel).style.background = "white";
-        document.getElementById(panel).style.padding = "10px";
-        document.getElementById(panel).style.margin = "10px";
-    }
-}
-
-function setHiddenBackgroundStyle(panel)
-{
-    document.getElementById(panel).style.background = "white";
-    document.getElementById(panel).style.padding = "0px";
-    document.getElementById(panel).style.margin = "0px";
-}
-
-function setPanelBackgroundStyle(panel)
-{
-    document.getElementById(panel).style.background = "white";
-    document.getElementById(panel).style.padding = "2px";
-    document.getElementById(panel).style.margin = "2px";
-}
-
-function drawDayVisibilityandGrid() 
-{
-    console.log("drawDayVisibilityandGrid, image_target_list.length", image_target_list.length);
-
-    if (url_view == "all") {
-        if (image_target_list.length > 1) {
-            ViewGridFromList(image_target_list);
-        } else {
-            ViewGrid();
-        }
-    }
-    var data = new google.visualization.DataTable();
-    // get midday in UTC time in ms
-    var midday = UTCdate_ms + day_ms/2;
-    var UTCmidday = new Date(midday);
-
-    //data.addColumn('datetime', 'Time'); Can't get this working...
-    data.addColumn('string', 'Time');
-    //data.addColumn('datetime', 'Time');
-    data.addColumn('number', 'Visible');            // object altitude
-    data.addColumn('number', 'Below soft horizon'); // object altitude if below soft horizon
-    data.addColumn('number', 'Not visible');        // object altitude below hard horizon or meridian transit
-    data.addColumn('number', 'Moon alt');           // moon altitude
-
-    var interval = 5*60*1000; // 5 minutes
-    
-    var ra = target_ra;
-    var dec = target_dec;
-    
-    var lat = location_lat;
-    var lng = location_lng;
-
-    console.log(ra, dec, lat, lng);
-
-    var rowdata = [];
-
-    var draw_full_day = 0;  // if 0 draw only during astronomical twilight
-
-    // sun rise and set times that close match dome open times
-    var suntimes = sun_rise_set(midday, lat, lng, -12);
-
-    var UTCsunset = new Date(suntimes.sunset);
-    var UTCsunrise = new Date(suntimes.sunrise);
-
-    var starttime;
-    var endtime;
-    if (draw_full_day) {
-        starttime = midday;
-        endtime = starttime + day_ms;
-    } else {
-        starttime = suntimes.sunset - suntimes.sunset % interval;
-        endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
-    }
-    var prevaz = null;
-    var meridian_index = null;
-
-    for (var d = starttime; d <= endtime; d = d + interval) {
-        //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
-        var altaz = object_altaz(d, ra, dec, lat, lng);
-        //console.log("target az=",altaz.az,",alt=",altaz.alt);
-        var objectalt = altaz.alt;
-
-        var moonpos = moon_position(d);
-        var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
-        var UTCdate = new Date(d);
-        //console.log("d=",d,",altaz=", altaz, ",moonalt=",moonalt);
-
-        var visiblealt = null;     // target visible
-        var softalt = null;        // target below soft horizon
-        var hardalt = null;        // target below hard horizon or meridian transit
-
-        var horizon_index = Math.round(altaz.az / 5);
-
-        if (prevaz != null) {
-            if ((prevaz > 180 && altaz.az < 180) || // from 360 to 0
-                (prevaz < 180 && altaz.az > 180))   // passed 180
-            {
-                // save meridian crossing
-                meridian_index = rowdata.length;
-                console.log("meridian_index",meridian_index);
-            }
-        }
-        prevaz = altaz.az;
-        if (objectalt > 0) {
-            //console.log("objectalt",objectalt,"horizon_index",horizon_index);
-            //console.log("soft",horizonSoft[horizon_index],"hard",horizonHard[horizon_index]);
-            if (objectalt > horizonSoft[horizon_index]) {
-                visiblealt = objectalt;
-            } else if (objectalt > horizonHard[horizon_index]) {
-                softalt = objectalt;
-            } else {
-                hardalt = objectalt;
-            }
-        }
-        if (moonalt < 0) {
-            moonalt = null;
-        }
-        var row = [
-                    toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
-                    //UTCdate,
-                    getAltitudeCellObject(visiblealt),
-                    getAltitudeCellObject(softalt),
-                    getAltitudeCellObject(hardalt),
-                    getAltitudeCellObject(moonalt)];
-        //console.log("row", row);
-        rowdata[rowdata.length] = row;
-    }
-
-    if (meridian_index != null && meridian_transit > 0) {
-        // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
-        // Maybe it could be done some other way...
-        var timer = Math.round(((meridian_transit / 2) * 60 * 1000) / interval);
-        var begin = Math.max(meridian_index - timer, 0);
-        var end = Math.min(meridian_index + timer, rowdata.length);
-        for (var i = begin; i < end; i++) {
-            if (rowdata[i][1] != null) {
-                rowdata[i][3] = rowdata[i][1];
-                rowdata[i][1] = null;
-            } else if (rowdata[i][2] != null) {
-                rowdata[i][3] = rowdata[i][2];
-                rowdata[i][2] = null;
-            }
-        }
-
-    }
-
-    //for (var i = 0; i < rowdata.length; i++) {
-    //    console.log("rowdata", i, rowdata[i])
-    //}
-
-    data.addRows(rowdata);
-
-    // problems with timezone if using date, formatter does not solve all problems
-    //var formatter = new google.visualization.DateFormat({timeZone: 0});
-    //formatter.format(data, 0);
-
-    var options = {
-        title: 'Target visibility',
-        hAxis: { 
-            title: 'Time (UTC)'
-            //format: 'HH:mm' 
-        },
-        vAxis: { title: 'Altitude (degrees)' },
-        gridlines: {    // Can't get gridlines to work...
-            // count: -1
-            //units: { hours: {format: ['HH:MM']}, }
-        },
-        // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
-        series: { 
-            0: { color: 'green' },
-            1: { color: 'orange', lineDashStyle: [4, 2] },
-            2: { color: 'red', lineDashStyle: [2, 2] },
-            3: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-        }
-    };
-
-    if (url_view == "all") {
-        console.log("dayvisibility_panel", dayvisibility_panel);
-        document.getElementById(dayvisibility_panel).style.height = "400px";
-        document.getElementById(dayvisibility_panel).style.width = "700px";
-    }
-    setGridBackgroundStyle("day-visibility-div");
-
-    // material var chart = new google.charts.Line(document.getElementById(dayvisibility_panel));
-    var chart = new google.visualization.LineChart(document.getElementById(dayvisibility_panel));
-
-    // material chart.draw(data, google.charts.Line.convertOptions(options));
-    chart.draw(data, options);
-
-    var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
-
-    // We use sun and moon distance in dgrees at midnight to approximate 
-    // the moon "phase". I guess there is also a correct way...
-    var moon_phase = get_moon_phase(midnight);
-    // Moon distance from object at midnight. Distance changes during the night
-    // but not much so this should be fine.
-    var moonpos_midnight = moon_position(midnight);
-    var moon_angle = moon_distance(ra, dec, moonpos_midnight.ra, moonpos_midnight.dec);
-
-    if (url_view == "all") {
-        document.getElementById(dayvisibility_panel_text).innerHTML = 
-            //"Astronomical twilight start : " + UTCsunset.toUTCString() + "<br>" +
-            //"Astronomical twilight end : " + UTCsunrise.toUTCString() + "<br>" +
-            "Moon phase: " + Math.floor(moon_phase) + "%<br>" +
-            "Moon distance from target: " + Math.floor(moon_angle) + " degrees";
-    } else {
-        document.getElementById(dayvisibility_panel_text).style.marginTop = "1px";
-        document.getElementById(dayvisibility_panel_text).innerHTML = astro_mosaic_link;
-    }
-
-    //console.log("TEST 1990-04-19");
-    //moon_position(Date.UTC(1990, 3, 19));
-}
-
-function getAltitudeCellObject(val)
-{
-        if (val == null) {
-            return null;
-        } else {
-            return { v: val, f: val.toFixed(0) + "°" };
-        }
-}
-
-function drawYearVisibility() 
-{
-    console.log("drawYearVisibility");
-
-    var data = new google.visualization.DataTable();
-    // get midday in UTC time in ms
-    var midday = UTCdate_ms + day_ms/2;
-
-    //data.addColumn('datetime', 'Time'); Can't get this working...
-    data.addColumn('date', 'Date');
-    data.addColumn('number', 'Visible');            // object altitude
-    data.addColumn('number', 'Not visible');        // moon altitude
-    data.addColumn('number', 'Moon alt');           // moon altitude
-
-    var interval = day_ms; // day
-    
-    var ra = target_ra;
-    var dec = target_dec;
-    
-    var lat = location_lat;
-    var lng = location_lng;
-
-    var rowdata = [];
-
-    var starttime = midday;
-    var endtime = starttime + 365 * day_ms;
-
-    for (var d = starttime; d <= endtime; d = d + interval) {
-        var suntimes = sun_rise_set(d, lat, lng, 0);
-
-        // get appriximate midnight
-        var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
-
-        var objectalt = object_altaz(midnight, ra, dec, lat, lng).alt;
-
-        var moonpos = moon_position(midnight);
-        var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
-
-        var visiblealt = null;     // target visible
-        var hardalt = null;        // target below 30 degrees
-
-        if (objectalt >= 30) {
-            visiblealt = objectalt;
-        } else if (objectalt > 0) {
-            hardalt = objectalt;
-        }
-        if (moonalt < 0) {
-            moonalt = null;
-        }
-        var row = [
-                new Date(d),
-                getAltitudeCellObject(visiblealt),
-                getAltitudeCellObject(hardalt),
-                getAltitudeCellObject(moonalt)];
-        rowdata[rowdata.length] = row;
-    }
-
-    data.addRows(rowdata);
-
-    var options = {
-        title: 'Target visibility at midnight over next 12 months',
-        hAxis: { 
-            //title: 'Date'
-            //format: 'HH:mm' 
-        },
-        vAxis: { title: 'Altitude (degrees)' },
-        gridlines: {    // Can't get gridlines to work...
-            // count: -1
-            //units: { hours: {format: ['HH:MM']}, }
-        },
-        // minorGridlines: { units: { hours: {format: ['HH:MM']} } },
-        series: { 
-            0: { color: 'green' },
-            1: { color: 'red', lineDashStyle: [2, 2] },
-            2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-        }
-    };
-
-    if (url_view == "all") {
-        document.getElementById(yearvisibility_panel).style.height = "400px";
-        document.getElementById(yearvisibility_panel).style.width = "700px";
-    }
-    setGridBackgroundStyle("year-visibility-div");
-
-    var chart = new google.visualization.LineChart(document.getElementById(yearvisibility_panel));
-
-    chart.draw(data, options);
-
-    if (url_view == "all") {
-        document.getElementById(yearvisibility_panel_text).innerHTML = "";
-    } else {
-        document.getElementById(yearvisibility_panel_text).style.marginTop = "1px";
-        document.getElementById(yearvisibility_panel_text).innerHTML = astro_mosaic_link;
-    }
-}
-
-// Find coordinates from Sesame XML output
-// or SIMBAD ascii output
-function find_coordinates(str)
-{
-    console.log('find_coordinates');
-
-    var idx = str.indexOf("<jpos>");
-    if (idx > 0) {
-        console.log('Assume Sesame XML format');
-        var coord = str.substr(idx+6, 100);
-        console.log("find_coordinates:get coordinates from '", coord, "'");
-        var idx2 = coord.indexOf("</jpos>");
-        if (idx2 == -1) {
-            console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
-            return false;
-        }
-        image_target = coord.substr(0, idx2);
-    } else {
-        console.log('Simbad ascii output');
-        idx = str.indexOf("J2000");
-        if (idx == -1) {
-            console.log("find_coordinates:could not find 'J2000'");
-            return false;
-        }
-        str = str.substr(idx+4);
-        idx = str.indexOf(":");
-        if (idx == -1) {
-            console.log("find_coordinates:could not find ':'");
-            return false;
-        }
-        var coord = str.substr(idx+1, 100);
-        console.log("find_coordinates:get coordinates from '", coord, "'");
-        coord = trim_spaces(coord);
-        for (var i = 0; i < coord.length; i++) {
-            var c = coord.substr(i,1);
-            if ((c < '0' || c > '9') && c != '.' && c != '-' && c != '+' && c != ' ') {
-                break;
-            }
-        }
-        if (i < 12) {
-            console.log("find_coordinates:failed to get coordinates from '", coord, "', failed at position ", i.toString());
-            return false;
-        }
-        image_target = coord.substr(0, i);
-    }
-    resolved_name = image_target;
-
-    // change image_target from name to coordinates
-    image_target = trim_spaces(image_target);
-    console.log("find_coordinates:image_target=", image_target);
-    image_target = reformat_coordinates(image_target);
-    //document.getElementById(status_text).innerHTML = "Resolved RA/DEC " + image_target;
-    if (url_view == "all") {
-        document.getElementById(status_text).innerHTML = "";
-    }
-
-    resolved_coordinates = image_target;
-
-    return true;
-}
-
-// Resolve image coordinates from Simbad database using name
-function ViewImageByName()
-{
-    console.log('ViewImageByName');
-
-    if (resolved_name == image_target && resolved_coordinates != null) {
-        // same name already resolved, do not resolve again
-        document.getElementById(status_text).innerHTML = "RA/DEC " + resolved_coordinates;
-        image_target = resolved_coordinates;
-        ViewImageByType();
-        return;
-    }
-
-    // Simbad ascii, some problems when accessing the site
-    // var resolver_url = "https://simbad.u-strasbg.fr/simbad/sim-id?output.format=ASCII&Ident=";
-    
-    // Mirror of Simbad u-strasbg? Worked when u-strasbg failed.
-    // var resolver_url = "http://simbad.cfa.harvard.edu/simbad/sim-id?output.format=ASCII&Ident=";
-
-    // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
-    var resolver_url = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
-
-    resolver_url = resolver_url + image_target.replace(/ /g, "+");
-
-    var waitingTimeout = setTimeout(function() { document.getElementById(error_text).innerHTML = "Resolving name..."; }, 1000);
-
-    fetch(resolver_url)
-        .then(
-            function(response) {
-                if (response.status !== 200) {
-                    clearTimeout(waitingTimeout);
-                    var txt = 'Problem accessing Sesame name resolver. Status Code: ' + response.status;
-                    console.log(txt);
-                    document.getElementById(error_text).innerHTML = txt;
-                    return;
-                }
-                response.text().then(function(text) {
-                    clearTimeout(waitingTimeout);
-                    if (find_coordinates(text)) {
-                        ViewImageByType();
-                    } else {
-                        document.getElementById(error_text).innerHTML = "Failed to resolve name " + image_target;
-                    }
-                })
-            }
-        )
-        .catch(function(err) {
-            clearTimeout(waitingTimeout);
-            console.log('Problem accessing Sesame name resolver. Fetch Error :', err);
-            document.getElementById(error_text).innerHTML = 'Problem accessing Sesame name resolver. Fetch Error :' + err;
-        }
-    );
-}
-
-// Remove leading, trailing and duplicate spaces
-function trim_spaces(str)
-{
-    // replace all whitespace to space
-    str = str.replace(/\s/g, " ");
-    // remove leading and trailing spaces
-    str = str.trim();
-    for (var i = 0; i < str.length && str.indexOf('  ') != -1; i++) {
-        // remove all duplicate spaces
-        str = str.replace(/  /g, " ");
-    }
-    return str;
-}
-
-function decimal_to_mmss(v)
-{
-    var sign = '';
-    v = v.trim();
-    //console.log("decimal_to_mmss, v", v);
-    var index = v.indexOf('.');
-    if (index == -1) {
-        //console.log("decimal_to_mmss, no dot found", v);
-        return v;
-    }
-    var vd = v.substring(index+1);
-    //console.log("decimal_to_mmss, vd", vd);
-    var d = parseFloat("0."+vd);
-    //console.log("decimal_to_mmss, d", d);
-    var secs = d * 3600;
-    var mins = Math.floor(secs / 60);
-    //console.log("decimal_to_mmss, mins", mins);
-    secs = secs - mins*60;
-    //console.log("decimal_to_mmss, secs", secs);
-
-    var x = v.substring(0, index);
-    console.log("decimal_to_mmss, x", x);
-    if (x.charAt(0) == '-') {
-        sign = '-';
-        x = x.substring(1);
-        //console.log("decimal_to_mmss, after sign, x", x);
-    }
-
-    var ret = sign + ("0" + x).slice(-2) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
-    //console.log("decimal_to_mmss, ret", ret);
-
-    return ret;
-}
-
-// split [-]XXYYZZ to [-]XX:YY:ZZ
-function split_coord(coord)
-{
-        if (coord.length == 7) {
-            return coord.substring(0, 1) + split_coord(coord.substring(1));
-        } else {
-            return coord.substring(0, 2) + ':' +
-                   coord.substring(2, 4) + ':' +
-                   coord.substring(4); 
-        }
-}
-
-function fix_field_lenght(fld)
-{
-    var sign;
-
-    //console.log("fix_field_lenght:in", fld)
-
-    if (fld.charAt(0) == '-') {
-        sign = '-';
-        fld = fld.substring(1);
-    } else {
-        sign = '';
-    }
-    var s = fld.split('.');
-    if (s.length > 1) {
-        // We have decimals
-        fld = sign + ("0" + s[0]).slice(-2) + '.' + (s[1] + "0").slice(0, 2);
-    } else {
-        fld = sign + ("0" + fld).slice(-2);
-    }
-    //console.log("fix_field_lenght:out", fld)
-    return fld;
-}
-
-// Ensure that format is HH:MM:SS DD:MM:SS, that is,
-// two numbers on each field.
-function reformat_coordinates_field_lenghts(coord)
-{
-    var radec = coord.split(" ");
-    for (var i = 0; i < radec.length; i++) {
-        var fields = radec[i].split(":");
-        for (var j = 0; j < fields.length; j++) {
-            fields[j] = fix_field_lenght(fields[j]);
-        }
-        if (fields.length == 3) {
-            radec[i] = fields[0] + ':' + fields[1] + ':' + fields[2];
-        } else if (fields.length == 2) {
-            var mmsplit = fields[1].split('.');
-            if (mmsplit.length == 2) {
-                // we have decimals in minutes
-                radec[i] = fields[0] + ':' + mmsplit[0] + ':' + mmsplit[1];
-            } else {
-                radec[i] = fields[0] + ':' + fields[1] + ':00';
-            }
-            
-        }
-    }
-    return radec[0] + ' ' + radec[1];
-}
-
-// Reformat coordinates to a format HH:MM:SS DD:MM:SS
-// Input can be: 
-// HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
-// HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
-// HHMMSS DDMMSS
-// HH.dec DD.dec
-function reformat_coordinates(coord)
-{
-    // number, assume coordinates
-    coord = trim_spaces(coord);
-    console.log('reformat_coordinates=', coord);
-    var numbers = coord.split('/');
-    if (numbers.length == 2) {
-        coord = trim_spaces(numbers[0] + ' ' + numbers[1]);
-        console.log('reformat_coordinates, split by /', coord);
-    }
-    numbers = coord.split(' ');
-    console.log('reformat_coordinates, numbers.length=', numbers.length);
-    if (numbers.length == 2) {
-        var ra = numbers[0];
-        var dec = numbers[1];
-        if (ra.split(':').length == 1) {
-            if (ra.indexOf('.') == -1 && dec.indexOf('.') == -1) {
-                console.log('no dots, assume HHMMSS DDMMSS');
-                coord = split_coord(ra) + ' ' + split_coord(dec);
-                console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
-            } else {
-                console.log('assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
-                coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
-                console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
-            }
-        } else {
-            console.log('reformat_coordinates, length 2 and we have :, assume correct format HH:MM:SS DD:MM:SS', coord);
-        }
-    } else if (numbers.length == 6) {
-        console.log('separated by space, add colons');
-        coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
-                numbers[3] + ':' + numbers[4] + ':' + numbers[5];
-        console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
-    } else if (numbers.length == 5) {
-        console.log('badly formatted SIMBAD case, assume zero last number, separated by space, add colons');
-        coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
-                numbers[3] + ':' + numbers[4] + ':' + 0;
-        console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
-    } else {
-        console.log('use as-is');
-        console.log('reformat_coordinates, length 6, reformat', coord);
-    }
-    coord = reformat_coordinates_field_lenghts(coord);
-    console.log('reformat_coordinates, field lengths fixed', coord);
-    return coord;
 }
 
 // target field action handler
@@ -2260,9 +1235,18 @@ function update_catalog_list()
     }
 }
 
-function getFov(fov)
+// Remove leading, trailing and duplicate spaces
+function trim_spaces(str)
 {
-    return (fov*60.0)/3600.0;
+    // replace all whitespace to space
+    str = str.replace(/\s/g, " ");
+    // remove leading and trailing spaces
+    str = str.trim();
+    for (var i = 0; i < str.length && str.indexOf('  ') != -1; i++) {
+        // remove all duplicate spaces
+        str = str.replace(/  /g, " ");
+    }
+    return str;
 }
 
 // Main function to view image. Get parameters
@@ -2275,9 +1259,8 @@ function ViewImage(oper)
     console.log('ViewImage', oper);
 
     if (url_view == "all") {
-        document.getElementById(status_text).innerHTML = "";
-        document.getElementById(error_text).innerHTML = "";
-        clearOldImage();
+        document.getElementById(viewer_panels.status_text).innerHTML = "";
+        document.getElementById(viewer_panels.error_text).innerHTML = "";
     }
 
     // get current date
@@ -2289,20 +1272,20 @@ function ViewImage(oper)
     }
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById(error_text).innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
+        document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
         return;
     }
     checkFilterChanged();
     checkFilterTimeChanged();
 
     //console.log("curdate", curdate);
-    UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
-                          parseInt(view_date.substr(8, 2)));
+    viewer_params.UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
+                                        parseInt(view_date.substr(8, 2)));
 
-    if (catalog_date != UTCdate_ms) {
+    if (catalog_date != viewer_params.UTCdate_ms) {
         // time changed, reset catalog view list
         console.log("ViewImage, date changed, reset catalog view");
-        catalog_date = UTCdate_ms;
+        catalog_date = viewer_params.UTCdate_ms;
         catalog_reset();
     }
 
@@ -2332,27 +1315,24 @@ function ViewImage(oper)
     }
 
     if (url_view == "all") {
-        img_fov = document.getElementById("overlap_percentage").value;
+        var img_fov = document.getElementById("overlap_percentage").value;
     } else {
-        img_fov = 20;
+        var img_fov = 20;
     }
-    img_fov = 1 - img_fov / 100;
 
     // Update processing variables based on telescope
-    fov_x = current_telescope.fov_x;
-    fov_y = current_telescope.fov_y;
-    location_lat = current_telescope.lat;
-    location_lng = current_telescope.lng;
-    horizonHard = current_telescope.horizon_limits.hard;
-    horizonSoft = current_telescope.horizon_limits.soft;
-    meridian_transit = current_telescope.meridian_transit;
-    telescope_location = current_telescope.name;
+    // XXX PARAMS
+    viewer_params.fov_x = current_telescope.fov_x;
+    viewer_params.fov_y = current_telescope.fov_y;
+    viewer_params.location_lat = current_telescope.lat;
+    viewer_params.location_lng = current_telescope.lng;
+    viewer_params.horizonSoft = current_telescope.horizon_limits.soft;
+    viewer_params.horizonHard = current_telescope.horizon_limits.hard;
+    viewer_params.meridian_transit = current_telescope.meridian_transit;
 
     var target_name;
 
-    init_catalog_view_list();
-
-    console.log("horizonHard[0]", horizonHard[0]);
+    console.log("horizonHard[0]", viewer_params.horizonHard[0]);
 
     if (url_view == "all") {
         image_target = document.getElementById("target").value;
@@ -2360,510 +1340,53 @@ function ViewImage(oper)
         image_target = startup_image;
     }
     image_target = trim_spaces(image_target);
-    console.log('image_target=', image_target);
-    image_target_list = [];
+    console.log('image_target=', image_target, viewer_params, viewer_panels);
+
+    if (url_view == 'all') {
+        viewer_params.grid_type = document.getElementById("grid_type").value;
+        viewer_params.grid_size_x = parseInt(document.getElementById("size_x").value);
+        viewer_params.grid_size_y = parseInt(document.getElementById("size_y").value);
+    } else {
+        viewer_params.grid_type = 'fov';
+        viewer_params.grid_size_x = 1;
+        viewer_params.grid_size_y = 1;
+    }
+
+    if (viewer_params.grid_type == 'panels') {
+        if (screen_setup != 'panels') {
+            // switch to panels view
+            createMosaicPanels();
+            screen_setup = 'panels';
+        }
+    } else {
+        if (screen_setup != 'default') {
+            // switch to default view
+            createDefaultPanels(mobile_screen);
+            screen_setup = 'default';
+        }
+    }
 
     showWiki();
 
-    var c = image_target.substr(0,1);
-    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-        console.log('image_target is number');
-        image_target_list = image_target.split(',');
-        for (var i = 0; i < image_target_list.length; i++) {
-            image_target_list[i] = reformat_coordinates(image_target_list[i]);
-        }
-        console.log('image_target_list', image_target_list);
-        image_target = image_target_list[0];
-        ViewImageByType();
-    } else {
-        console.log('image_target is name');
-        // try to resolve target as a name
-        ViewImageByName();
-    }
+    console.log('call StartAstroMosaicViewerEngine');
+
+    engine_data = null;
+
+    engine_data = StartAstroMosaicViewerEngine(
+                    url_view, 
+                    image_target, 
+                    viewer_params, 
+                    viewer_panels, 
+                    catalogs,
+                    img_fov,
+                    engine_native_resources);
+
+    console.log('returned from StartAstroMosaicViewerEngine');
+
+    init_catalog_view_list();
 
     if (url_view == "all" || url_view == "weather") {
         showWeatherForecast();
-    }
-}
-
-function ViewImageByType()
-{
-    console.log('ViewImageByType');
-    if (!get_image_target_ra_dec()) {
-        document.getElementById(error_text).innerHTML = "Failed to parse target RA/DEC";
-        return;
-    }
-    if (url_view == "all" && document.getElementById("grid_type").value == 'panels') {
-        ViewPanels();
-    } else {
-        // material google.charts.load('current', {'packages':['line']});
-        if (url_view == "target") {
-            ViewGrid();
-        } else {
-            google.charts.load('current', {'packages':['corechart']});
-            if (url_view == "all" || url_view == "day") {
-                google.charts.setOnLoadCallback(drawDayVisibilityandGrid);
-            }
-            if (url_view == "all" || url_view == "year") {
-                google.charts.setOnLoadCallback(drawYearVisibility);
-            }
-        }
-    }
-}
-
-function degrees_to_radians(degrees)
-{
-    var pi = Math.PI;
-    return degrees * (pi/180);
-}
-
-function clearOldImage()
-{
-    for (var x = 0; x < 5; x++) {
-        for (var y = 0; y < 5; y++) {
-            var panelid = y.toString() + x.toString();
-            var aladinpanel = "aladin-lite-div-"+panelid;
-            document.getElementById(aladinpanel).innerHTML = "";
-            document.getElementById(aladinpanel).style.borderStyle = "none";;
-            document.getElementById(aladinpanel).style.height = "0px";
-            document.getElementById(aladinpanel).style.width = "0px";
-            document.getElementById("panel-text-"+panelid).innerHTML = "";
-            setHiddenBackgroundStyle(aladinpanel);
-        }
-    }
-}
-
-function OpenNGC_type_to_typename(type, target_list)
-{
-    // Map OpenNSC types to a more descriptive text
-    if (type == '*')   return('Star');
-    if (type == '**')   return('Double star');
-    if (type == '*Ass')   return('Association of stars');
-    if (type == 'OCl')   return('Open Cluster');
-    if (type == 'GCl')   return('Globular Cluster');
-    if (type == 'Cl+N')   return('Star cluster + Nebula');
-    if (type == 'G')   return('Galaxy');
-    if (type == 'GPair')   return('Galaxy Pair');
-    if (type == 'GTrpl')   return('Galaxy Triplet');
-    if (type == 'GGroup')   return('Group of galaxies');
-    if (type == 'PN')   return('Planetary Nebula');
-    if (type == 'HII')   return('HII Ionized region');
-    if (type == 'DrkN')   return('Dark Nebula');
-    if (type == 'EmN')   return('Emission Nebula');
-    if (type == 'Neb')   return('Nebula');
-    if (type == 'RfN')   return('Reflection Nebula');
-    if (type == 'SNR')   return('Supernova remnant');
-    if (type == 'Nova')   return('Nova star');
-    if (type == 'NonEx')   return('Nonexistent object');
-    if (type == 'Dup')   return('Duplicated object (see NGC or IC columns to find the master object)');
-    if (type == 'Other')   {
-        if (target_list) {
-            return('');
-        } else {
-            return('Other classification (see object notes)');
-        }
-    }
-    
-    // Slooh type 
-    return(type);
-}
-
-function addTabRow(tab, v1, v2)
-{
-    return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
-}
-
-function initAladin(aladin_fov, aladin_target)
-{
-    console.log('initAladin', aladin_target, aladin_panel, url_view);
-    var aladin = null;
-    var layers;
-    var fullscreen;
-    if (url_view == "all") {
-        layers = true;
-        fullscreen = true;
-    } else {
-        layers = false;
-        fullscreen = false;
-    }
-    if (A) {
-        aladin = A.aladin('#'+aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
-                           showReticle:false, showZoomControl:false, showFullscreenControl:fullscreen, 
-                           showLayersControl:layers, showGotoControl:false, 
-                           showControl: false, cooFrame: "J2000", showFrame: false});
-    } else {
-        document.getElementById(image_panel).style.height = "50px";
-        document.getElementById(image_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
-    }
-    if (aladin) {
-        for (var i = 0; i < catalogs.length; i++) {
-            if (catalogs[i].AladinCatalog != null) {
-                if (!skip_slooh_catalog(current_telescope_service, catalogs[i])) {
-                    aladin.addCatalog(catalogs[i].AladinCatalog);
-                }
-            }
-        }
-    }
-
-    // define function triggered when an object is clicked
-    var objClicked;
-    if (aladin && url_view == "all") {
-        console.log('initAladin, set objectClicked');
-        aladin.on('objectClicked', function(object) {
-            if (object) {
-                console.log('aladin objectClicked, show object');
-                objClicked = object;
-                object.select();
-                var tab = "<BR><TABLE>";
-                tab = addTabRow(tab, "Name", object.data.name);
-                tab = addTabRow(tab, "Type", object.data.info.type);
-                tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                tab = addTabRow(tab, "Constellation", object.data.info.constellation);
-                tab = addTabRow(tab, "Magnitude", object.data.info.mag);
-                tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
-                tab = addTabRow(tab, "Notes", object.data.info.notes);
-                tab = addTabRow(
-                        tab, 
-                        "Url", 
-                        '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+object.data.name.replace(/ /g, "+")+'">SIMBAD</a>');
-            
-                tab = tab + "</TABLE>";
-                console.log('aladin objectClicked', tab);
-                alt_wikitext = tab;
-                showWikiTarget(object.data.wikiname);
-                alt_wikitext = null;
-            } else {
-                console.log('aladin objectClicked, no object');
-            }
-        });
-    }
-    return aladin;
-}
-
-function ViewGrid()
-{
-    var grid_size_x;
-    var grid_size_y;
-
-    console.log('ViewGrid');
-
-    if (url_view == "all") {
-        document.getElementById(image_panel).style.height = "700px";
-        document.getElementById(image_panel).style.width = "700px";
-    }
-    setGridBackgroundStyle("target-image-div");
-
-    if (url_view == "all") {
-        grid_type = document.getElementById("grid_type").value;
-        grid_size_x = parseInt(document.getElementById("size_x").value);
-        grid_size_y = parseInt(document.getElementById("size_y").value);
-    } else {
-        grid_type = "fov";
-        grid_size_x = 1;
-        grid_size_y = 1;
-    }
-
-    if (grid_size_x == 1 && grid_size_y == 1) {
-        grid_type = "fov";
-    }
-    if (grid_type == "mosaic") {
-        size_x = grid_size_x / 2 - 0.5;
-        size_y = grid_size_y / 2 - 0.5;
-    } else {
-        size_x = 1;
-        size_y = 1;
-        grid_size_x = 3;
-        grid_size_y = 3;
-    }
-
-    // Show image and get coordinates from there to
-    // calculate grid boxes.
-    var aladin_fov;
-    if (grid_type == "mosaic") {
-        if (grid_size_x > grid_size_y) {
-            aladin_fov = (grid_size_x+0.2)*Math.max(fov_x, fov_y)*aladin_fov_extra;
-        } else {
-            aladin_fov = (grid_size_y+0.2)*Math.max(fov_x, fov_y)*aladin_fov_extra;
-        }
-    } else {
-        aladin_fov = 1.2*Math.max(fov_x, fov_y)*aladin_fov_extra;
-    }
-
-    var aladin = initAladin(aladin_fov, image_target);
-
-    var radec = null;
-    if (aladin) {
-        radec = aladin.getRaDec();
-    }
-
-    console.log("center RaDec = ", radec);
-
-    var ra = radec[0];
-    var dec = radec[1];
-
-    var x;
-    var y;
-    var row = size_y;
-    var col;
-    var panel_radec = [];
-    for (x = 0; x < grid_size_x; x++) {
-        panel_radec[x] = [];
-    }
-    y = 0;
-    while (row >= -size_y) {
-        var row_dec = dec + row * img_fov * fov_y;
-        col = size_x;
-        x = 0;
-        while (col >= -size_x) {
-            var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
-
-            console.log("panel ra/dec=", col_ra, "/", row_dec);
-
-            // now center ra/dec is col_ra/row_dec
-            // calculate corners
-            var row_dec1 = row_dec + fov_y/2;
-            var row_dec2 = row_dec - fov_y/2;
-            var col_ra1 = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-            var col_ra2 = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-            var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-            var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-
-            var panel = [
-                [col_ra1-col_ra1_delta, row_dec1], 
-                [col_ra1+col_ra1_delta, row_dec1], 
-                [col_ra2+col_ra2_delta, row_dec2], 
-                [col_ra2-col_ra2_delta, row_dec2], 
-                [col_ra1-col_ra1_delta, row_dec1]
-            ];
-
-            //console.log("panel = ", panel);
-
-            var line_color = '#ee2345';
-
-            if ((grid_type == "mosaic" || (x == 1 && y == 1)) && aladin) {
-                var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
-                aladin.addOverlay(overlay);
-                overlay.add(A.polyline(panel));
-            }
-            col = col - 1;
-
-            var col_ra_hours = col_ra * degToHours;
-
-            if (grid_type == "mosaic") {
-                if (current_telescope_service.radec_format == 0) {
-                    panel_radec[x][y] = col_ra_hours.toFixed(5) + 
-                                        " " + row_dec.toFixed(5);
-                } else {
-                    panel_radec[x][y] = reformat_coordinates(
-                                            col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5));
-                }
-            } else {
-                /* We show only one scope FoV (default) so show
-                 * coordinates in different formats.
-                 */
-                panel_radec[x][y] = "RA/DEC " + 
-                                    col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5) + ", " + 
-                                    ra.toFixed(5) + " " + dec.toFixed(5) + ", " +
-                                    image_target;
-            }
-            x = x + 1;
-        }
-        row = row - 1;
-        y = y + 1;
-    }
-    if (grid_type == "mosaic") {
-        var tab = document.createElement("TABLE");
-        tab.style.width = "100%";
-        tab.style.borderCollapse="collapse";
-        for (y = 0; y < grid_size_y; y++) {
-            var tabrow = document.createElement("TR");
-            tab.appendChild(tabrow);
-            for (x = 0; x < grid_size_x; x++) {
-                var tabdata = document.createElement("TD");
-                var celltext = document.createTextNode(panel_radec[x][y]);
-                tabdata.style.border = "1px solid #dddddd";
-                tabdata.style.padding = "4px";
-                tabdata.appendChild(celltext);
-                tabrow.appendChild(tabdata);
-            }
-        }
-        document.getElementById(image_panel_text).appendChild(tab);
-    } else {
-        if (url_view == "all") {
-            document.getElementById(image_panel_text).innerHTML = panel_radec[1][1];
-        } else {
-            document.getElementById(image_panel_text).style.marginTop = "1px";
-            document.getElementById(image_panel_text).innerHTML = astro_mosaic_link;
-        }
-    }
-    if (version_text && url_view == "all") {
-        // use wiki panel to show version info
-        var lines = version_text.split('\n');
-        var visible_text = '<br>';
-        for (var i = 0; i < 35 && i < lines.length; i++) {
-            visible_text = visible_text + lines[i] + '<br>';
-        }
-        if (i < lines.length) {
-            visible_text = visible_text + '...<br>';
-        }
-        document.getElementById(wiki_panel).style.height = "300px";
-        document.getElementById(wiki_panel).style.width = wiki_panel_width;
-        document.getElementById(wiki_panel).innerHTML = visible_text;
-        // show only once, next time it is not shown
-        version_text = null;    
-    }
-}
-
-function ViewGridFromList(coordinates)
-{
-    console.log('ViewGridFromList');
-
-    document.getElementById(image_panel).style.height = "700px";
-    document.getElementById(image_panel).style.width = "700px";
-    setGridBackgroundStyle("target-image-div");
-
-    var grid_size_x = coordinates.length;
-    var grid_size_y = coordinates.length;
-    size_x = grid_size_x / 2 - 0.5;
-    size_y = grid_size_y / 2 - 0.5;
-
-    // Show image and get coordinates from there to
-    // calculate grid boxes.
-    var aladin_fov;
-    if (grid_size_x > grid_size_y) {
-        aladin_fov = (grid_size_x+0.2)*fov_x;
-    } else {
-        aladin_fov = (grid_size_y+0.2)*fov_x;
-    }
-
-    var aladin = initAladin(aladin_fov, coordinates[0])
-    var radec = null;
-
-    console.log("center RaDec = ", coordinates[0]);
-
-    for (var i = 0; i < coordinates.length; i++) {
-        radec = get_ra_dec(coordinates[i]);
-        var col_ra = radec[0];
-        var row_dec = radec[1];
-
-        console.log("panel "+i+" ra/dec=", col_ra, "/", row_dec);
-
-        // calculate corners
-        var row_dec1 = row_dec + fov_y/2;
-        var row_dec2 = row_dec - fov_y/2;
-        var col_ra1 = col_ra;
-        var col_ra2 = col_ra;
-        var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-        var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-
-        var panel = [
-            [col_ra1-col_ra1_delta, row_dec1], 
-            [col_ra1+col_ra1_delta, row_dec1], 
-            [col_ra2+col_ra2_delta, row_dec2], 
-            [col_ra2-col_ra2_delta, row_dec2], 
-            [col_ra1-col_ra1_delta, row_dec1]
-        ];
-
-        var line_color = '#ee2345';
-        if (aladin) {
-            var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
-            aladin.addOverlay(overlay);
-            overlay.add(A.polyline(panel));
-        }
-    }
-}
-
-function ViewPanels()
-{
-    console.log('ViewPanels');
-
-    var grid_size_x = parseInt(document.getElementById("size_x").value);
-    var grid_size_y = parseInt(document.getElementById("size_y").value);
-    if (grid_size_x == 1 && grid_size_y == 1) {
-        ViewGrid();
-        return;
-    }
-    if (grid_size_x > 5) {
-        document.getElementById(error_text).innerHTML = "Max size in panels view is 5x5";
-        grid_size_x = 5;
-    }
-    if (grid_size_y > 5) {
-        document.getElementById(error_text).innerHTML = "Max size in panels view is 5x5";
-        grid_size_y = 5;
-    }
-
-    wikiReset();
-
-    for (var x = 0; x < grid_size_x; x++) {
-        for (var y = 0; y < grid_size_y; y++) {
-            var panelid = y.toString() + x.toString();
-            var aladinpanel = "aladin-lite-div-"+panelid;
-            document.getElementById(aladinpanel).style.height = "300px";
-            document.getElementById(aladinpanel).style.width = "300px";
-            setPanelBackgroundStyle(aladinpanel);
-        }
-        setPanelBackgroundStyle("day-visibility-div");
-        setPanelBackgroundStyle("year-visibility-div");
-        setPanelBackgroundStyle("target-image-div");
-    }
-
-    size_x = grid_size_x / 2 - 0.5;
-    size_y = grid_size_y / 2 - 0.5;
-
-    console.log("image_target=" + image_target);
-    var ra = target_ra;
-    var dec = target_dec;
-
-    var i = 0;
-    var row = size_y;
-    var col;
-    var row_number = 0;
-    var y = 0;
-    while (row >= -size_y) {
-        var row_dec = dec + row * img_fov * fov_y;
-        col = size_x;
-        var panel_number = 5 * row_number;
-        var x = 0;
-        while (col >= -size_x) {
-            var col_ra = ra + col * (img_fov * fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
-            // convert from degrees to hours
-            col_ra = col_ra * degToHours;
-
-            var point_ra_hour = Math.floor(col_ra);
-            var point_ra_sec = (Math.abs(col_ra) - Math.abs(point_ra_hour)) * 3600;
-            var point_ra_min = Math.floor(point_ra_sec / 60);
-            point_ra_sec = point_ra_sec - point_ra_min * 60;
-    
-            var point_dec_hour = Math.floor(row_dec);
-            var point_dec_sec = (Math.abs(row_dec) - Math.abs(point_dec_hour)) * 3600;
-            var point_dec_min = Math.floor(point_dec_sec / 60);
-            point_dec_sec = point_dec_sec - point_dec_min * 60;
-    
-            aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
-            aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
-
-            var panel_id = 'aladin-lite-div-'+y.toString()+x.toString();
-            if (fov_x != fov_y) {
-                var height = 300 * fov_y / fov_x;
-                document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
-            } else {
-                document.getElementById(panel_id).style.height = "300px";
-            }
-            if (A) {
-                aladin = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:fov_x, target: aladin_target_str,
-                                    showReticle:false, showZoomControl:false, showFullscreenControl:false, 
-                                    showLayersControl:false, showGotoControl:false,
-                                    showControl: false, cooFrame: "J2000", showFrame: false});
-            }
-            document.getElementById("panel-text-"+y.toString()+x.toString()).innerHTML = (i+1).toString() + " RA/DEC " + col_ra.toFixed(5) + " " + row_dec.toFixed(5);
-            col = col - 1;
-            i = i + 1;
-            panel_number = panel_number + 1;
-            x = x + 1;
-        }
-        row = row - 1;
-        row_number = row_number + 1;
-        y = y + 1;
     }
 }
 
@@ -2992,63 +1515,63 @@ function filter_visible_catalog_items(cat, lat, lng)
 
     if (catalog_filter_time == null) {
         console.log("filter_visible_catalog_items:use whole night");
-        var midday = UTCdate_ms + day_ms/2;
-        var suntimes = sun_rise_set(midday, lat, lng, 0);
+        var midday = viewer_params.UTCdate_ms + day_ms/2;
+        var suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
         midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
     } else {
         console.log("filter_visible_catalog_items:use specific time");
-        midnight = UTCdate_ms + catalog_filter_time;
+        midnight = viewer_params.UTCdate_ms + catalog_filter_time;
     }
     var fl = [];
     fl[fl.length] = ['', ''];
 
     // if object altitude is above catalogFilterDegrees degrees in any of the following
     // points during the night we add it to list
-    aa1 = object_altitude_init(midnight, lat, lng);
+    aa1 = engine_native_resources.object_altitude_init(midnight, lat, lng);
     var thisfilterdate = new Date(midnight);
     console.log("filter date 1:", thisfilterdate.toUTCString());
-    var moonpos = moon_position(midnight);
+    var moonpos = engine_native_resources.moon_position(midnight);
     // Check moon altitude at given time. If it is below horizon we do not filter with moon.
-    var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
-    moonalt = moon_topocentric_correction(moonalt);
+    var moonalt = engine_native_resources.object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
+    moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
     if (moonalt < 0) {
         moonFilter = null;
     }
     if (catalog_filter_time == null) {
         // no time filter, use also times 2 and 4 hours before and after midnight
         var d = midnight+2*hour_ms;
-        aa2 = object_altitude_init(d, lat, lng);
+        aa2 = engine_native_resources.object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
-        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
+        moonalt = engine_native_resources.object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
         if (moonalt < 0) {
             moonFilter = null;
         }
         console.log("filter date 2:", thisfilterdate.toUTCString());
         d = midnight-2*hour_ms;
-        aa3 = object_altitude_init(d, lat, lng);
+        aa3 = engine_native_resources.object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
         // check moon altitude at this time
-        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
+        moonalt = engine_native_resources.object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
         if (moonalt < 0) {
             moonFilter = null;
         }
         console.log("filter date 3:", thisfilterdate.toUTCString());
         var d = midnight+4*hour_ms;
-        aa4 = object_altitude_init(d, lat, lng);
+        aa4 = engine_native_resources.object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
-        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
+        moonalt = engine_native_resources.object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
         if (moonalt < 0) {
             moonFilter = null;
         }
         console.log("filter date 4:", thisfilterdate.toUTCString());
         d = midnight-4*hour_ms;
-        aa5 = object_altitude_init(d, lat, lng);
+        aa5 = engine_native_resources.object_altitude_init(d, lat, lng);
         thisfilterdate = new Date(d);
-        moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
-        moonalt = moon_topocentric_correction(moonalt);
+        moonalt = engine_native_resources.object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
+        moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
         if (moonalt < 0) {
             moonFilter = null;
         }
@@ -3062,20 +1585,20 @@ function filter_visible_catalog_items(cat, lat, lng)
         var alt;
         var addToList = false;
         if (catalogFilterDegrees != null) {
-            alt = object_altitude_get(aa1, ra, dec);
+            alt = engine_native_resources.object_altitude_get(aa1, ra, dec);
             if (catalog_filter_time == null) {
                 // no time filter, use also times 2 and 4 hours before and after midnight
                 if (alt < catalogFilterDegrees) {
-                    alt = object_altitude_get(aa2, ra, dec);
+                    alt = engine_native_resources.object_altitude_get(aa2, ra, dec);
                 }
                 if (alt < catalogFilterDegrees) {
-                    alt = object_altitude_get(aa3, ra, dec);
+                    alt = engine_native_resources.object_altitude_get(aa3, ra, dec);
                 }
                 if (alt < catalogFilterDegrees) {
-                    alt = object_altitude_get(aa4, ra, dec);
+                    alt = engine_native_resources.object_altitude_get(aa4, ra, dec);
                 }
                 if (alt < catalogFilterDegrees) {
-                    alt = object_altitude_get(aa5, ra, dec);
+                    alt = engine_native_resources.object_altitude_get(aa5, ra, dec);
                 }
             }
         }
@@ -3084,7 +1607,7 @@ function filter_visible_catalog_items(cat, lat, lng)
             addToList = true;
             if (moonFilter != null) {
                 // check for distance from moon
-                var moon_angle = moon_distance(ra, dec, moonpos.ra, moonpos.dec);
+                var moon_angle = engine_native_resources.moon_distance(ra, dec, moonpos.ra, moonpos.dec);
                 if (moon_angle < moonFilter) {
                     addToList = false;
                 }
@@ -3135,7 +1658,7 @@ function init_catalog_view_list()
         document.getElementById("catalogDiv").removeChild(catalog_text);
     }
 
-    current_catalog_filtered_list = filter_visible_catalog_items(current_catalog, location_lat, location_lng);
+    current_catalog_filtered_list = filter_visible_catalog_items(current_catalog, viewer_params.location_lat, viewer_params.location_lng);
     if (current_catalog_filtered_list != null) {
 
         catalogDiv_select = create_catalog_select_list('catalogDiv_select', current_catalog_filtered_list.list);
@@ -3233,12 +1756,12 @@ function checkFilterTimeChanged()
     } else {
         var hhmm = newvalue.split(':');
         if (hhmm.length != 2) {
-            document.getElementById(error_text).innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format time (HH:MM)";
             return;
         }
         UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
         if (UTCtime_ms == null) {
-            document.getElementById(error_text).innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format time (HH:MM)";
             return;
         }
         console.log("checkFilterTimeChanged, time ", UTCtime_ms);
@@ -3282,16 +1805,18 @@ function wikiReset()
     wikiIframe = null;
 }
 
-function noWikiAvailable()
+function noWikiAvailable(alt_wikitext, error_text)
 {
     if (alt_wikitext != null) {
         console.log("noWikiAvailable", alt_wikitext);
-
-        document.getElementById(wiki_panel).style.height = "300px";
-        document.getElementById(wiki_panel).style.width = wiki_panel_width;
-        document.getElementById(wiki_panel).innerHTML = alt_wikitext;
-
-        alt_wikitext = null;
+        document.getElementById(info_panels.wiki_panel).style.height = "200px";
+        document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
+        document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + alt_wikitext + "</p>";
+    } else if (error_text != null) {
+        console.log("noWikiAvailable", error_text);
+        document.getElementById(info_panels.wiki_panel).style.height = "50px";
+        document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
+        document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + error_text + "</p>";
     }
 }
 
@@ -3301,20 +1826,20 @@ function getWikiContent(pageid)
 
     console.log("getWikiContent, pageid", pageid);
 
-    document.getElementById(wiki_panel).innerHTML = null;
-    document.getElementById(wiki_panel).style.height = "700px";
-    document.getElementById(wiki_panel).style.width = wiki_panel_width;
+    document.getElementById(info_panels.wiki_panel).innerHTML = "";
+    document.getElementById(info_panels.wiki_panel).style.height = element_div_size;
+    document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
 
     // use IFRAME and mobile wiki page
     wikiReset();
 
     console.log("getWikiContent, create new IFRAME");
     wikiIframe = document.createElement("IFRAME");
-    wikiIframe.width = wiki_frame_width;
-    wikiIframe.height = 700;
+    wikiIframe.width = info_panels.wiki_frame_width;
+    wikiIframe.height = element_div_size_int;
     console.log("getWikiContent, set IFRAME src", "https://en.m.wikipedia.org/?curid="+pageid);
     wikiIframe.setAttribute("src", "https://en.m.wikipedia.org/?curid="+pageid);
-    document.getElementById(wiki_panel).appendChild(wikiIframe);
+    document.getElementById(info_panels.wiki_panel).appendChild(wikiIframe);
 }
 
 function charIsNumber(c)
@@ -3357,13 +1882,14 @@ function reformatTargetName(name)
     return newname;
 }
 
-function showWikiTarget(wiki_target)
+function showWikiTarget(wiki_target, alt_text)
 {
     if (!document.getElementById("wikiCheckbox").checked) {
         wikiReset();
-        noWikiAvailable();
+        noWikiAvailable(alt_text, null);
         return;
     }
+
     var url = "https://en.wikipedia.org/w/api.php?action=query&redirects&" +
               "format=json&formatversion=2&prop=revisions&origin=*&titles=";
 
@@ -3380,20 +1906,24 @@ function showWikiTarget(wiki_target)
                     return;
                 }
                 response.json().then(function(jsonData) {
-                    console.log('showWiki, get page id, got response from HTTP GET');
+                    console.log('sshowWikiTarget, get page id, got response from HTTP GET', wiki_target);
                     var pageid = jsonData.query.pages[0].pageid;
                     if (pageid) {
                         getWikiContent(pageid);
                     } else {
-                        console.log("Failed to get Wiki page id from json");
+                        var error_text = "Failed to get Wiki page id from json for " + wiki_target;
+                        console.log(error_text);
                         wikiReset();
-                        noWikiAvailable();
+                        noWikiAvailable(alt_text, error_text);
                     }
                 })
             }
         )
         .catch(function(err) {
-            console.log('Problem accessing Wiki. Fetch Error :', err);
+            var error_text = 'Problem accessing Wiki. Fetch Error :' + err;
+            console.log(error_text);
+            wikiReset();
+            noWikiAvailable(alt_text, error_text);
         }
     );
 }
@@ -3405,9 +1935,13 @@ function showWiki()
     }
     if (!document.getElementById("wikiCheckbox").checked) {
         console.log("showWiki:do not show");
-        document.getElementById(wiki_panel).style.height = "0px";
-        document.getElementById(wiki_panel).style.width = "0px";
-        wikiReset();
+        var wiki_elem = document.getElementById(info_panels.wiki_panel);
+        if (wiki_elem) {
+            wiki_elem.style.height = "0px";
+            wiki_elem.style.width = "0px";
+            wiki_elem.innerHTML = "";
+            wikiReset();
+        }
         return;
     }
     console.log("showWiki");
@@ -3424,7 +1958,7 @@ function showWiki()
         } else {
             console.log("showWiki, no current catalog target, remove wiki");
             if (wikiIframe != null) {
-                //document.getElementById(wiki_panel).removeChild(wikiIframe);
+                //document.getElementById(info_panels.wiki_panel).removeChild(wikiIframe);
                 wikiIframe = null;
             }
             return;
@@ -3434,12 +1968,21 @@ function showWiki()
         wiki_target = reformatTargetName(image_target);
     }
 
-    showWikiTarget(wiki_target);
+    showWikiTarget(wiki_target, null);
 }
 
 // Seeing widget from https://www.meteoblue.com/
 function showWeatherForecast(telescope_location_chile)
 {
+    if (url_view != "weather" && !document.getElementById("weatherCheckbox").checked) {
+        var elem = document.getElementById(info_panels.weather_panel);
+        if (elem) {
+            elem.innerHTML = "";
+            elem.style.height = "0px";
+            elem.style.width = "0px";
+        }
+        return;
+    }
     if (current_telescope.weather == null) {
         return;
     }
@@ -3460,9 +2003,11 @@ function showWeatherForecast(telescope_location_chile)
     // Add a delay before showing weather, otherwise it will be shown
     // first and screen jumps up and down
     setTimeout(function(){ 
-        document.getElementById(weather_panel).style.height = "700px";
-        document.getElementById(weather_panel).style.width = "600px";
-        document.getElementById(weather_panel).innerHTML = current_telescope.weather_url;
+        if (url_view == "weather" || document.getElementById("weatherCheckbox").checked) {
+            document.getElementById(info_panels.weather_panel).style.height = element_div_size;
+            document.getElementById(info_panels.weather_panel).style.width = element_div_size;
+            document.getElementById(info_panels.weather_panel).innerHTML = current_telescope.weather_url;
+        }
     }, 1000);
 }
 

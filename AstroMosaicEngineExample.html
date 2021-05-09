@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html lang = "en">
+<head></head>
+<link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+</head>
+
+<body>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<div id="target-div" style="width:300px;height:300px;"></div>
+<div id="day-div" style="width:300px;height:300px;"></div>
+<div id="year-div" style="width:300px;height:300px;"></div>
+
+<script type="text/javascript" src="AstroMosaicEngine.js"></script>
+
+<script>
+
+var viewer_params = {
+    fov_x : 37,                 // x fov in degrees
+    fov_y : 43,                 // y fov in degrees
+    location_lat : 28.29970,    // location latitude
+    location_lng : -16.50826,   // location longitude
+    horizonSoft : null,         // soft horizon limit or null
+    horizonHard : [30],         // hard horizon limit or null
+    meridian_transit : null,    // meridian transit or null
+    UTCdate_ms : null,          // UTC date in milliseconds at the start of the day, null for current date
+    isCustomMode : true,        // use custom colors
+    chartTextColor : "white",   // custom chart text color
+    gridlinesColor : "lightgray",// custom chart grid lines color
+    backgroundColor : "black"   // custom chart background color
+};
+
+AstroMosaicEngine("horsehead nebula", viewer_params, "target-div", "day-div", "year-div");
+
+</script>
+</body>
+</html>
