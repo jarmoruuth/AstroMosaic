@@ -21,19 +21,24 @@
 var viewer_params = {
     fov_x : 37,                 // x fov in degrees
     fov_y : 43,                 // y fov in degrees
-    location_lat : 28.29970,    // location latitude
-    location_lng : -16.50826,   // location longitude
+    location_lat : 28.29970,    // location latitude (here Teide)
+    location_lng : -16.50826,   // location longitude (here Teide)
     horizonSoft : null,         // soft horizon limit or null
     horizonHard : [30],         // hard horizon limit or null
     meridian_transit : null,    // meridian transit or null
     UTCdate_ms : null,          // UTC date in milliseconds at the start of the day, null for current date
+    timezoneOffset: null,       // difference between UTC time and local time, in minutes, null for UTC, should match with lat/lng
     isCustomMode : true,        // use custom colors
     chartTextColor : "white",   // custom chart text color
-    gridlinesColor : "lightgray",// custom chart grid lines color
+    gridlinesColor : "gray",    // custom chart grid lines color
     backgroundColor : "black"   // custom chart background color
 };
 
-AstroMosaicEngine("horsehead nebula", viewer_params, "target-div", "day-div", "year-div");
+// we could use local time zone but it should match with lat/lng
+// var d = new Date();
+// viewer_params.timezoneOffset = d.getTimezoneOffset();
+
+AstroMosaicEngine("M82", viewer_params, "target-div", "day-div", "year-div");
 
 </script>
 </body>

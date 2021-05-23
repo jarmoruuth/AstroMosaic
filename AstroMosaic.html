@@ -243,8 +243,19 @@ p {
         </form>
     </div>
     <div>
+        <form action="javascript:filterMagnitudeChanged()">
+            Magnitude:
+            <input type="text" id="catalogFilterMagnitude" size=5>
+        </form>    
+    </div>
+    <div>
         <form action="javascript:ViewImage(0)">
             <input type="checkbox" id="wikiCheckbox">Wiki
+        </form>    
+    </div>
+    <div>
+        <form action="javascript:ViewImage(0)">
+            <input type="checkbox" id="textCheckbox">Text
         </form>    
     </div>
     <div>
@@ -259,7 +270,7 @@ p {
 
 <div id="footerDiv" class="footer">
     <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a></p>
-    <p><button style="background-color:white" onclick="alert(version_text)">Version info</button>
+    <p><button id="version-button" style="background-color:white" onclick="alert(version_text)">Version info</button>
     <a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
 </div>
 
@@ -271,24 +282,35 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
+var version_number = "1.51";
+
 var version_text = 
+    "Version " + version_number + "\n"+
+    "- Fixes to Wiki output\n" +
+    "- Added checkbox for text only info of catalog items\n" +
+    "- Added filtering based on magnitude (although default catalogs do not have that yet)\n" +
+    "- Fix to Slooh 500 catalog field ordering (in .json file)\n" +
+    "- Fix to gridlines and time printing, thanks for tips goes to Ed Kalin\n" +
+    "- Added basic time zone support. Field timezoneOffset can optionally have difference" + 
+    " between UTC time and local time, in minutes (as returned by getTimezoneOffset())\n" +
+    "- Some more cleanup\n" +
     "Version 1.50\n"+
-    "-Separated AstroMosaic engine to a separate AstroMosaicEngine.js file\n" +
-    "-Interface reorganizations\n" +
+    "- Separated AstroMosaic engine to a separate AstroMosaicEngine.js file\n" +
+    "- Interface reorganizations\n" +
     "Version 1.40\n"+
-    "-Fixed CHI-6 FoV\n" +
+    "- Fixed CHI-6 FoV\n" +
     "Version 1.39\n"+
-    "-Added Telescope Live CHI-6 telescope\n" +
+    "- Added Telescope Live CHI-6 telescope\n" +
     "Version 1.38\n"+
-    "-Fixed URL parameter handling\n" +
+    "- Fixed URL parameter handling\n" +
     "Version 1.37\n"+
-    "-Added add_catalog URL parameter to add your own catalog\n" +
+    "- Added add_catalog URL parameter to add your own catalog\n" +
     "Version 1.36\n"+
-    "-Fix to coordinate handling, format like 05:41.0 -02:30 was not handled correctly\n" +
+    "- Fix to coordinate handling, format like 05:41.0 -02:30 was not handled correctly\n" +
     "Version 1.35\n"+
-    "-Fix to decimal number handling, sign was sometimes dropped\n" +
+    "- Fix to decimal number handling, sign was sometimes dropped\n" +
     "Version 1.34\n"+
-    "-Fix to catalog filtering\n" +
+    "- Fix to catalog filtering\n" +
     "Version 1.33\n"+
     "- Reworked internal data structures\n" +
     "- Url parameter services_json=url to give services and telescopes in a json file\n" +
@@ -354,6 +376,8 @@ var version_text =
     "Version 1.00\n"+
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
+
+document.getElementById("version-button").innerText= "v." + version_number + " info";
 
 var startup_image = "Crescent nebula";
 
@@ -505,35 +529,35 @@ var all_services = {
             name: "Slooh", 
             radec_format: 0, 
             telescopes: [
-                { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide1", meridian_transit: 60 }, 
-                { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
-                { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
-                { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide3", meridian_transit: 60  }, 
-                { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide4", meridian_transit: 60  }, 
+                { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, weather: "slooh-teide", horizon_limits: "slooh-teide1", meridian_transit: 60 }, 
+                { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide3", meridian_transit: 60  }, 
+                { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide4", meridian_transit: 60  }, 
 
-                { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }
+                { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }
             ]
         },
         { 
             name: "Telescope Live", 
             radec_format: 1, 
             telescopes: [
-                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60  },
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, timezoneOffset: null, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60  },
                 
-                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
             
-                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.47253, lng: -70.76300, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
             ] 
         }
     ],
@@ -606,6 +630,7 @@ var viewer_params = {
     horizonHard : null,
     meridian_transit : null,
     UTCdate_ms : null,
+    timezoneOffset : null,  // as returned by timezoneOffset(), null means UTC, should match with lat/lng
     grid_type : null,
     grid_size_x : null,
     grid_size_y : null,
@@ -626,8 +651,8 @@ var info_panels = {
 };
 
 var engine_native_resources = {
-    show_wiki_target : function(){},
-    wiki_reset : function(){},
+    aladin_object_clicked : function(){},
+    reset_view : function(){},
     sun_rise_set : function(){},
     object_altitude_init : function(){},
     object_altaz : function(){},
@@ -670,6 +695,7 @@ var catalog_date = null;
 var catalog_filter_time = null;
 var catalogFilterDegrees = null;
 var catalogFilterMoon = null;
+var catalogFilterMagnitude = null;
 var catalog_index = null;
 
 var wikiChecked = false;
@@ -842,8 +868,8 @@ function initAstroMosaic()
     update_telescope_list(current_telescope_service.name);
     update_catalog_list();
 
-    engine_native_resources.show_wiki_target = showWikiTarget;
-    engine_native_resources.wiki_reset = wikiReset;
+    engine_native_resources.aladin_object_clicked = showWikiTarget;
+    engine_native_resources.reset_view = wikiReset;
 }
 
 function init_all_services()
@@ -1073,6 +1099,7 @@ function set_url_add_service(url_add_service, clear_old_services)
             var new_telescope = {
                 name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), 
                 lat: parseFloat(params[4]), lng: parseFloat(params[5]),
+                timezoneOffset : null,
                 alt: 0, weather: null, 
                 horizon_limits: horizon_0, meridian_transit: 0
             };
@@ -1277,6 +1304,7 @@ function ViewImage(oper)
     }
     checkFilterChanged();
     checkFilterTimeChanged();
+    checkFilterMagnitudeChanged();
 
     //console.log("curdate", curdate);
     viewer_params.UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
@@ -1313,6 +1341,7 @@ function ViewImage(oper)
             }
         }
     }
+    viewer_params.timezoneOffset = null; // current_telescope_service.telescopes[i].timezoneOffset;
 
     if (url_view == "all") {
         var img_fov = document.getElementById("overlap_percentage").value;
@@ -1390,38 +1419,70 @@ function ViewImage(oper)
     }
 }
 
+function addTabRow(tab, v1, v2)
+{
+    return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
+}
+
+function dataObjectToTable(data)
+{
+    var tab = "<BR><TABLE>";
+    tab = addTabRow(tab, "Name", data.name);
+    tab = addTabRow(tab, "Type", data.info.type);
+    tab = addTabRow(tab, "RA/DEC",  data.info.radec);
+    tab = addTabRow(tab, "Constellation", data.info.constellation);
+    tab = addTabRow(tab, "Magnitude", data.info.mag);
+    tab = addTabRow(tab, "Distance (Mly)", data.info.distance);
+    tab = addTabRow(tab, "Notes", data.info.notes);
+    tab = addTabRow(
+            tab, 
+            "Url", 
+            '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.name.replace(/ /g, "+")+'">SIMBAD</a>');
+    tab = tab + "</TABLE>";
+    return tab;
+}
+
+function catalogToDataObject(target)
+{
+    // target array
+    //   0      1     2      3       4      5       6      7       8
+    // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+    var catname = target[0];    // CAT
+    var extname = target[7];    // NAME
+    var dispname;
+    if (extname != "") {
+        dispname = catname + ', ' + extname;
+    } else {
+        dispname = catname;
+    }
+    return {
+            name: dispname, 
+            wikiname: catname,
+            info: { 
+                    radec: target[1].toFixed(5) + ' ' + target[2].toFixed(5),
+                    type: target[3],
+                    constellation: target[4],
+                    mag: target[5],
+                    distance: target[6],
+                    notes: target[8]
+            }
+        };
+}
+
 function addJsonToAladinCatalog(cat)
 {
     cat.AladinCatalog = A.catalog({name: cat.name, labelColumn: 'name', displayLabel: true, labelColor: cat.color, labelFont: '12px sans-serif'});
     cat.AladinCatalog.hide();
 
     for (var i = 0; i < cat.targets.length; i++) {
-        //   0      1     2      3       4      5       6      7       8
-        // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
-        var catname = cat.targets[i][0];    // CAT
-        var extname = cat.targets[i][7];    // NAME
-        var dispname;
-        if (extname != "") {
-            dispname = catname + ', ' + extname;
-        } else {
-            dispname = catname;
-        }
         if (i == 0) {
             console.log("addJsonToAladinCatalog:add", cat.targets[i], name);
         }
-
-        cat.AladinCatalog.addSources(A.source(cat.targets[i][1] * hoursToDeg, cat.targets[i][2], 
-                        {
-                            name: dispname, 
-                            wikiname: catname,
-                            info: { 
-                                    type: cat.targets[i][3],
-                                    constellation: cat.targets[i][4],
-                                    mag: cat.targets[i][5],
-                                    distance: cat.targets[i][6],
-                                    notes: cat.targets[i][8]
-                            }
-                        } ));
+        cat.AladinCatalog.addSources(
+                            A.source(
+                                cat.targets[i][1] * hoursToDeg, 
+                                cat.targets[i][2], 
+                                catalogToDataObject(cat.targets[i])));
     }
 }
 
@@ -1485,8 +1546,8 @@ function create_catalog_select_list(name, list)
     x.setAttribute("id", name);
 
     for (var i = 0; i < list.length; i++) {
-        if (i < 3) {
-            console.log("list[i]", list[i]);
+        if (i == 1) {
+            console.log("list[", i, "]", list[i]);
         }
         var y = document.createElement("option");
         y.setAttribute("value", list[i][0]);
@@ -1524,6 +1585,8 @@ function filter_visible_catalog_items(cat, lat, lng)
     }
     var fl = [];
     fl[fl.length] = ['', ''];
+    var catalog_objects = [];
+    catalog_objects[catalog_objects.length] = null;
 
     // if object altitude is above catalogFilterDegrees degrees in any of the following
     // points during the night we add it to list
@@ -1613,6 +1676,11 @@ function filter_visible_catalog_items(cat, lat, lng)
                 }
             }
         }
+        if (addToList && catalogFilterMagnitude != null) {
+            if (cat.targets[i][5] > catalogFilterMagnitude) {
+                addToList = false;
+            }
+        }
         if (addToList) {
             //   0      1     2      3       4      5       6      7       8
             // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
@@ -1624,16 +1692,14 @@ function filter_visible_catalog_items(cat, lat, lng)
             if (cat.targets[i][3] != "") {
                 name = name + ', ' + cat.targets[i][3];     // TYPE
             }
-            if (fl.length == 0) {
-                console.log("filter_visible_catalog_items:add", cat.targets[i], name);
-            }
             fl[fl.length] = [ 
                 cat.targets[i][1].toFixed(5) + ' ' +  + cat.targets[i][2].toFixed(5),
                 name
             ];
+            catalog_objects[catalog_objects.length] = cat.targets[i];
         }
     }
-    return { list: fl };
+    return { list: fl, catalog_objects: catalog_objects };
 }
 
 function init_catalog_view_list()
@@ -1669,8 +1735,6 @@ function init_catalog_view_list()
                                     catalog_index = catalogDiv_select.selectedIndex;
                                     if (catalog_index == 0) {
                                         catalog_index = null;
-                                    } else {
-                                        catalog_index = catalog_index - 1;
                                     }
                                     ViewImage(0);
                                 };
@@ -1785,6 +1849,37 @@ function filterTimeChanged()
     }
 }
 
+function checkFilterMagnitudeChanged()
+{
+    if (url_view != "all") {
+        return;
+    }
+    var newvalue_str = document.getElementById("catalogFilterMagnitude").value;
+    console.log("checkFilterMagnitudeChanged, magnitude value", newvalue);
+    if (newvalue_str == '') {
+        var newvalue = null;
+    } else {
+        var newvalue = parseFloat(newvalue_str);
+    }
+    if (catalogFilterMagnitude != newvalue) {
+        // time changed, reset view list
+        console.log("checkFilterMagnitudeChanged, magnitude changed, reset catalog view");
+        catalogFilterMagnitude = newvalue;
+        catalog_reset();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function filterMagnitudeChanged()
+{
+    console.log("filterMagnitudeChanged");
+    if (checkFilterMagnitudeChanged()) {
+        ViewImage(0);
+    }
+}
+
 function catalog_reset()
 {
     catalog_filters_changed = true;
@@ -1805,15 +1900,16 @@ function wikiReset()
     wikiIframe = null;
 }
 
-function noWikiAvailable(alt_wikitext, error_text)
+function noWikiAvailable(alt_data, error_text)
 {
-    if (alt_wikitext != null) {
-        console.log("noWikiAvailable", alt_wikitext);
+    if (alt_data != null) {
+        console.log("noWikiAvailable:show alt_data");
+        var tab = dataObjectToTable(alt_data);
         document.getElementById(info_panels.wiki_panel).style.height = "200px";
         document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
-        document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + alt_wikitext + "</p>";
+        document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + tab + "</p>";
     } else if (error_text != null) {
-        console.log("noWikiAvailable", error_text);
+        console.log("noWikiAvailable:show error_text");
         document.getElementById(info_panels.wiki_panel).style.height = "50px";
         document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
         document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + error_text + "</p>";
@@ -1882,11 +1978,17 @@ function reformatTargetName(name)
     return newname;
 }
 
-function showWikiTarget(wiki_target, alt_text)
+function showWikiTarget(data)
 {
-    if (!document.getElementById("wikiCheckbox").checked) {
+    showWikiTargetOrAlt(data.wikiname, data);
+}
+
+function showWikiTargetOrAlt(wiki_target, alt_data)
+{
+    var showWiki = document.getElementById("wikiCheckbox").checked;
+    if (!showWiki) {
         wikiReset();
-        noWikiAvailable(alt_text, null);
+        noWikiAvailable(alt_data, null);
         return;
     }
 
@@ -1906,15 +2008,19 @@ function showWikiTarget(wiki_target, alt_text)
                     return;
                 }
                 response.json().then(function(jsonData) {
-                    console.log('sshowWikiTarget, get page id, got response from HTTP GET', wiki_target);
-                    var pageid = jsonData.query.pages[0].pageid;
+                    console.log('showWikiTarget, get page id, got response from HTTP GET', wiki_target);
+                    if (jsonData.query && jsonData.query.pages) {
+                        var pageid = jsonData.query.pages[0].pageid;
+                    } else {
+                        var pageid = null;
+                    }
                     if (pageid) {
                         getWikiContent(pageid);
                     } else {
                         var error_text = "Failed to get Wiki page id from json for " + wiki_target;
                         console.log(error_text);
                         wikiReset();
-                        noWikiAvailable(alt_text, error_text);
+                        noWikiAvailable(alt_data, error_text);
                     }
                 })
             }
@@ -1923,9 +2029,20 @@ function showWikiTarget(wiki_target, alt_text)
             var error_text = 'Problem accessing Wiki. Fetch Error :' + err;
             console.log(error_text);
             wikiReset();
-            noWikiAvailable(alt_text, error_text);
+            noWikiAvailable(alt_data, error_text);
         }
     );
+}
+
+function clearWikiPanel()
+{
+    var wiki_elem = document.getElementById(info_panels.wiki_panel);
+    if (wiki_elem) {
+        wiki_elem.style.height = "0px";
+        wiki_elem.style.width = "0px";
+        wiki_elem.innerHTML = "";
+        wikiReset();
+    }
 }
 
 function showWiki()
@@ -1933,42 +2050,48 @@ function showWiki()
     if (url_view != "all") {
         return;
     }
-    if (!document.getElementById("wikiCheckbox").checked) {
+    var showWiki = document.getElementById("wikiCheckbox").checked;
+    var showText = document.getElementById("textCheckbox").checked;
+    if (!showWiki && !showText) {
         console.log("showWiki:do not show");
-        var wiki_elem = document.getElementById(info_panels.wiki_panel);
-        if (wiki_elem) {
-            wiki_elem.style.height = "0px";
-            wiki_elem.style.width = "0px";
-            wiki_elem.innerHTML = "";
-            wikiReset();
-        }
+        clearWikiPanel();
         return;
     }
     console.log("showWiki");
 
-    var wiki_target;
-    var c = image_target.substr(0,1);
-    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-        // numeric target, check if we have slooh target selected
-        console.log("showWiki, numeric, try current_catalog");
-        if (catalog_index != null && current_catalog_filtered_list != null) {
-            var name = current_catalog_filtered_list.list[catalog_index][0];
-            console.log("showWiki, use current_catalog_filtered_list", name);
-            wiki_target = reformatTargetName(name);
-        } else {
-            console.log("showWiki, no current catalog target, remove wiki");
-            if (wikiIframe != null) {
-                //document.getElementById(info_panels.wiki_panel).removeChild(wikiIframe);
-                wikiIframe = null;
+    if (showWiki) {
+        var wiki_target;
+        var alt_data = null;
+        var c = image_target.substr(0,1);
+        if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+            // numeric target, check if we have catalog target selected
+            console.log("showWiki, numeric, try current_catalog");
+            if (catalog_index != null && current_catalog_filtered_list != null) {
+                alt_data = catalogToDataObject(current_catalog_filtered_list.catalog_objects[catalog_index]);
+                wiki_target = alt_data.wikiname;
+                console.log("showWiki, use current_catalog_filtered_list", wiki_target);
+            } else {
+                console.log("showWiki, no current catalog target, remove wiki");
+                clearWikiPanel();
+                return;
             }
-            return;
+        } else {
+            console.log("showWiki, use image_target", image_target);
+            wiki_target = reformatTargetName(image_target);
         }
     } else {
-        console.log("showWiki, use image_target", image_target);
-        wiki_target = reformatTargetName(image_target);
+        // showText
+        if (catalog_index != null && current_catalog_filtered_list != null) {
+            console.log("showWiki, text only, use current_catalog_filtered_list", wiki_target);
+            alt_data = catalogToDataObject(current_catalog_filtered_list.catalog_objects[catalog_index]);
+            wiki_target = alt_data.wikiname;
+        } else {
+            console.log("showWiki, text only, no current_catalog_filtered_list");
+            clearWikiPanel();
+            return;
+        }
     }
-
-    showWikiTarget(wiki_target, null);
+    showWikiTargetOrAlt(wiki_target, alt_data);
 }
 
 // Seeing widget from https://www.meteoblue.com/

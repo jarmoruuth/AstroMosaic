@@ -40,6 +40,8 @@
  *              meridian_transit : meridian transit or null,
  *              UTCdate_ms       : start of day UTC date in milliseconds 
  *                                 or null for current day,
+ *              timezoneOffset   : difference between UTC time and local time, in minutes,
+ *                                 null for UTC, should match with lat/lng
  *              isCustomMode     : true to use custom colors, false otherwise
  *                                 if true, all custom colorts below must be given,
  *              chartTextColor   : custom chart text color,
@@ -85,6 +87,7 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         horizonHard : params.horizonHard,
         meridian_transit : params.meridian_transit,
         UTCdate_ms : params.UTCdate_ms,
+        timezoneOffset : params.timezoneOffset,
         grid_type : "fov",
         grid_size_x : 1,
         grid_size_y : 1,
@@ -639,7 +642,7 @@ function StartAstroMosaicViewerEngine(
         }
     }
 
-    function setChartOptions(title, seriesStyle)
+    function setChartOptions(title, hAxisTitle, seriesStyle, hAxisFormat)
     {
         var chartTextStyle = {};
         var gridlinesStyle = {};
@@ -657,16 +660,17 @@ function StartAstroMosaicViewerEngine(
             legendTextStyle: chartTextStyle,
             titleTextStyle: chartTextStyle,
             hAxis: { 
-                title: 'Time (UTC)',
+                title: hAxisTitle,
                 textStyle: chartTextStyle,
                 titleTextStyle: chartTextStyle,
-                gridlines: gridlinesStyle
-                //format: 'HH:mm' 
+                gridlines: gridlinesStyle,
+                format: hAxisFormat
             },
             vAxis: { 
                 title: 'Altitude (degrees)',
                 textStyle: chartTextStyle,
-                titleTextStyle: chartTextStyle
+                titleTextStyle: chartTextStyle,
+                gridlines: gridlinesStyle,
             },
             legend:{
                 textStyle: chartTextStyle
@@ -698,8 +702,8 @@ function StartAstroMosaicViewerEngine(
         var midday = engine_params.UTCdate_ms + day_ms/2;
 
         //engine_data.daydata.addColumn('datetime', 'Time'); Can't get this working...
-        engine_data.daydata.addColumn('string', 'Time');
-        //engine_data.daydata.addColumn('datetime', 'Time');
+        //engine_data.daydata.addColumn('string', 'Time');
+        engine_data.daydata.addColumn('datetime', 'Time');
         engine_data.daydata.addColumn('number', 'Visible');            // object altitude
         if (engine_params.horizonSoft != null) {
             engine_data.daydata.addColumn('number', 'Below soft horizon'); // object altitude if below soft horizon
@@ -721,7 +725,7 @@ function StartAstroMosaicViewerEngine(
 
         var draw_full_day = 0;  // if 0 draw only during astronomical twilight
 
-        // sun rise and set times that close match dome open times
+        // sun rise and set times that closely match dome open times
         var suntimes = sun_rise_set(midday, lat, lng, -12);
 
         var starttime;
@@ -735,6 +739,7 @@ function StartAstroMosaicViewerEngine(
         }
         var prevaz = null;
         var meridian_index = null;
+        var localdate = new Date();
 
         for (var d = starttime; d <= endtime; d = d + interval) {
             //console.log("d",d,"sunrise",suntimes.sunrise,"unset",suntimes.sunset);
@@ -745,8 +750,6 @@ function StartAstroMosaicViewerEngine(
             var moonpos = moon_position(d);
             var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
             moonalt = moon_topocentric_correction(moonalt);
-            var UTCdate = new Date(d);
-            //console.log("d=",d,",altaz=", altaz, ",moonalt=",moonalt);
 
             var visiblealt = null;     // target visible
             var softalt = null;        // target below soft horizon
@@ -768,7 +771,7 @@ function StartAstroMosaicViewerEngine(
                 //console.log("objectalt",objectalt,"horizon_index",horizon_index);
                 //console.log("soft",horizonSoft[horizon_index],"hard",horizonHard[horizon_index]);
                 if (engine_params.horizonSoft != null) {
-                    console.log("drawDayVisibilityandGrid, use both soft and hard horizon");
+                    //console.log("drawDayVisibilityandGrid, use both soft and hard horizon");
                     if (objectalt > engine_params.horizonSoft[horizon_index]) {
                         visiblealt = objectalt;
                     } else if (objectalt > engine_params.horizonHard[horizon_index]) {
@@ -777,7 +780,7 @@ function StartAstroMosaicViewerEngine(
                         hardalt = objectalt;
                     }
                 } else {
-                    console.log("drawDayVisibilityandGrid, only hard horizon");
+                    //console.log("drawDayVisibilityandGrid, only hard horizon");
                     if (objectalt > engine_params.horizonHard[horizon_index]) {
                         visiblealt = objectalt;
                     } else {
@@ -788,25 +791,29 @@ function StartAstroMosaicViewerEngine(
             if (moonalt < 0) {
                 moonalt = null;
             }
+            if (engine_params.timezoneOffset == null) {
+                var celldate = new Date(d + localdate.getTimezoneOffset()*60*1000);
+            } else {
+                var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000);
+            }
             if (engine_params.horizonSoft != null) {
                 var row = [
-                        toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
-                        //UTCdate,
+                        celldate, 
                         getAltitudeCellObject(visiblealt),
                         getAltitudeCellObject(softalt),
                         getAltitudeCellObject(hardalt),
                         getAltitudeCellObject(moonalt)];
             } else {
                 var row = [
-                    toDateString(UTCdate.getUTCHours())+":"+toDateString(UTCdate.getUTCMinutes()), 
-                    //UTCdate,
-                    getAltitudeCellObject(visiblealt),
-                    getAltitudeCellObject(hardalt),
-                    getAltitudeCellObject(moonalt)];
+                        celldate, 
+                        getAltitudeCellObject(visiblealt),
+                        getAltitudeCellObject(hardalt),
+                        getAltitudeCellObject(moonalt)];
             }
             //console.log("row", row);
             rowdata[rowdata.length] = row;
         }
+        console.log("sunrise", new Date(suntimes.sunrise + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000) )
 
         if (meridian_index != null && engine_params.meridian_transit > 0) {
             // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
@@ -834,39 +841,46 @@ function StartAstroMosaicViewerEngine(
             }
         }
 
-        //for (var i = 0; i < rowdata.length; i++) {
-        //    console.log("rowdata", i, rowdata[i])
-        //}
-
         engine_data.daydata.addRows(rowdata);
 
-        // problems with timezone if using date, formatter does not solve all problems
-        //var formatter = new google.visualization.DateFormat({timeZone: 0});
-        //formatter.format(engine_data.daydata, 0);
+        if (engine_params.timezoneOffset == null) {
+            var format = new google.visualization.DateFormat({ pattern: 'HH:mm' + " UTC" });
+        } else {
+            var format = new google.visualization.DateFormat({ pattern: 'HH:mm' });
+        }
+        format.format(engine_data.daydata, 0);
+
+        if (engine_params.timezoneOffset == null) {
+            var hAxisTitle = 'Time (UTC)';
+        } else {
+            var hAxisTitle = 'Time';
+        }
 
         if (engine_params.horizonSoft != null) {
             var options = setChartOptions(
-                        'Target visibility',
-                        { 
-                            0: { color: 'green' },
-                            1: { color: 'orange', lineDashStyle: [4, 2] },
-                            2: { color: 'red', lineDashStyle: [2, 2] },
-                            3: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-                        });
+                            'Target visibility',
+                            hAxisTitle,
+                            { 
+                                0: { color: 'green' },
+                                1: { color: 'orange', lineDashStyle: [4, 2] },
+                                2: { color: 'red', lineDashStyle: [2, 2] },
+                                3: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
+                            },
+                            'HH:mm');
         } else {
             var options = setChartOptions(
-                'Target visibility',
-                { 
-                    0: { color: 'green' },
-                    1: { color: 'red', lineDashStyle: [2, 2] },
-                    2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-                });
+                            'Target visibility',
+                            hAxisTitle,
+                            { 
+                                0: { color: 'green' },
+                                1: { color: 'red', lineDashStyle: [2, 2] },
+                                2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
+                            },
+                            'HH:mm' );
         }
 
-        // material var engine_data.daychart = new google.charts.Line(document.getElementById(engine_panels.dayvisibility_panel));
         engine_data.daychart = new google.visualization.LineChart(document.getElementById(engine_panels.dayvisibility_panel));
 
-        // material engine_data.daychart.draw(engine_data.daydata, google.charts.Line.convertOptions(options));
         engine_data.daychart.draw(engine_data.daydata, options);
 
         var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
@@ -889,9 +903,6 @@ function StartAstroMosaicViewerEngine(
             document.getElementById(engine_panels.dayvisibility_panel_text).style.marginTop = "1px";
             document.getElementById(engine_panels.dayvisibility_panel_text).innerHTML = astro_mosaic_link;
         }
-
-        //console.log("TEST 1990-04-19");
-        //moon_position(Date.UTC(1990, 3, 19));
     }
 
     function getAltitudeCellObject(val)
@@ -911,7 +922,6 @@ function StartAstroMosaicViewerEngine(
         // get midday in UTC time in ms
         var midday = engine_params.UTCdate_ms + day_ms/2;
 
-        //engine_data.yeardata.addColumn('datetime', 'Time'); Can't get this working...
         engine_data.yeardata.addColumn('date', 'Date');
         engine_data.yeardata.addColumn('number', 'Visible');            // object altitude
         engine_data.yeardata.addColumn('number', 'Not visible');        // moon altitude
@@ -954,10 +964,11 @@ function StartAstroMosaicViewerEngine(
                 moonalt = null;
             }
             var row = [
-                    new Date(d),
-                    getAltitudeCellObject(visiblealt),
-                    getAltitudeCellObject(hardalt),
-                    getAltitudeCellObject(moonalt)];
+                        new Date(d),
+                        getAltitudeCellObject(visiblealt),
+                        getAltitudeCellObject(hardalt),
+                        getAltitudeCellObject(moonalt)
+                      ];
             rowdata[rowdata.length] = row;
         }
 
@@ -965,11 +976,13 @@ function StartAstroMosaicViewerEngine(
 
         var options = setChartOptions(
                         'Target visibility at midnight over next 12 months',
+                        'Month',
                         { 
                             0: { color: 'green' },
                             1: { color: 'red', lineDashStyle: [2, 2] },
                             2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-                        });
+                        },
+                        "MMM YYYY");
 
         engine_data.yearchart = new google.visualization.LineChart(document.getElementById(engine_panels.yearvisibility_panel));
 
@@ -1149,7 +1162,7 @@ function StartAstroMosaicViewerEngine(
         //console.log("decimal_to_mmss, secs", secs);
 
         var x = v.substring(0, index);
-        console.log("decimal_to_mmss, x", x);
+        //console.log("decimal_to_mmss, x", x);
         if (x.charAt(0) == '-') {
             sign = '-';
             x = x.substring(1);
@@ -1233,46 +1246,46 @@ function StartAstroMosaicViewerEngine(
     {
         // number, assume coordinates
         coord = trim_spaces(coord);
-        console.log('reformat_coordinates=', coord);
+        //console.log('reformat_coordinates=', coord);
         var numbers = coord.split('/');
         if (numbers.length == 2) {
             coord = trim_spaces(numbers[0] + ' ' + numbers[1]);
             console.log('reformat_coordinates, split by /', coord);
         }
         numbers = coord.split(' ');
-        console.log('reformat_coordinates, numbers.length=', numbers.length);
+        //console.log('reformat_coordinates, numbers.length=', numbers.length);
         if (numbers.length == 2) {
             var ra = numbers[0];
             var dec = numbers[1];
             if (ra.split(':').length == 1) {
                 if (ra.indexOf('.') == -1 && dec.indexOf('.') == -1) {
-                    console.log('no dots, assume HHMMSS DDMMSS');
+                    //console.log('no dots, assume HHMMSS DDMMSS');
                     coord = split_coord(ra) + ' ' + split_coord(dec);
-                    console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
+                    //console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
                 } else {
-                    console.log('assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
+                    //console.log('assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
                     coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
-                    console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
+                    //console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
                 }
             } else {
-                console.log('reformat_coordinates, length 2 and we have :, assume correct format HH:MM:SS DD:MM:SS', coord);
+                //console.log('reformat_coordinates, length 2 and we have :, assume correct format HH:MM:SS DD:MM:SS', coord);
             }
         } else if (numbers.length == 6) {
-            console.log('separated by space, add colons');
+            //console.log('separated by space, add colons');
             coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                     numbers[3] + ':' + numbers[4] + ':' + numbers[5];
-            console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
+            //console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
         } else if (numbers.length == 5) {
-            console.log('badly formatted SIMBAD case, assume zero last number, separated by space, add colons');
+            //console.log('badly formatted SIMBAD case, assume zero last number, separated by space, add colons');
             coord = numbers[0] + ':' + numbers[1] + ':' + numbers[2] + ' ' +
                     numbers[3] + ':' + numbers[4] + ':' + 0;
-            console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
+            //console.log('reformat_coordinates, length "+numbers.length+", use as-is', coord);
         } else {
-            console.log('use as-is');
-            console.log('reformat_coordinates, length 6, reformat', coord);
+            //console.log('use as-is');
+            //console.log('reformat_coordinates, length 6, reformat', coord);
         }
         coord = reformat_coordinates_field_lenghts(coord);
-        console.log('reformat_coordinates, field lengths fixed', coord);
+        //console.log('reformat_coordinates, field lengths fixed', coord);
         return coord;
     }
 
@@ -1308,11 +1321,6 @@ function StartAstroMosaicViewerEngine(
                 }
             }
         }
-    }
-
-    function addTabRow(tab, v1, v2)
-    {
-        return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
     }
 
     function EngineInitAladin(aladin_fov, aladin_target)
@@ -1354,22 +1362,7 @@ function StartAstroMosaicViewerEngine(
                 if (object) {
                     console.log('aladin objectClicked, show object');
                     object.select();
-                    var tab = "<BR><TABLE>";
-                    tab = addTabRow(tab, "Name", object.data.name);
-                    tab = addTabRow(tab, "Type", object.data.info.type);
-                    tab = addTabRow(tab, "RA/DEC",  (object.ra*degToHours).toFixed(5) + ' ' + object.dec.toFixed(5));
-                    tab = addTabRow(tab, "Constellation", object.data.info.constellation);
-                    tab = addTabRow(tab, "Magnitude", object.data.info.mag);
-                    tab = addTabRow(tab, "Distance (Mly)", object.data.info.distance);
-                    tab = addTabRow(tab, "Notes", object.data.info.notes);
-                    tab = addTabRow(
-                            tab, 
-                            "Url", 
-                            '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+object.data.name.replace(/ /g, "+")+'">SIMBAD</a>');
-                
-                    tab = tab + "</TABLE>";
-                    console.log('aladin objectClicked', tab);
-                    engine_native_resources.show_wiki_target(object.data.wikiname, tab);
+                    engine_native_resources.aladin_object_clicked(object.data);
                 } else {
                     console.log('aladin objectClicked, no object');
                 }
@@ -1601,7 +1594,7 @@ function StartAstroMosaicViewerEngine(
             grid_size_y = 5;
         }
 
-        engine_native_resources.wiki_reset();
+        engine_native_resources.reset_view();
 
         var size_x = grid_size_x / 2 - 0.5;
         var size_y = grid_size_y / 2 - 0.5;
