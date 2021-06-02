@@ -684,6 +684,15 @@ function StartAstroMosaicViewerEngine(
         return options;
     }
 
+    function dayVisibilityTime(celldate, time_as_string)
+    {
+        if (time_as_string) {
+            return toDateString(celldate.getUTCHours()) + ":" + toDateString(celldate.getUTCMinutes());
+        } else {
+            return celldate;
+        }
+    }
+
     function drawDayVisibilityandGrid() 
     {
         console.log("drawDayVisibilityandGrid, image_target_list.length", image_target_list.length);
@@ -701,9 +710,17 @@ function StartAstroMosaicViewerEngine(
         // get midday in UTC time in ms
         var midday = engine_params.UTCdate_ms + day_ms/2;
 
-        //engine_data.daydata.addColumn('datetime', 'Time'); Can't get this working...
-        //engine_data.daydata.addColumn('string', 'Time');
-        engine_data.daydata.addColumn('datetime', 'Time');
+        // For time column string seem to be better than time because
+        // Google charts scales the chart with time and does not show
+        // the whole night always. We loose vertical grid lines but
+        // to me it looks better to see the whole night and not only
+        // a part of it.
+        var time_as_string = true;
+        if (time_as_string) {
+            engine_data.daydata.addColumn('string', 'Time');
+        } else {
+            engine_data.daydata.addColumn('datetime', 'Time');
+        }
         engine_data.daydata.addColumn('number', 'Visible');            // object altitude
         if (engine_params.horizonSoft != null) {
             engine_data.daydata.addColumn('number', 'Below soft horizon'); // object altitude if below soft horizon
@@ -792,20 +809,28 @@ function StartAstroMosaicViewerEngine(
                 moonalt = null;
             }
             if (engine_params.timezoneOffset == null) {
-                var celldate = new Date(d + localdate.getTimezoneOffset()*60*1000);
+                if (time_as_string) {
+                    var celldate = new Date(d);
+                } else {
+                    var celldate = new Date(d + localdate.getTimezoneOffset()*60*1000);
+                }
             } else {
-                var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000);
+                if (time_as_string) {
+                    var celldate = new Date(d + engine_params.timezoneOffset*60*1000);
+                } else {
+                    var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000);
+                }
             }
             if (engine_params.horizonSoft != null) {
                 var row = [
-                        celldate, 
+                        dayVisibilityTime(celldate, time_as_string),
                         getAltitudeCellObject(visiblealt),
                         getAltitudeCellObject(softalt),
                         getAltitudeCellObject(hardalt),
                         getAltitudeCellObject(moonalt)];
             } else {
                 var row = [
-                        celldate, 
+                        dayVisibilityTime(celldate, time_as_string),
                         getAltitudeCellObject(visiblealt),
                         getAltitudeCellObject(hardalt),
                         getAltitudeCellObject(moonalt)];
@@ -813,7 +838,6 @@ function StartAstroMosaicViewerEngine(
             //console.log("row", row);
             rowdata[rowdata.length] = row;
         }
-        console.log("sunrise", new Date(suntimes.sunrise + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000) )
 
         if (meridian_index != null && engine_params.meridian_transit > 0) {
             // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
@@ -843,12 +867,15 @@ function StartAstroMosaicViewerEngine(
 
         engine_data.daydata.addRows(rowdata);
 
-        if (engine_params.timezoneOffset == null) {
-            var format = new google.visualization.DateFormat({ pattern: 'HH:mm' + " UTC" });
-        } else {
-            var format = new google.visualization.DateFormat({ pattern: 'HH:mm' });
+        if (!time_as_string) {
+            /*  The following formatting is needed if showing time as a time. */
+            if (engine_params.timezoneOffset == null) {
+                var format = new google.visualization.DateFormat({ pattern: 'HH:mm' + " UTC" });
+            } else {
+                var format = new google.visualization.DateFormat({ pattern: 'HH:mm' });
+            }
+            format.format(engine_data.daydata, 0);
         }
-        format.format(engine_data.daydata, 0);
 
         if (engine_params.timezoneOffset == null) {
             var hAxisTitle = 'Time (UTC)';
@@ -1435,8 +1462,6 @@ function StartAstroMosaicViewerEngine(
             while (col >= -size_x) {
                 var col_ra = ra + col * (img_fov * engine_params.fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
 
-                console.log("panel ra/dec=", col_ra, "/", row_dec);
-
                 // now center ra/dec is col_ra/row_dec
                 // calculate corners
                 var row_dec1 = row_dec + engine_params.fov_y/2;
@@ -1453,8 +1478,6 @@ function StartAstroMosaicViewerEngine(
                     [col_ra2-col_ra2_delta, row_dec2], 
                     [col_ra1-col_ra1_delta, row_dec1]
                 ];
-
-                //console.log("panel = ", panel);
 
                 var line_color = '#ee2345';
 
