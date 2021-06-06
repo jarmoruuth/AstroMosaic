@@ -269,9 +269,9 @@ p {
 </div>
 
 <div id="footerDiv" class="footer">
-    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com">astroimagetools@gmail.com</a></p>
+    <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz" target="_blank">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com" target="_blank">astroimagetools@gmail.com</a></p>
     <p><button id="version-button" style="background-color:white" onclick="alert(version_text)">Version info</button>
-    <a href="AstroMosaicInfo.html#credits">Credits</a></small></p>
+    <a href="AstroMosaicInfo.html#credits" target="_blank">Credits</a></small></p>
 </div>
 
 </div>
@@ -282,10 +282,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.52";
+var version_number = "1.53";
 
 var version_text = 
     "Version " + version_number + "\n"+
+    "- Changed some links to open in a new tab so the current view context is not lost\n" +
+    "Version 1.52\n"+
     "- Changed visibility chart axis so that it always shows full night\n" +
     "Version 1.51\n"+
     "- Fixes to Wiki output\n" +
@@ -1439,7 +1441,7 @@ function dataObjectToTable(data)
     tab = addTabRow(
             tab, 
             "Url", 
-            '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.name.replace(/ /g, "+")+'">SIMBAD</a>');
+            '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
     tab = tab + "</TABLE>";
     return tab;
 }
