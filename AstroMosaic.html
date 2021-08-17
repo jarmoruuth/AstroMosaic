@@ -282,10 +282,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.54";
+var version_number = "1.55";
 
 var version_text = 
     "Version " + version_number + "\n"+
+    "- Fixed Wiki for Sharpless targets\n" +
+    "Version 1.54\n"+
     "- Added Hubble WFC3 telescope\n" +
     "Version 1.53\n"+
     "- Changed some links to open in a new tab so the current view context is not lost\n" +
@@ -1960,7 +1962,9 @@ function reformatCheckName(target, prefix, name)
 {
     var c = target.substr(0, prefix.length).toUpperCase();
     var cn = target.substr(prefix.length, 1);
-    if (c == prefix.toUpperCase() && (cn == ' ' || charIsNumber(cn))) {
+    if (c == prefix.toUpperCase() && cn == '-') {
+        return name + target.substr(prefix.length);
+    } else if (c == prefix.toUpperCase() && (cn == ' ' || charIsNumber(cn))) {
         return name + ' ' + target.substr(prefix.length);
     } else {
         return null;
@@ -1981,6 +1985,9 @@ function reformatTargetName(name)
     }
     if (newname == null) {
         newname = reformatCheckName(name, 'IC', 'IC');
+    }
+    if (newname == null) {
+        newname = reformatCheckName(name, 'SH2', 'Sh2');
     }
     if (newname == null) {
         newname = name;
