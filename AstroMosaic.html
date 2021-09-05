@@ -282,10 +282,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.55";
+var startup_image = "M56";
 
 var version_text = 
-    "Version " + version_number + "\n"+
+    "Version 1.56\n"+
+    "- Resolving names from loaded catalogs if Sesame name resolver fails\n" +
+    "Version 1.55\n"+
     "- Fixed Wiki for Sharpless targets\n" +
     "Version 1.54\n"+
     "- Added Hubble WFC3 telescope\n" +
@@ -385,9 +387,9 @@ var version_text =
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
 
-document.getElementById("version-button").innerText= "v." + version_number + " info";
+var version_number = version_text.substring(8, 12);
 
-var startup_image = "Crescent nebula";
+document.getElementById("version-button").innerText= "v." + version_number + " info";
 
 var hoursToDeg = 15;
 var hour_ms = 60*60*1000;

@@ -1021,6 +1021,24 @@ function StartAstroMosaicViewerEngine(
         }
     }
 
+    // update globals when target namer is found
+    // herte we assume target coordinates are in image_target global variable
+    function target_name_found()
+    {
+        resolved_name = image_target;
+
+        // change image_target from name to coordinates
+        image_target = trim_spaces(image_target);
+        console.log("find_coordinates:image_target=", image_target);
+        image_target = reformat_coordinates(image_target);
+        //document.getElementById(engine_panels.status_text).innerHTML = "Resolved RA/DEC " + image_target;
+        if (engine_view_type == "all") {
+            document.getElementById(engine_panels.status_text).innerHTML = "";
+        }
+
+        resolved_coordinates = image_target;
+    }
+
     // Find coordinates from Sesame XML output
     // or SIMBAD ascii output
     function find_coordinates(str)
@@ -1066,20 +1084,171 @@ function StartAstroMosaicViewerEngine(
             }
             image_target = coord.substr(0, i);
         }
-        resolved_name = image_target;
 
-        // change image_target from name to coordinates
-        image_target = trim_spaces(image_target);
-        console.log("find_coordinates:image_target=", image_target);
-        image_target = reformat_coordinates(image_target);
-        //document.getElementById(engine_panels.status_text).innerHTML = "Resolved RA/DEC " + image_target;
-        if (engine_view_type == "all") {
-            document.getElementById(engine_panels.status_text).innerHTML = "";
-        }
-
-        resolved_coordinates = image_target;
+        target_name_found();
 
         return true;
+    }
+
+    // find catalog by name
+    function findCatalogName(name)
+    {
+        var catalog_name = null;
+        var target_is_catalog_name = true;
+        var is_exact_match = true;
+        var retname = name;
+
+        var upname = trim_spaces(name).toUpperCase().replace(/ /g, "");
+
+        if ((upname.substring(0, 1) == 'M' && isNumber(upname.substring(1, 2)))
+            || upname.substring(0, 7) == 'MESSIER') 
+        {
+            catalog_name = 'Messier';
+            retname = upname.replace("MESSIER", "M ").replace(/  /g, " ");
+            retname = retname.replace("M", "M ").replace(/  /g, " ");
+        } else if (upname.substring(0, 3) == 'NGC') {
+            retname = upname.replace("NGC", "NGC ").replace(/  /g, " ");
+            catalog_name = 'NGC';
+        } else if (upname.substring(0, 2) == 'IC') {
+            retname = upname.replace("IC", "IC ").replace(/  /g, " ");
+            catalog_name = 'IC';
+        } else if (upname.substring(0, 3) == 'RCW') {
+            retname = upname.replace("RCW", "RCW ").replace(/  /g, " ");
+            catalog_name = 'RCW';
+        } else if (upname.substring(0, 3) == 'SH2') {
+            catalog_name = 'Sharpless';
+            retname = upname.replace("SH2", "SH2");
+        } else if ((upname.substring(0, 1) == 'G' && isNumber(upname.substring(1, 2))) 
+                   || upname.substring(0, 3) == 'GUM') 
+        {
+            catalog_name = 'RCW';
+            retname = upname.replace("GUM", "G ").replace(/ /g, "");
+            retname = retname.replace("G", "G ").replace(/ /g, "");
+            target_is_catalog_name = false;
+            is_exact_match = true;
+        } else {
+            target_is_catalog_name = false;
+            is_exact_match = false;
+        }
+        if (catalog_name != null) {
+            console.log("findCatalogName " + retname + " from " + catalog_name + ", exact_match " + is_exact_match);
+        } else {
+            console.log("findCatalogName " + retname + " from all catalogs, exact_match " + is_exact_match);
+        }
+        return { name: retname, catalog_name: catalog_name, target_is_catalog_name: target_is_catalog_name, is_exact_match: is_exact_match};
+    }
+
+    function findTargetFromCatalog(targets, name)
+    {
+        if (targets == null) {
+            console.log("findTargetFromCatalog null catalog");
+            return null;
+        }
+        for (var i = 0; i < targets.length; i++) {
+            if (targets[i][0].indexOf(name) != -1) {
+                return targets[i];
+            }
+        }
+        return null;
+    }
+
+    function isNumber(c)
+    {
+        if (c == null || c == undefined) {
+            return false;
+        }
+        return c >= '0' && c <= '9';
+    } 
+
+    function doExactMatch(s, n)
+    {
+        var i = s.indexOf(n);
+        if (i == -1) {
+            return false;
+        }
+        if (isNumber(s[i + n.length])) {
+            // another number follows, so we got G11 instead of G1
+            return false;
+        }
+        console.log("doExactMatch found " + n + " from " + s);
+        return true;
+    }
+
+    function findExactMatch(targets, name)
+    {
+        if (targets == null) {
+            console.log("findExactMatch null catalog");
+            return null;
+        }
+        for (var i = 0; i < targets.length; i++) {
+            if (doExactMatch(targets[i][0], name)       // CAT
+               || doExactMatch(targets[i][7], name)     // NAME
+               || doExactMatch(targets[i][8], name))    // INFO
+            {
+                return targets[i];
+            }
+        }
+        return null;
+    }
+
+    function findFromCatalog(targets, name)
+    {
+        if (targets == null) {
+            console.log("findFromCatalog null catalog");
+            return null;
+        }
+        var re = new RegExp(name, "i");
+        for (var i = 0; i < targets.length; i++) {
+            if (targets[i][0].search(re) != -1       // CAT
+               || targets[i][7].search(re) != -1     // NAME
+               || targets[i][8].search(re) != -1)    // INFO
+            {
+                return targets[i];
+            }
+        }
+        return null;
+    }
+
+    // if name resolver fails try to reolve name from loaded catalogs
+    function resolveNameFromCatalogs(name)
+    {
+        console.log("resolveNameFromCatalogs " + name);
+
+        var catinfo = findCatalogName(name);
+        var target_info = null;
+
+        for (var i = 0; i < engine_catalogs.length; i++) {
+            if (catinfo.catalog_name != null) {
+                // we check specific catalog
+                if (catinfo.catalog_name != engine_catalogs[i].name) {
+                    // not the catalog we want to check
+                    console.log("resolveNameFromCatalogs skip catalog " + engine_catalogs[i].name);
+                    continue;
+                }
+            }
+            console.log("resolveNameFromCatalogs check catalog " + engine_catalogs[i].name + " for name " + catinfo.name);
+            if (catinfo.target_is_catalog_name) {
+                target_info = findTargetFromCatalog(engine_catalogs[i].targets, catinfo.name);
+            } else if (catinfo.is_exact_match) {
+                target_info = findExactMatch(engine_catalogs[i].targets, catinfo.name);
+            } else {
+                target_info = findFromCatalog(engine_catalogs[i].targets, catinfo.name);
+            }
+            if (target_info != null) {
+                // found
+                break;
+            }
+        }
+        if (target_info != null) {
+            // found the target
+            image_target = target_info[1] + " " + target_info[2];
+            console.log("resolveNameFromCatalogs found " + target_info);
+            target_name_found();
+            return true;
+        } else {
+            console.log("resolveNameFromCatalogs not found");
+            return false;
+        }
     }
 
     // Resolve image coordinates from Simbad database using name
@@ -1119,17 +1288,22 @@ function StartAstroMosaicViewerEngine(
                 function(response) {
                     if (response.status !== 200) {
                         clearTimeout(waitingTimeout);
-                        var txt = 'Problem accessing Sesame name resolver. Status Code: ' + response.status;
-                        engine_error_text = txt;
-                        console.log(engine_error_text);
-                        if (engine_panels.error_text) {
-                            document.getElementById(engine_panels.error_text).innerHTML = txt;
+                        console.log('Problem accessing Sesame name resolver. Status Code: ' + response.status);
+                        if (resolveNameFromCatalogs(image_target)) {
+                            EngineViewImageByType();
+                        } else {
+                            engine_error_text = 'Sesame and local name resolve failed';
+                            if (engine_panels.error_text) {
+                                document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                            }
+                            return;
                         }
-                        return;
                     }
                     response.text().then(function(text) {
                         clearTimeout(waitingTimeout);
                         if (find_coordinates(text)) {
+                            EngineViewImageByType();
+                        } else if (resolveNameFromCatalogs(image_target)) {
                             EngineViewImageByType();
                         } else {
                             engine_error_text = "Failed to resolve name " + image_target;
@@ -1142,13 +1316,15 @@ function StartAstroMosaicViewerEngine(
                 }
             )
             .catch(function(err) {
-                if (engine_panels.error_text) {
-                    clearTimeout(waitingTimeout);
-                }
-                engine_error_text = 'Problem accessing Sesame name resolver. Fetch Error :' + err;
-                console.log(engine_error_text);
-                if (engine_panels.error_text) {
-                    document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                console.log('Problem accessing Sesame name resolver. Fetch Error :' + err);
+                clearTimeout(waitingTimeout);
+                if (resolveNameFromCatalogs(image_target)) {
+                    EngineViewImageByType();
+                } else {
+                    engine_error_text = 'Sesame and local name resolve failed';
+                    if (engine_panels.error_text) {
+                        document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                    }
                 }
             }
         );
