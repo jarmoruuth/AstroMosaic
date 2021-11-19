@@ -207,7 +207,7 @@ p {
     </div>
     <div>
         <br>
-        <button onclick="ViewImage(0)">View image</button>
+        <button onclick="ViewImage(0)">Refresh</button>
     </div>
     <div>
         <br>
@@ -279,6 +279,10 @@ p {
     </div>
 </div>
 
+<div>
+    <p id="startup_info_text"></p>
+</div>
+
 <div id="panels-div">
 </div>
 
@@ -296,9 +300,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M58";
+var startup_image = "M59";
+var startup_info_text = "Added LDN catalog and RoboScopes telescopes";
 
 var version_text = 
+    "Version 1.59\n"+
+    "- Added LDN catalog\n" +
     "Version 1.58\n"+
     "- Added RoboScopes\n" +
     "- Telescope Live as default\n" +
@@ -665,6 +672,7 @@ var viewer_panels = {
     yearvisibility_panel_text : "year-div-text",
     status_text : "error_text",
     error_text : "error_text",
+    startup_info_text: "startup_info_text",
     panel_view_x : 5,
     panel_view_y : 5,
     panel_view_div : "panel-view-div-",
@@ -1121,6 +1129,7 @@ function apply_url_set()
         viewer_panels.yearvisibility_panel_text = "textDiv";
         viewer_panels.status_text = "textDiv";
         viewer_panels.error_text = "textDiv";
+        viewer_panels.startup_info_text = "textDiv";
     } else {
         url_view = "all";
         astro_mosaic_link = "";
@@ -1467,6 +1476,15 @@ function ViewImage(oper)
     if (url_view == "all" || url_view == "weather") {
         showWeatherForecast();
     }
+    if (url_view == "all") {
+        if (startup_info_text != null) {
+            document.getElementById(viewer_panels.startup_info_text).innerHTML = 'Latest updates: ' + startup_info_text;
+            startup_info_text = null;
+        } else {
+            document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
+        }
+    }
+
 }
 
 function addTabRow(tab, v1, v2)
