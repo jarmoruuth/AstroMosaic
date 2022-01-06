@@ -300,10 +300,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M59";
-var startup_info_text = "Added LDN catalog and RoboScopes telescopes";
+var startup_image = "M60";
+var startup_info_text = "Added Barnard catalog";
 
 var version_text = 
+    "Version 1.60\n"+
+    "- Added Barnard catalog\n" +
     "Version 1.59\n"+
     "- Added LDN catalog\n" +
     "Version 1.58\n"+
@@ -547,7 +549,8 @@ var catalogs = [
     { name: "IC", targets: null, url: "https://ruuth.xyz/OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "RCW", targets: null, url: "https://ruuth.xyz/RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
     { name: "Sharpless", targets: null, url: "https://ruuth.xyz/Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
-    { name: "LDN", targets: null, url: "https://ruuth.xyz/LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' }
+    { name: "LDN", targets: null, url: "https://ruuth.xyz/LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
+    { name: "Barnard", targets: null, url: "https://ruuth.xyz/Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' }  // light cyan
 ];
 
 // zero horizon if nothing else is specified
