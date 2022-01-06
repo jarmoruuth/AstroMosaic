@@ -6,7 +6,7 @@
  * It can show:
  *      - Target with telescope field of view using Aladin Lite
  *      - Target day visibility graphs
- *      - Target year vibility graphs
+ *      - Target year visibility graphs
  * 
 \*************************************************************************/
 
@@ -17,7 +17,7 @@
  * AstroMosaic entry point for embedded Javascript.
  * 
  * Notes:
- * - If calling AstroMosaicEngine multiuple times Aladin view may show
+ * - If calling AstroMosaicEngine multiple times Aladin view may show
  *   multiple views. This can be solved by setting AstroMosaicEngine
  *   return object to null before calling it again.
  * 
@@ -43,7 +43,7 @@
  *              timezoneOffset   : difference between UTC time and local time, in minutes,
  *                                 null for UTC, should match with lat/lng
  *              isCustomMode     : true to use custom colors, false otherwise
- *                                 if true, all custom colorts below must be given,
+ *                                 if true, all custom colors below must be given,
  *              chartTextColor   : custom chart text color,
  *              gridlinesColor   : custom chart grid lines color,
  *              backgroundColor  : custom chart background color
@@ -144,7 +144,7 @@ function getAstroMosaicFov(fov)
 }
 
 /* 
- * Ensure that we have horizon limits fot every 5 arcminutes.
+ * Ensure that we have horizon limits fov every 5 arcminutes.
  */
 function fillHorizonLimits(horizon_limits)
 {
@@ -251,7 +251,7 @@ function StartAstroMosaicViewerEngine(
         return degrees * (pi/180);
     }
 
-    // convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees
+    // convert image_target HH:MM:SS DEG:HH:MM to decimal degrees
     function get_ra_dec(target)
     {
         var radec = [];
@@ -289,7 +289,7 @@ function StartAstroMosaicViewerEngine(
         return radec;
     }
 
-    // convert image_target HH:MM:SS DEG:HH:MM to decimal dgrees into target_ra and target_dec
+    // convert image_target HH:MM:SS DEG:HH:MM to decimal degrees into target_ra and target_dec
     function get_image_target_ra_dec()
     {
         var radec = get_ra_dec(image_target);
@@ -408,7 +408,7 @@ function StartAstroMosaicViewerEngine(
         return aa;
     }
 
-    // Calculate altidude on given RA/DEC
+    // Calculate altitude on given RA/DEC
     function object_altitude_get(aa, ra, dec)
     {
         // calculate local hour angle in degrees
@@ -552,7 +552,7 @@ function StartAstroMosaicViewerEngine(
     // Simplified version of rise and set times.
     // - we do not correct for altitude
     // - we use current day rise time as next day rise time
-    // - h is altide in degrees from horizon
+    // - h is altitude in degrees from horizon
     //   0      center of sun's disk on horizon
     //   -12    nautical twilight
     //   -15    Amateur astronomical twilight
@@ -605,7 +605,7 @@ function StartAstroMosaicViewerEngine(
         return A;
     }
 
-    // This method can be found in many places, somwhow
+    // This method can be found in many places, somehow
     // it gives weird results
     function get_moon_phase2(date)
     {
@@ -621,7 +621,7 @@ function StartAstroMosaicViewerEngine(
         return age;
     }
 
-    // My own version, calcuate sun-moon angle to get
+    // My own version, calculate sun-moon angle to get
     // approximate "phase" in percentages
     function get_moon_phase(d)
     {
@@ -632,7 +632,7 @@ function StartAstroMosaicViewerEngine(
         return (scale_to_360(dist) / 180) * 100;
     }
 
-    // Convert to dtate string to that e.g. 1:0 becomes 01:00
+    // Convert to date string to that e.g. 1:0 becomes 01:00
     function toDateString(num)
     {
         if (num < 10) {
@@ -912,7 +912,7 @@ function StartAstroMosaicViewerEngine(
 
         var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
 
-        // We use sun and moon distance in dgrees at midnight to approximate 
+        // We use sun and moon distance in degrees at midnight to approximate 
         // the moon "phase". I guess there is also a correct way...
         var moon_phase = get_moon_phase(midnight);
         // Moon distance from object at midnight. Distance changes during the night
@@ -970,7 +970,7 @@ function StartAstroMosaicViewerEngine(
         for (var d = starttime; d <= endtime; d = d + interval) {
             var suntimes = sun_rise_set(d, lat, lng, 0);
 
-            // get appriximate midnight
+            // get approximate midnight
             var midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
 
             var objectalt = object_altaz(midnight, ra, dec, lat, lng).alt;
@@ -1021,8 +1021,8 @@ function StartAstroMosaicViewerEngine(
         }
     }
 
-    // update globals when target namer is found
-    // herte we assume target coordinates are in image_target global variable
+    // update globals when target name is found
+    // here we assume target coordinates are in image_target global variable
     function target_name_found()
     {
         resolved_name = image_target;
@@ -1126,6 +1126,10 @@ function StartAstroMosaicViewerEngine(
             retname = retname.replace("G", "G ").replace(/ /g, "");
             target_is_catalog_name = false;
             is_exact_match = true;
+        } else if ((upname.substring(0, 1) == 'B' && isNumber(upname.substring(1, 2)))
+                    || upname.substring(0, 7) == 'Barnard') {
+            catalog_name = 'Barnard';
+            retname = upname.replace("Barnard", "B").replace(/ /g, "");
         } else {
             target_is_catalog_name = false;
             is_exact_match = false;
@@ -1251,7 +1255,7 @@ function StartAstroMosaicViewerEngine(
         }
     }
 
-    // Resolve image coordinates from Simbad database using name
+    // Resolve image coordinates from Sesame database using name
     function EngineViewImageByName()
     {
         console.log('EngineViewImageByName');
@@ -1272,7 +1276,7 @@ function StartAstroMosaicViewerEngine(
         // Mirror of Simbad u-strasbg? Worked when u-strasbg failed.
         // var resolver_url = "http://simbad.cfa.harvard.edu/simbad/sim-id?output.format=ASCII&Ident=";
 
-        // Sesame  uses Simbad, NED and Vizier for resolving. Best documented interface.
+        // Sesame uses Simbad, NED and Vizier for resolving. Best documented interface.
         var resolver_url = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/SNV?";
 
         resolver_url = resolver_url + image_target.replace(/ /g, "+");
@@ -1856,5 +1860,3 @@ function StartAstroMosaicViewerEngine(
         }
     }
 }
-
-var dummy = "4";

@@ -421,9 +421,9 @@ var hoursToDeg = 15;
 var hour_ms = 60*60*1000;
 var day_ms = 24*hour_ms;
 
-// Messier cata log is in the source as a dedault catalog (altough
+// Messier catalog is in the source as a default catalog (although
 // not that useful for southern sky). But we need to have some
-// catalog in place at statup and loading catalogs may take time.
+// catalog in place at startup and loading catalogs may take time.
 var messier_catalog = { 
 "Credits" : "Information retrieved from Sesame",
 "format" : ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"],
@@ -566,6 +566,7 @@ var all_services = {
     { 
             name: "Telescope Live", 
             radec_format: 1, 
+            default_telescope: 2,
             telescopes: [
                 { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, timezoneOffset: null, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60  },
                 
@@ -917,10 +918,16 @@ function initAstroMosaic()
     init_all_services();
 
     telescope_services = all_services.telescope_services;
-    current_telescope_service = telescope_services[0];
-    current_telescope = current_telescope_service.telescopes[0];
     current_telescope_service_selected_index = 0;
-    current_telescope_selected_index = 0;
+    current_telescope_service = telescope_services[current_telescope_service_selected_index];
+    console.log("current_telescope_service", current_telescope_service.name);
+    if (current_telescope_service.hasOwnProperty('default_telescope')) {
+        current_telescope_selected_index = current_telescope_service.default_telescope;
+    } else {
+        current_telescope_selected_index = 0;
+    }
+    current_telescope = current_telescope_service.telescopes[current_telescope_selected_index];
+    console.log("current_telescope", current_telescope.name);
 
     apply_url_set();
 
@@ -1042,8 +1049,14 @@ function apply_url_set()
         for (var i = 0; i < all_services.telescope_services.length; i++) {
             if (all_services.telescope_services[i].name == url_service) {
                 current_telescope_service = all_services.telescope_services[i];
-                current_telescope = current_telescope_service.telescopes[0];
+                if (current_telescope_service.hasOwnProperty('default_telescope')) {
+                    current_telescope_selected_index = current_telescope_service.default_telescope;
+                } else {
+                    current_telescope_selected_index = 0;
+                }
+                current_telescope = current_telescope_service.telescopes[current_telescope_selected_index];
                 current_telescope_service_selected_index = i;
+                console.log("current_telescope", current_telescope.name);
                 break;
             }
         }
@@ -1055,6 +1068,8 @@ function apply_url_set()
             if (current_telescope_service.telescopes[i].name == url_telescope) {
                 current_telescope = current_telescope_service.telescopes[i];
                 current_telescope_selected_index = i;
+                current_telescope_service.default_telescope = i;
+                console.log("current_telescope", current_telescope.name);
                 break;
             }
         }
@@ -1183,6 +1198,7 @@ function set_url_add_service(url_add_service, clear_old_services)
                         current_telescope_service_selected_index = i;
                         current_telescope = current_telescope_service.telescopes[current_telescope_service.telescopes.length - 1];
                         current_telescope_service_selected_index = all_services.telescope_services.length - 1;
+                        console.log("current_telescope", current_telescope.name);
                     }
                     break;
                 }
@@ -1196,6 +1212,7 @@ function set_url_add_service(url_add_service, clear_old_services)
                     current_telescope_service = add_service;
                     current_telescope = current_telescope_service.telescopes[0];
                     current_telescope_service_selected_index = all_services.telescope_services.length - 1;
+                    console.log("current_telescope", current_telescope.name);
                 }
             }
         }
@@ -1277,7 +1294,13 @@ function update_telescope_list(new_name)
         }
     }
     // Update list of telescopes
-    current_telescope = current_telescope_service.telescopes[0];
+    if (current_telescope_service.hasOwnProperty('default_telescope')) {
+        current_telescope_selected_index = current_telescope_service.default_telescope;
+    } else {
+        current_telescope_selected_index = 0;
+    }
+    current_telescope = current_telescope_service.telescopes[current_telescope_selected_index];
+    console.log("current_telescope", current_telescope.name);
     for (i = 0; i < current_telescope_service.telescopes.length; i++) {
         var option = document.createElement("option");
         option.text = current_telescope_service.telescopes[i].name;
@@ -1423,7 +1446,7 @@ function ViewImage(oper)
 
     var target_name;
 
-    console.log("horizonHard[0]", viewer_params.horizonHard[0]);
+    console.log("current_telescope", current_telescope.name, "horizonHard[0]", viewer_params.horizonHard[0]);
 
     if (url_view == "all") {
         image_target = document.getElementById("target").value;
@@ -2044,6 +2067,9 @@ function reformatTargetName(name)
     }
     if (newname == null) {
         newname = reformatCheckName(name, 'SH2', 'Sh2');
+    }
+    if (newname == null) {
+        newname = reformatCheckName(name, 'B', 'Barnard');
     }
     if (newname == null) {
         newname = name;
