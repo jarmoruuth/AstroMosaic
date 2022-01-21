@@ -40,7 +40,7 @@
  *              meridian_transit : meridian transit or null,
  *              UTCdate_ms       : start of day UTC date in milliseconds 
  *                                 or null for current day,
- *              timezoneOffset   : difference between UTC time and local time, in minutes,
+ *              timezoneOffset   : difference between UTC time and local time, in hours,
  *                                 null for UTC, should match with lat/lng
  *              isCustomMode     : true to use custom colors, false otherwise
  *                                 if true, all custom colors below must be given,
@@ -213,6 +213,7 @@ function StartAstroMosaicViewerEngine(
     var engine_error_text = null;
 
     console.log('StartAstroMosaicViewerEngine', engine_view_type, target);
+    console.log('timezoneOffset', engine_params.timezoneOffset);
 
     if (engine_native_resources) {
         engine_native_resources.sun_rise_set = sun_rise_set;
@@ -812,13 +813,13 @@ function StartAstroMosaicViewerEngine(
                 if (time_as_string) {
                     var celldate = new Date(d);
                 } else {
-                    var celldate = new Date(d + localdate.getTimezoneOffset()*60*1000);
+                    var celldate = new Date(d + localdate.getTimezoneOffset()*60*60*1000);
                 }
             } else {
                 if (time_as_string) {
-                    var celldate = new Date(d + engine_params.timezoneOffset*60*1000);
+                    var celldate = new Date(d + engine_params.timezoneOffset*60*60*1000);
                 } else {
-                    var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*1000);
+                    var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*60*1000);
                 }
             }
             if (engine_params.horizonSoft != null) {
@@ -880,7 +881,11 @@ function StartAstroMosaicViewerEngine(
         if (engine_params.timezoneOffset == null) {
             var hAxisTitle = 'Time (UTC)';
         } else {
-            var hAxisTitle = 'Time';
+            if (engine_params.timezoneOffset >= 0) {
+                var hAxisTitle = 'Time (UTC+' + engine_params.timezoneOffset + ')';
+            } else {
+                var hAxisTitle = 'Time (UTC-' + Math.abs(engine_params.timezoneOffset) + ')';
+            }
         }
 
         if (engine_params.horizonSoft != null) {

@@ -300,10 +300,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M60";
-var startup_info_text = "Added Barnard catalog";
+var startup_image = "M61";
+var startup_info_text = "Fixes and updates for configuring Astro Mosaic, like time zone support";
 
 var version_text = 
+    "Version 1.61\n"+
+    "- Fixes and updates for configuring Astro Mosaic, like time zone support.\n"+
     "Version 1.60\n"+
     "- Added Barnard catalog\n" +
     "Version 1.59\n"+
@@ -328,7 +330,7 @@ var version_text =
     "- Fix to Slooh 500 catalog field ordering (in .json file)\n" +
     "- Fix to gridlines and time printing, thanks for tips goes to Ed Kalin\n" +
     "- Added basic time zone support. Field timezoneOffset can optionally have difference" + 
-    " between UTC time and local time, in minutes (as returned by getTimezoneOffset())\n" +
+    " between UTC time and local time, in hours\n" +
     "- Some more cleanup\n" +
     "Version 1.50\n"+
     "- Separated AstroMosaic engine to a separate AstroMosaicEngine.js file\n" +
@@ -692,7 +694,7 @@ var viewer_params = {
     horizonHard : null,
     meridian_transit : null,
     UTCdate_ms : null,
-    timezoneOffset : null,  // as returned by timezoneOffset(), null means UTC, should match with lat/lng
+    timezoneOffset : null,  // in hours, null means UTC, should match with lat/lng
     grid_type : null,
     grid_size_x : null,
     grid_size_y : null,
@@ -1158,7 +1160,7 @@ function apply_url_set()
 // Add a new service from url, old services are not removed. 
 // If service exists, only new telescopes are added to that service.
 // New service is set as default.
-// Format is: service_name, telescope_name, fov_x, fov_y, lat, lng [, weather_service_name]
+// Format is: service_name, telescope_name, fov_x, fov_y, lat, lng [, weather:weather_service_name|tz:timezone_in_hours]
 function set_url_add_service(url_add_service, clear_old_services)
 {
     console.log("set_url_add_service", url_add_service);
@@ -1180,11 +1182,26 @@ function set_url_add_service(url_add_service, clear_old_services)
                 alt: 0, weather: null, 
                 horizon_limits: horizon_0, meridian_transit: 0
             };
-            if (params.length >= 7) {
-                for (var i = 0; i < all_services.weather_services.length; i++) {
-                    if (all_services.weather_services[i].name == params[6]) {
-                        new_telescope.weather = params[6];
-                        break;
+            for (pn = 6; pn < params.length; pn++) {
+                if (params[pn].startsWith("tz:")) {
+                    // timezone, convert hours to minutes
+                    var tz = params[pn].substring(3);
+                    console.log("service, tz=" +  tz);
+                    new_telescope.timezoneOffset = parseInt(tz);
+                } else {
+                    if (params[pn].startsWith("weather:")) {
+                        var weather_service_name = params[pn].substring(8);
+                    } else {
+                        // for compatibility with older Url syntax, allow without "weather:" prefix
+                        var weather_service_name = params[pn];
+                    }
+                    console.log("service, weather_service_name=" +  weather_service_name);
+                    // check if name matches with weather service
+                    for (var i = 0; i < all_services.weather_services.length; i++) {
+                        if (all_services.weather_services[i].name == weather_service_name) {
+                            new_telescope.weather = weather_service_name;
+                            break;
+                        }
                     }
                 }
             }
@@ -1426,7 +1443,6 @@ function ViewImage(oper)
             }
         }
     }
-    viewer_params.timezoneOffset = null; // current_telescope_service.telescopes[i].timezoneOffset;
 
     if (url_view == "all") {
         var img_fov = document.getElementById("overlap_percentage").value;
@@ -1443,6 +1459,7 @@ function ViewImage(oper)
     viewer_params.horizonSoft = current_telescope.horizon_limits.soft;
     viewer_params.horizonHard = current_telescope.horizon_limits.hard;
     viewer_params.meridian_transit = current_telescope.meridian_transit;
+    viewer_params.timezoneOffset = current_telescope.timezoneOffset;
 
     var target_name;
 
