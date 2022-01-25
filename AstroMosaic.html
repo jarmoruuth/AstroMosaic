@@ -300,10 +300,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M61";
-var startup_info_text = "Fixes and updates for configuring Astro Mosaic, like time zone support";
+var startup_image = "M62";
+var startup_info_text = "Added configuration for optional offaxis guiding view";
 
 var version_text = 
+    "Version 1.62\n"+
+    "- Added configuration for optional offaxis guiding view.\n"+
     "Version 1.61\n"+
     "- Fixes and updates for configuring Astro Mosaic, like time zone support.\n"+
     "Version 1.60\n"+
@@ -570,7 +572,7 @@ var all_services = {
             radec_format: 1, 
             default_telescope: 2,
             telescopes: [
-                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, timezoneOffset: null, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60  },
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, timezoneOffset: null, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
                 
                 { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
@@ -768,6 +770,7 @@ var url_target = null;
 var url_add_catalog = null;
 var url_add_service = null;
 var url_set_service = null;
+var url_offaxis = null;
 var url_service = null;
 var url_telescope = null;
 var url_name = null;
@@ -951,6 +954,11 @@ function init_all_services()
         for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
             all_services.telescope_services[i].telescopes[j].fov_x = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].fov_x);
             all_services.telescope_services[i].telescopes[j].fov_y = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].fov_y);
+            if (all_services.telescope_services[i].telescopes[j].hasOwnProperty('offaxis')) {
+                all_services.telescope_services[i].telescopes[j].offaxis.fov_x = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.fov_x);
+                all_services.telescope_services[i].telescopes[j].offaxis.fov_y = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.fov_y);
+                all_services.telescope_services[i].telescopes[j].offaxis.offset = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.offset);
+            }
             if (Array.isArray(all_services.telescope_services[i].telescopes[j].horizon_limits)) {
                 // Already array. Check if it is has enough enties. If not, repeat last item.
                 console.log("init_all_services", "horizon_limits is array");
@@ -1012,6 +1020,7 @@ function parse_url(searchParams)
     url_add_catalog = searchParams.get('add_catalog');
     url_add_service = searchParams.get('add_service');
     url_set_service = searchParams.get('set_service');
+    url_offaxis = searchParams.get('add_offaxis');
     url_service = searchParams.get('service');
     url_telescope = searchParams.get('telescope');
     url_name = searchParams.get('name');
@@ -1034,6 +1043,9 @@ function apply_url_add()
     }
     if (url_add_service) {
         set_url_add_service(url_add_service, false);
+    }
+    if (url_offaxis) {
+        set_url_add_offaxis(url_offaxis);
     }
 }
 
@@ -1230,6 +1242,37 @@ function set_url_add_service(url_add_service, clear_old_services)
                     current_telescope = current_telescope_service.telescopes[0];
                     current_telescope_service_selected_index = all_services.telescope_services.length - 1;
                     console.log("current_telescope", current_telescope.name);
+                }
+            }
+        }
+    }
+}
+
+// Add a new offaxis from url. 
+// Format is: service_name, telescope_name, fov_x, fov_y, offset, position
+function set_url_add_offaxis(url_add_offaxis, clear_old_services)
+{
+    console.log("set_url_offaxis", url_add_offaxis);
+    var url_offaxis_list = url_add_offaxis.split(';');
+    for (var n = 0; n < url_offaxis_list.length; n++) {
+        var params = url_offaxis_list[n].split(',');
+        if (params.length < 6) {
+            alert("Too few parameters in url-parameter add_offaxis! Ignoring offaxis " + params[0] + ".");
+        } else {
+            var new_offaxis = {
+                fov_x: parseFloat(params[2]), 
+                fov_y: parseFloat(params[3]),
+                offset: parseFloat(params[4]),
+                position: params[5]
+            };
+            for (var i = 0; i < all_services.telescope_services.length; i++) {
+                if (all_services.telescope_services[i].name == params[0]) {
+                    for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
+                        if (all_services.telescope_services[i].telescopes[j].name == params[1]) {
+                            all_services.telescope_services[i].telescopes[j].offaxis = new_offaxis;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -1460,6 +1503,9 @@ function ViewImage(oper)
     viewer_params.horizonHard = current_telescope.horizon_limits.hard;
     viewer_params.meridian_transit = current_telescope.meridian_transit;
     viewer_params.timezoneOffset = current_telescope.timezoneOffset;
+    if (current_telescope.hasOwnProperty('offaxis')) {
+        viewer_params.offaxis = current_telescope.offaxis;
+    }
 
     var target_name;
 

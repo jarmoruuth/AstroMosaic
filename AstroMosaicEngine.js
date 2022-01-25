@@ -703,6 +703,8 @@ function StartAstroMosaicViewerEngine(
         {
             if (image_target_list.length > 1) {
                 EngineViewGridFromList(image_target_list);
+            } else if (engine_params.hasOwnProperty('offaxis')) {
+                EngineViewGridOffaxis(image_target_list);
             } else {
                 EngineViewGrid();
             }
@@ -1732,21 +1734,18 @@ function StartAstroMosaicViewerEngine(
     {
         console.log('EngineViewGridFromList');
 
-        var grid_size_x = coordinates.length;
-        var grid_size_y = coordinates.length;
-        var size_x = grid_size_x / 2 - 0.5;
-        var size_y = grid_size_y / 2 - 0.5;
+        var grid_size = coordinates.length;
 
         // Show image and get coordinates from there to
         // calculate grid boxes.
         var aladin_fov;
-        if (grid_size_x > grid_size_y) {
-            aladin_fov = (grid_size_x+0.2)*engine_params.fov_x;
+        if (engine_params.fov_x > engine_params.fov_y) {
+            aladin_fov = (grid_size+0.2)*engine_params.fov_x;
         } else {
-            aladin_fov = (grid_size_y+0.2)*engine_params.fov_x;
+            aladin_fov = (grid_size+0.2)*engine_params.fov_y;
         }
 
-        engine_data.aladin = EngineInitAladin(aladin_fov, coordinates[0])
+        engine_data.aladin = EngineInitAladin(aladin_fov, coordinates[0]);
         var radec = null;
 
         console.log("center RaDec = ", coordinates[0]);
@@ -1759,28 +1758,108 @@ function StartAstroMosaicViewerEngine(
             console.log("panel "+i+" ra/dec=", col_ra, "/", row_dec);
 
             // calculate corners
-            var row_dec1 = row_dec + engine_params.fov_y/2;
-            var row_dec2 = row_dec - engine_params.fov_y/2;
-            var col_ra1 = col_ra;
-            var col_ra2 = col_ra;
-            var col_ra1_delta = ((engine_params.fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-            var col_ra2_delta = ((engine_params.fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-
-            var panel = [
-                [col_ra1-col_ra1_delta, row_dec1], 
-                [col_ra1+col_ra1_delta, row_dec1], 
-                [col_ra2+col_ra2_delta, row_dec2], 
-                [col_ra2-col_ra2_delta, row_dec2], 
-                [col_ra1-col_ra1_delta, row_dec1]
-            ];
-
-            var line_color = '#ee2345';
-            if (engine_data.aladin) {
-                var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
-                engine_data.aladin.addOverlay(overlay);
-                overlay.add(A.polyline(panel));
-            }
+            drawBox(col_ra, row_dec, engine_params.fov_x, engine_params.fov_y);
         }
+    }
+
+    function drawBox(col_ra, row_dec, fov_x, fov_y)
+    {
+        console.log('drawBox', col_ra, row_dec, fov_x, fov_y);
+
+        // calculate image corners
+        var row_dec1 = row_dec + fov_y/2;
+        var row_dec2 = row_dec - fov_y/2;
+        var col_ra1 = col_ra;
+        var col_ra2 = col_ra;
+        var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+        var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+
+        var panel = [
+            [col_ra1-col_ra1_delta, row_dec1], 
+            [col_ra1+col_ra1_delta, row_dec1], 
+            [col_ra2+col_ra2_delta, row_dec2], 
+            [col_ra2-col_ra2_delta, row_dec2], 
+            [col_ra1-col_ra1_delta, row_dec1]
+        ];
+
+        var line_color = '#ee2345';
+        if (engine_data.aladin) {
+            var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+            engine_data.aladin.addOverlay(overlay);
+            overlay.add(A.polyline(panel));
+        }
+    }
+
+    // Show telescope Fov and offaxis guiding FoV
+    // https://ruuth.xyz/AstroMosaic.html?set_service=Fuji%20X-T3,400mm,206,137,60.04298,24.24452,tz:2,weather:detect_location&add_offaxis=Fuji%20X-T3,400mm,2,2,1,T
+    function EngineViewGridOffaxis()
+    {
+        console.log('EngineViewGridOffaxis');
+
+        var total_fov_x = engine_params.fov_x + engine_params.offaxis.fov_x;
+        var total_fov_y = engine_params.fov_y;
+
+        // Show image and get coordinates from there to
+        // calculate grid boxes.
+        var aladin_fov = 1.2*Math.max(total_fov_x, total_fov_y)*aladin_fov_extra;
+
+        engine_data.aladin = EngineInitAladin(aladin_fov, image_target);
+        var radec = null;
+
+        console.log("center RaDec = ", image_target);
+
+        radec = get_ra_dec(image_target);
+        var col_ra = radec[0];
+        var row_dec = radec[1];
+
+        console.log("ra/dec=", col_ra, "/", row_dec);
+
+        // telescope FoV
+        drawBox(col_ra, row_dec, engine_params.fov_x, engine_params.fov_y);
+
+        // offaxis guiding FoV
+        switch (engine_params.offaxis.position) {
+            case 'T':
+                drawBox(
+                    col_ra, 
+                    row_dec + engine_params.fov_y/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_y/2,
+                    engine_params.offaxis.fov_x, 
+                    engine_params.offaxis.fov_y);
+                break;
+            case 'B':
+                drawBox(
+                    col_ra, 
+                    row_dec - engine_params.fov_y/2 - engine_params.offaxis.offset - engine_params.offaxis.fov_y/2,
+                    engine_params.offaxis.fov_x, 
+                    engine_params.offaxis.fov_y);
+                break;
+            case 'L':
+                drawBox(
+                    col_ra + 
+                        (engine_params.fov_x/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_x/2) *
+                        (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))), 
+                    row_dec,
+                    engine_params.offaxis.fov_x, 
+                    engine_params.offaxis.fov_y);
+                break;
+            case 'R':
+                drawBox(
+                    col_ra - 
+                        (engine_params.fov_x/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_x/2) *
+                        (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))),
+                    row_dec,
+                    engine_params.offaxis.fov_x, 
+                    engine_params.offaxis.fov_y);
+                break;
+        }
+
+        var col_ra_hours = col_ra * degToHours;
+        panel_radec = "RA/DEC " + 
+            col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5) + ", " + 
+            col_ra.toFixed(5) + " " + row_dec.toFixed(5) + ", " +
+            image_target;
+
+        document.getElementById(engine_panels.aladin_panel_text).innerHTML = panel_radec;
     }
 
     function EngineViewPanels()
