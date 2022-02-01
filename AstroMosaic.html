@@ -300,10 +300,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M62";
-var startup_info_text = "Added configuration for optional offaxis guiding view";
+var startup_image = "M63";
+var startup_info_text = "Fixes to parsing incomplete RA/DEC values and catalog name search";
 
 var version_text = 
+    "Version 1.63\n"+
+    "- Fixes to parsing incomplete RA/DEC values and catalog name search.\n"+
     "Version 1.62\n"+
     "- Added configuration for optional offaxis guiding view.\n"+
     "Version 1.61\n"+
@@ -1850,7 +1852,7 @@ function filter_visible_catalog_items(cat, lat, lng)
                 name = name + ', ' + cat.targets[i][3];     // TYPE
             }
             fl[fl.length] = [ 
-                cat.targets[i][1].toFixed(5) + ' ' +  + cat.targets[i][2].toFixed(5),
+                cat.targets[i][1].toFixed(5) + ' ' +  cat.targets[i][2].toFixed(5),
                 name
             ];
             catalog_objects[catalog_objects.length] = cat.targets[i];
@@ -1888,6 +1890,7 @@ function init_catalog_view_list()
         catalogDiv_select.onchange = function() { 
                                     // Get coordinates from catalogDiv_select.value and put them
                                     // to target box so we will show the target
+                                    console.log("init_catalog_view_list:set target=" + catalogDiv_select.value);
                                     document.getElementById("target").value = catalogDiv_select.value;
                                     catalog_index = catalogDiv_select.selectedIndex;
                                     if (catalog_index == 0) {
