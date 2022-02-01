@@ -269,6 +269,10 @@ function StartAstroMosaicViewerEngine(
             radec[0] = Math.abs(parseFloat(raparts[0])) + (parseFloat(raparts[1]) * 60) / 3600;
         }
         if (isNaN(radec[0])) {
+            // assume minutes are missing
+            radec[0] = Math.abs(parseFloat(raparts[0]));
+        }
+        if (isNaN(radec[0])) {
             return [];
         }
         // convert from hours to degrees
@@ -280,6 +284,10 @@ function StartAstroMosaicViewerEngine(
         if (isNaN(radec[1])) {
             // assume seconds are missing
             radec[1] = Math.abs(parseFloat(decparts[0])) + (parseFloat(decparts[1]) * 60) / 3600;
+        }
+        if (isNaN(radec[1])) {
+            // assume minutes are missing
+            radec[1] = Math.abs(parseFloat(decparts[0]));
         }
         if (isNaN(radec[1])) {
             return [];
@@ -318,7 +326,7 @@ function StartAstroMosaicViewerEngine(
         return Math.sin(deg*degToRad);
     }
 
-    // cos from decimal regrees
+    // cos from decimal degrees
     function cosd(deg)
     {
         return Math.cos(deg*degToRad);
@@ -1136,7 +1144,8 @@ function StartAstroMosaicViewerEngine(
         } else if ((upname.substring(0, 1) == 'B' && isNumber(upname.substring(1, 2)))
                     || upname.substring(0, 7) == 'Barnard') {
             catalog_name = 'Barnard';
-            retname = upname.replace("Barnard", "B").replace(/ /g, "");
+            retname = upname.replace("Barnard", "M ").replace(/  /g, " ");
+            retname = retname.replace("B", "B ").replace(/  /g, " ");
         } else {
             target_is_catalog_name = false;
             is_exact_match = false;
@@ -1155,6 +1164,7 @@ function StartAstroMosaicViewerEngine(
             console.log("findTargetFromCatalog null catalog");
             return null;
         }
+        console.log("findTargetFromCatalog name " + name);
         for (var i = 0; i < targets.length; i++) {
             if (targets[i][0].indexOf(name) != -1) {
                 return targets[i];
@@ -1191,6 +1201,7 @@ function StartAstroMosaicViewerEngine(
             console.log("findExactMatch null catalog");
             return null;
         }
+        console.log("findExactMatch name "+ name);
         for (var i = 0; i < targets.length; i++) {
             if (doExactMatch(targets[i][0], name)       // CAT
                || doExactMatch(targets[i][7], name)     // NAME
@@ -1208,6 +1219,7 @@ function StartAstroMosaicViewerEngine(
             console.log("findFromCatalog null catalog");
             return null;
         }
+        console.log("findFromCatalog name " + name);
         var re = new RegExp(name, "i");
         for (var i = 0; i < targets.length; i++) {
             if (targets[i][0].search(re) != -1       // CAT
@@ -1220,7 +1232,7 @@ function StartAstroMosaicViewerEngine(
         return null;
     }
 
-    // if name resolver fails try to reolve name from loaded catalogs
+    // if name resolver fails try to resolve name from loaded catalogs
     function resolveNameFromCatalogs(name)
     {
         console.log("resolveNameFromCatalogs " + name);
@@ -1253,7 +1265,7 @@ function StartAstroMosaicViewerEngine(
         if (target_info != null) {
             // found the target
             image_target = target_info[1] + " " + target_info[2];
-            console.log("resolveNameFromCatalogs found " + target_info);
+            console.log("resolveNameFromCatalogs found '" + target_info + "', image_target " + image_target);
             target_name_found();
             return true;
         } else {
