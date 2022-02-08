@@ -291,10 +291,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M63";
-var startup_info_text = "Fixes to parsing incomplete RA/DEC values and catalog name search";
+var startup_image = "M64";
+var startup_info_text = "Added Cederblad catalog";
 
 var version_text = 
+    "Version 1.64\n"+
+    "- Added Cederblad catalog\n" +
     "Version 1.63\n"+
     "- Fixes to parsing incomplete RA/DEC values and catalog name search.\n"+
     "Version 1.62\n"+
@@ -547,7 +549,8 @@ var catalogs = [
     { name: "RCW", targets: null, url: "https://ruuth.xyz/RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
     { name: "Sharpless", targets: null, url: "https://ruuth.xyz/Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
     { name: "LDN", targets: null, url: "https://ruuth.xyz/LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
-    { name: "Barnard", targets: null, url: "https://ruuth.xyz/Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' }  // light cyan
+    { name: "Barnard", targets: null, url: "https://ruuth.xyz/Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' },  // light cyan
+    { name: "Cederblad", targets: null, url: "https://ruuth.xyz/Cederblad.json", source: "vizier", AladinCatalog: null, color: '#A0FFFF' }
 ];
 
 // zero horizon if nothing else is specified
@@ -2127,6 +2130,9 @@ function reformatTargetName(name)
     }
     if (newname == null) {
         newname = reformatCheckName(name, 'B', 'Barnard');
+    }
+    if (newname == null) {
+        newname = reformatCheckName(name, 'Ced', 'Cederblad');
     }
     if (newname == null) {
         newname = name;

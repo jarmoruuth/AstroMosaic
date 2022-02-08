@@ -1142,10 +1142,17 @@ function StartAstroMosaicViewerEngine(
             target_is_catalog_name = false;
             is_exact_match = true;
         } else if ((upname.substring(0, 1) == 'B' && isNumber(upname.substring(1, 2)))
-                    || upname.substring(0, 7) == 'Barnard') {
+                    || upname.substring(0, 7) == 'Barnard') 
+        {
             catalog_name = 'Barnard';
-            retname = upname.replace("Barnard", "M ").replace(/  /g, " ");
+            retname = upname.replace("Barnard", "B ").replace(/  /g, " ");
             retname = retname.replace("B", "B ").replace(/  /g, " ");
+        } else if ((upname.substring(0, 3) == 'Ced' && isNumber(upname.substring(3, 4)))
+                   || upname.substring(0, 9) == 'Cederblad')
+        {
+            catalog_name = 'Cederblad';
+            retname = upname.replace("Cederblad", "Ced ").replace(/  /g, " ");
+            retname = retname.replace("Ced", "Ced ").replace(/  /g, " ");
         } else {
             target_is_catalog_name = false;
             is_exact_match = false;
