@@ -230,7 +230,8 @@ function StartAstroMosaicViewerEngine(
     img_fov = 1 - img_fov / 100;
 
     var c = image_target.substr(0,1);
-    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+    var c2 = image_target.substr(0,2);
+    if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c2 == 'd ') {
         console.log('image_target is number');
         image_target_list = image_target.split(',');
         for (var i = 0; i < image_target_list.length; i++) {
@@ -1374,8 +1375,14 @@ function StartAstroMosaicViewerEngine(
         return str;
     }
 
-    function decimal_to_mmss(v)
+    function decimal_to_mmss(v, degrees)
     {
+        if (degrees) {
+            // convert degrees to hours
+            console.log("decimal_to_mmss, degrees, ", v);
+            v = '' + parseFloat(v) * degToHours;
+            console.log("decimal_to_mmss, degrees to hours, ", v);
+        }
         var sign = '';
         v = v.trim();
         //console.log("decimal_to_mmss, v", v);
@@ -1403,7 +1410,7 @@ function StartAstroMosaicViewerEngine(
         }
 
         var ret = sign + ("0" + x).slice(-2) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
-        //console.log("decimal_to_mmss, ret", ret);
+        console.log("decimal_to_mmss, ret", ret);
 
         return ret;
     }
@@ -1471,14 +1478,24 @@ function StartAstroMosaicViewerEngine(
 
     // Reformat coordinates to a format HH:MM:SS DD:MM:SS
     // Input can be: 
+    // 1. hour, degrees
     // HH:MM:SS DD:MM:SS, HH MM SS DD MM SS, 
     // HH:MM:SS/DD:MM:SS, HH MM SS/DD MM SS,
     // HHMMSS DDMMSS
     // HH.dec DD.dec
+    // 2. degrees
+    // d DD.dec DD.dec
     function reformat_coordinates(coord)
     {
         // number, assume coordinates
         coord = trim_spaces(coord);
+        if (coord[0] == 'd') {
+            var degrees = true;
+            coord = trim_spaces(coord.substring(1));
+            console.log('reformat_coordinates, we have degrees, =', coord);
+        } else {
+            var degrees = false;
+        }
         //console.log('reformat_coordinates=', coord);
         var numbers = coord.split('/');
         if (numbers.length == 2) {
@@ -1496,8 +1513,8 @@ function StartAstroMosaicViewerEngine(
                     coord = split_coord(ra) + ' ' + split_coord(dec);
                     //console.log('reformat_coordinates, length 2, assume HHMMSS DDMMSS', coord);
                 } else {
-                    //console.log('assume HH.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
-                    coord = decimal_to_mmss(ra) + ' ' + decimal_to_mmss(dec);
+                    //console.log('assume HH.dec DD.dec or DD.dec DD.dec, convert to HH:MM:SS DD:MM:SS');
+                    coord = decimal_to_mmss(ra, degrees) + ' ' + decimal_to_mmss(dec, false);
                     //console.log('reformat_coordinates, length 2, assume correct HH.dec DD.dec', coord);
                 }
             } else {
