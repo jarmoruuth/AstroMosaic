@@ -1726,7 +1726,7 @@ function StartAstroMosaicViewerEngine(
                     * coordinates in different formats.
                     */
                     panel_radec[x][y] = "RA/DEC " + 
-                                        col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5) + ", " + 
+                                        col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5) + ", d " + 
                                         ra.toFixed(5) + " " + dec.toFixed(5) + ", " +
                                         image_target;
                 }

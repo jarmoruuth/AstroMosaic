@@ -1,4 +1,4 @@
-<!-- Tool to visualize telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2021 -->
+<!-- Tool to visualize telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2022 -->
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
@@ -152,6 +152,9 @@ p {
             Target:<br>
             <input type="text" id="target"><br>
         </form>
+    </div>
+    <div>
+    <button onclick="alert(target_info_text)"><img src="information-outline.png"></button>
     </div>
     <div>
         <form>
@@ -415,6 +418,25 @@ var version_text =
     "- target visibility during one night and next 12 months\n";
 
 var version_number = version_text.substring(8, 12);
+
+var target_info_text = "Supported target formats\n" +
+                       "\n" +
+                       "Target name:\n" +
+                       "\n" +
+                       "A target name that can be resolved by name resolvers.\n" +
+                       "\n" +
+                       "RA/DEC in hours and degrees:\n" +
+                       "\n" +
+                       "HH:MM:SS DD:MM:SS\n" +
+                       "HH MM SS DD MM SS\n" +
+                       "HH:MM:SS/DD:MM:SS\n" +
+                       "HH MM SS/DD MM SS\n" +
+                       "HHMMSS DDMMSS\n" +
+                       "HH.dec DD.dec\n" +
+                       "\n" +
+                       "RA/DEC in decimal degrees:\n" +
+                       "\n" +
+                       "d DD.dec DD.dec";
 
 document.getElementById("version-button").innerText= "v." + version_number + " info";
 
