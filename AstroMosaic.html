@@ -294,10 +294,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M65";
-var startup_info_text = "Added support for decimal degrees coordinate format 'd DD.dec DD.dec'";
+var startup_image = "M66";
+var startup_info_text = "Added support for SkyGems telescopes";
 
 var version_text = 
+    "Version 1.66\n"+
+    "- Added support for SkyGems telescopes\n" +
     "Version 1.65\n"+
     "- Added support for decimal degrees coordinate format 'd DD.dec DD.dec'\n" +
     "Version 1.64\n"+
@@ -634,7 +636,22 @@ var all_services = {
                 { name: "Pier 9", fov_x: 29, fov_y: 19, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [35], meridian_transit: 60  },
                 { name: "Pier 10", fov_x: 105, fov_y: 70, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
                 { name: "Pier 11", fov_x: 336, fov_y: 256, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
-                { name: "Pier 12", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
+                { name: "Pier 12", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  }
+            ] 
+        },
+        { 
+            name: "SkyGems", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "Hakos iDK 20", fov_x: 37, fov_y: 37, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "Hakos H8 2.8", fov_x: 205, fov_y: 137, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "Hakos RC360", fov_x: 40, fov_y: 40, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "FSQ106 Namibia", fov_x: 116, fov_y: 87, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
+
+                { name: "Spain Veloce 200 RH", fov_x: 102, fov_y: 77, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, weather: "rs-spa", horizon_limits: [36], meridian_transit: 60  },
+                { name: "Spain CDK500", fov_x: 37, fov_y: 37, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, weather: "rs-spa", horizon_limits: [12], meridian_transit: 60  },
+
+                { name: "Dream Astrograph New Mexico", fov_x: 101, fov_y: 101, lat: 34.2, lng: -108.1, timezoneOffset: null, alt: 2371, weather: "sg-newmex", horizon_limits: [35], meridian_transit: 60  }
             ] 
         },
         { 
@@ -652,6 +669,8 @@ var all_services = {
         { name: "tl-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/el-chaparral-alto_spain_2518568?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/el-chaparral-alto_spain_2518568?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
         { name: "tl-aus", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/mount-manton_australia_8167256?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/mount-manton_australia_8167256?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
         { name: "rs-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/fregenal-de-la-sierra_spain_2517643?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 745px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/fregenal-de-la-sierra_spain_2517643?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank" rel="noopener">meteoblue</a></div>'},
+        { name: "sg-nam", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/-23.2N16.4E1737_Africa%2FWindhoek?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 753px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/-23.2N16.4E1737_Africa%2FWindhoek?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank" rel="noopener">meteoblue</a></div>'},
+        { name: "sg-newmex", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/34.2N-108.1E2264_America%2FDenver?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 753px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/34.2N-108.1E2264_America%2FDenver?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank" rel="noopener">meteoblue</a></div>'},
         { name: "detect_location", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing?geoloc=detect&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'}
     ],
     horizon_limits: [
