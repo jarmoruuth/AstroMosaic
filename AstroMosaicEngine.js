@@ -1617,6 +1617,17 @@ function StartAstroMosaicViewerEngine(
                     console.log('aladin objectClicked, no object');
                 }
             });
+         // Update on user move of view
+            aladin.on('positionChanged', function(pos){
+              if (pos) {
+                  console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
+                  var tempcoords = (pos.ra*degToHours).toFixed(7) + " " + (pos.dec).toFixed(7);
+                  document.getElementById(viewer_panels.moved_coords).innerHTML = tempcoords;
+              }
+              else {
+                //not sure if there is a fail condition here
+              }
+          });
         }
         return aladin;
     }
@@ -1665,6 +1676,7 @@ function StartAstroMosaicViewerEngine(
         }
 
         console.log("center RaDec = ", radec);
+        document.getElementById(viewer_panels.current_coords).innerHTML = (radec[0]*degToHours).toFixed(7) + " " + radec[1].toFixed(7);
 
         var ra = radec[0];
         var dec = radec[1];

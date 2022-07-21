@@ -275,6 +275,9 @@ p {
 
 <div>
     <p id="startup_info_text"></p>
+    <p hidden aria-hidden>Aladin Current FOV:  <span id="current_coords"></span></p>
+    <p hidden aria-hidden>Adjusted FOV Center: <span id="moved_coords"></span></p>
+    <button onclick="ViewImage(3)">Update FOV Center</button>
 </div>
 
 <div id="panels-div">
@@ -720,6 +723,8 @@ var viewer_panels = {
     status_text : "error_text",
     error_text : "error_text",
     startup_info_text: "startup_info_text",
+    current_coords: "current_coords",
+    moved_coords: "moved_coords",
     panel_view_x : 5,
     panel_view_y : 5,
     panel_view_div : "panel-view-div-",
@@ -764,7 +769,8 @@ var engine_native_resources = {
     object_altitude_get : function(){},
     moon_position : function(){},
     moon_topocentric_correction : function(){},
-    moon_distance : function(){}
+    moon_distance : function(){},
+    aladin_position_changed: function(){}
 };
 
 var engine_data = null;
@@ -1201,6 +1207,8 @@ function apply_url_set()
         viewer_panels.status_text = "textDiv";
         viewer_panels.error_text = "textDiv";
         viewer_panels.startup_info_text = "textDiv";
+        viewer_panels.current_coords = "textDiv";
+        viewer_panels.moved_coords = "textDiv";
     } else {
         url_view = "all";
         astro_mosaic_link = "";
@@ -1465,6 +1473,7 @@ function trim_spaces(str)
 // Values for oper_
 //      1 - Telescope service changed
 //      2 - Telescope changed
+//      3 - Reframe target
 function ViewImage(oper)
 {
     console.log('ViewImage', oper);
@@ -1526,6 +1535,12 @@ function ViewImage(oper)
         }
     }
 
+  if (oper == 3) {
+    document.getElementById("target").value= document.getElementById(viewer_panels.moved_coords).innerHTML;
+    // if (document.getElementById("target").value != document.getElementById(viewer_panels.moved_coords).innerHTML){
+    //     document.getElementById("target").value= document.getElementById(viewer_panels.moved_coords).innerHTML;
+    //   } 
+  }
     if (url_view == "all") {
         var img_fov = document.getElementById("overlap_percentage").value;
     } else {
@@ -1552,9 +1567,14 @@ function ViewImage(oper)
 
     if (url_view == "all") {
         image_target = document.getElementById("target").value;
-    } else {
+    }
+    else if (document.getElementById("target").value != document.getElementByClass("aladin_location_text").value){
+      image_target= document.getElementByClassName("aladin_location_text").value;
+    }
+    else {
         image_target = startup_image;
     }
+    
     image_target = trim_spaces(image_target);
     console.log('image_target=', image_target, viewer_params, viewer_panels);
 
@@ -1612,7 +1632,6 @@ function ViewImage(oper)
             document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
         }
     }
-
 }
 
 function addTabRow(tab, v1, v2)
