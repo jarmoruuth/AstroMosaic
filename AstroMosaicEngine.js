@@ -94,7 +94,9 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         isCustomMode : params.isCustomMode,
         chartTextColor : params.chartTextColor,
         gridlinesColor : params.gridlinesColor,
-        backgroundColor : params.backgroundColor
+        backgroundColor : params.backgroundColor,
+        isRepositionModeFunc : null,
+        repositionTargetFunc : null
     };
 
     var engine_panels = {
@@ -206,6 +208,8 @@ function StartAstroMosaicViewerEngine(
 
     };
     var aladin_fov_extra = 1;
+    var aladin_position = null;
+    var aladin_view_ready = false;
 
     var image_target;
     var image_target_list = [];
@@ -246,6 +250,11 @@ function StartAstroMosaicViewerEngine(
         EngineViewImageByName();
     }
     return engine_data;
+
+    function build_error_text(txt)
+    {
+        return "<strong>" + txt + "</strong>";
+    }
 
     function degrees_to_radians(degrees)
     {
@@ -715,7 +724,7 @@ function StartAstroMosaicViewerEngine(
             } else if (engine_params.hasOwnProperty('offaxis')) {
                 EngineViewGridOffaxis(image_target_list);
             } else {
-                EngineViewGrid();
+                EngineViewGrid(false);
             }
         }
         engine_data.daydata = new google.visualization.DataTable();
@@ -1325,7 +1334,7 @@ function StartAstroMosaicViewerEngine(
                         } else {
                             engine_error_text = 'Sesame and local name resolve failed';
                             if (engine_panels.error_text) {
-                                document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                                document.getElementById(engine_panels.error_text).innerHTML = build_error_text(engine_error_text);
                             }
                             return;
                         }
@@ -1340,7 +1349,7 @@ function StartAstroMosaicViewerEngine(
                             engine_error_text = "Failed to resolve name " + image_target;
                             console.log(engine_error_text);
                             if (engine_panels.error_text) {
-                                document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                                document.getElementById(engine_panels.error_text).innerHTML = build_error_text(engine_error_text);
                             }
                         }
                     })
@@ -1354,7 +1363,7 @@ function StartAstroMosaicViewerEngine(
                 } else {
                     engine_error_text = 'Sesame and local name resolve failed';
                     if (engine_panels.error_text) {
-                        document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                        document.getElementById(engine_panels.error_text).innerHTML = build_error_text(engine_error_text);
                     }
                 }
             }
@@ -1546,7 +1555,7 @@ function StartAstroMosaicViewerEngine(
             engine_error_text = "Failed to parse target RA/DEC";
             console.log(engine_error_text);
             if (engine_panels.error_text) {
-                document.getElementById(engine_panels.error_text).innerHTML = engine_error_text;
+                document.getElementById(engine_panels.error_text).innerHTML = build_error_text(engine_error_text);
             }
             return;
         }
@@ -1554,7 +1563,7 @@ function StartAstroMosaicViewerEngine(
             EngineViewPanels();
         } else {
             if (engine_view_type == "target") {
-                EngineViewGrid();
+                EngineViewGrid(false);
             } else {
                 google.charts.load('current', {'packages':['corechart']});
                 if (engine_view_type == "all" 
@@ -1568,6 +1577,27 @@ function StartAstroMosaicViewerEngine(
                     || (engine_view_type == "" && engine_panels.yearvisibility_panel != null)) 
                 {
                     google.charts.setOnLoadCallback(drawYearVisibility);
+                }
+            }
+        }
+    }
+
+    function getAladinPosition(aladin)
+    {
+        let radec = aladin.getRaDec();
+        let ra_hours = radec[0] * degToHours;
+        let dec = radec[1];
+        return ra_hours.toFixed(5) + " " + dec.toFixed(5);
+    }
+
+    function addAladinCatalogs(aladin)
+    {
+        if (engine_catalogs) {
+            for (var i = 0; i < engine_catalogs.length; i++) {
+                if (engine_catalogs[i].AladinCatalog != null) {
+                    if (!skip_slooh_catalog(current_telescope_service, engine_catalogs[i])) {
+                        aladin.addCatalog(engine_catalogs[i].AladinCatalog);
+                    }
                 }
             }
         }
@@ -1595,15 +1625,12 @@ function StartAstroMosaicViewerEngine(
         } else {
             document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
         }
-        if (aladin && engine_catalogs) {
-            for (var i = 0; i < engine_catalogs.length; i++) {
-                if (engine_catalogs[i].AladinCatalog != null) {
-                    if (!skip_slooh_catalog(current_telescope_service, engine_catalogs[i])) {
-                        aladin.addCatalog(engine_catalogs[i].AladinCatalog);
-                    }
-                }
-            }
+        if (aladin) {
+            addAladinCatalogs(aladin);
         }
+
+        aladin_position = getAladinPosition(aladin);
+        console.log('EngineInitAladin', aladin_position);
 
         // define function triggered when an object is clicked
         if (aladin && engine_view_type == "all") {
@@ -1621,8 +1648,19 @@ function StartAstroMosaicViewerEngine(
             aladin.on('positionChanged', function(pos){
               if (pos) {
                   console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
-                  var tempcoords = (pos.ra*degToHours).toFixed(7) + " " + (pos.dec).toFixed(7);
-                  document.getElementById(viewer_panels.moved_coords).innerHTML = tempcoords;
+                  var tempcoords = (pos.ra*degToHours).toFixed(5) + " " + (pos.dec).toFixed(5);
+                  if (engine_params.isRepositionModeFunc != null
+                        && engine_params.isRepositionModeFunc()
+                        && tempcoords != aladin_position
+                        && aladin_view_ready)
+                    {
+                        aladin_position = tempcoords;
+                        image_target = tempcoords;
+                        aladin_view_ready = false;
+                        get_image_target_ra_dec();
+                        EngineViewGrid(true);
+                        engine_params.repositionTargetFunc(image_target);
+                  }
               }
               else {
                 //not sure if there is a fail condition here
@@ -1632,7 +1670,7 @@ function StartAstroMosaicViewerEngine(
         return aladin;
     }
 
-    function EngineViewGrid()
+    function EngineViewGrid(reposition)
     {
         var grid_size_x;
         var grid_size_y;
@@ -1668,7 +1706,12 @@ function StartAstroMosaicViewerEngine(
             aladin_fov = 1.2*Math.max(engine_params.fov_x, engine_params.fov_y)*aladin_fov_extra;
         }
 
-        engine_data.aladin = EngineInitAladin(aladin_fov, image_target);
+        if (reposition) {
+            engine_data.aladin.removeLayers();
+            addAladinCatalogs(engine_data.aladin);
+        } else {
+            engine_data.aladin = EngineInitAladin(aladin_fov, image_target);
+        }
 
         var radec = null;
         if (engine_data.aladin) {
@@ -1676,7 +1719,6 @@ function StartAstroMosaicViewerEngine(
         }
 
         console.log("center RaDec = ", radec);
-        document.getElementById(viewer_panels.current_coords).innerHTML = (radec[0]*degToHours).toFixed(7) + " " + radec[1].toFixed(7);
 
         var ra = radec[0];
         var dec = radec[1];
@@ -1776,6 +1818,7 @@ function StartAstroMosaicViewerEngine(
                 document.getElementById(engine_panels.aladin_panel_text).innerHTML = astro_mosaic_link;
             }
         }
+        aladin_view_ready = true; 
     }
 
     function EngineViewGridFromList(coordinates)
@@ -1917,15 +1960,15 @@ function StartAstroMosaicViewerEngine(
         var grid_size_x = engine_params.grid_size_x;
         var grid_size_y = engine_params.grid_size_y;
         if (grid_size_x == 1 && grid_size_y == 1) {
-            EngineViewGrid();
+            EngineViewGrid(false);
             return;
         }
         if (grid_size_x > 5) {
-            document.getElementById(engine_panels.error_text).innerHTML = "Max size in panels view is 5x5";
+            document.getElementById(engine_panels.error_text).innerHTML = build_error_text("Max size in panels view is 5x5");
             grid_size_x = 5;
         }
         if (grid_size_y > 5) {
-            document.getElementById(engine_panels.error_text).innerHTML = "Max size in panels view is 5x5";
+            document.getElementById(engine_panels.error_text).innerHTML = build_error_text("Max size in panels view is 5x5");
             grid_size_y = 5;
         }
 

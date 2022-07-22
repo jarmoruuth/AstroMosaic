@@ -148,7 +148,7 @@ p {
     
 <div id="firstDiv" class="flex-container-top">
     <div>
-        <form action="javascript:ViewTarget()">
+        <form title="Enter target name or coordinates, click info icon for more info." action="javascript:ViewTarget()">
             Target:<br>
             <input type="text" id="target"><br>
         </form>
@@ -157,22 +157,22 @@ p {
     <button onclick="alert(target_info_text)"><img src="information-outline.png"></button>
     </div>
     <div>
-        <form>
+        <form title="Select telescope service.">
             Service:<br>
             <select id="current-telescope-service" onchange="javascript:ViewImage(1)">
             </select>
         </form>
     </div>
     <div>
-        <form>
+        <form title="Select telescope.">
             Telescope:<br>
             <select id="current-telescope" onchange="javascript:ViewImage(2)">
             </select>
         </form>
     </div>
     <div>
-        <form>
-            View:<br>
+        <form title="Select grid type: telescope field of view, mosaic grid or separate mosaic panels.">
+            View:<br >
             <select id="grid_type" onchange="javascript:ViewImage(0)">
                 <option value="fov">FoV</option>
                 <option value="mosaic">Mosaic grid</option>
@@ -181,38 +181,40 @@ p {
         </form>
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="Select mosaic overlap, a recommended value is to use 20% overlap." action="javascript:ViewImage(0)">
             Mosaic overlap (%):<br>
             <input type="number" id="overlap_percentage" min="1" max="100">
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="Select mosaic grid size." action="javascript:ViewImage(0)">
             Grid size (x,y):<br>
             <input type="number" id="size_x" min="1" max="10">
             <input type="number" id="size_y" min="1" max="10">
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="Select date for target visibility view." action="javascript:ViewImage(0)">
             Date (YYYY-MM-DD):<br>
             <input type="text" id="view_date">
         </form>    
     </div>
     <div>
         <br>
-        <button onclick="ViewImage(0)">Refresh</button>
+        <button title="Refresh current view." onclick="ViewImage(0)">Refresh</button>
     </div>
     <div>
         <br>
-        <p id="error_text"></p>
+        <form title="If selected, reposition image framing by moving the image using the mouse." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="repositionCheckbox">Reposition
+       </form>    
     </div>
 </div>
 
 <div id="secondDiv" class="flex-container-top2">
 
     <div>
-        <form>
+        <form title="Select catalog.">
             <select id="catalog-selection" onchange="javascript:filterChanged()">
             </select>
         </form>
@@ -220,7 +222,7 @@ p {
     <div id ="catalogDiv">
     </div>
     <div>
-        <form>
+        <form title="Show only catalog objects that are higher than selected altitude.">
             Altitude:
             <select id="catalogFilterDegrees" onchange="javascript:filterChanged()">
                 <option value="all">All</option>
@@ -234,13 +236,13 @@ p {
         </form>
     </div>
     <div>
-        <form action="javascript:filterTimeChanged()">
+        <form title="Show only catalog objects that are visible at selected time. Time format is HH:MM." action="javascript:filterTimeChanged()">
             Time:
             <input type="text" id="catalogFilterTime" size=5>
         </form>    
     </div>
     <div>
-        <form>
+        <form title="Show only catalog objects that are further away from the moon than selected angle.">
             Moon:
             <select id="catalogFilterMoon" onchange="javascript:filterChanged()">
                 <option value="all">All</option>
@@ -251,23 +253,23 @@ p {
         </form>
     </div>
     <div>
-        <form action="javascript:filterMagnitudeChanged()">
+        <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have a magnitude available." action="javascript:filterMagnitudeChanged()">
             Magnitude:
             <input type="text" id="catalogFilterMagnitude" size=5>
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="If selected, show target Wiki page when available." action="javascript:ViewImage(0)">
             <input type="checkbox" id="wikiCheckbox">Wiki
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="If selected, show target test information when available." action="javascript:ViewImage(0)">
             <input type="checkbox" id="textCheckbox">Text
         </form>    
     </div>
     <div>
-        <form action="javascript:ViewImage(0)">
+        <form title="If selected, show current weather at telescope location." action="javascript:ViewImage(0)">
             <input type="checkbox" id="weatherCheckbox">Weather
         </form>    
     </div>
@@ -275,9 +277,9 @@ p {
 
 <div>
     <p id="startup_info_text"></p>
-    <p hidden aria-hidden>Aladin Current FOV:  <span id="current_coords"></span></p>
-    <p hidden aria-hidden>Adjusted FOV Center: <span id="moved_coords"></span></p>
-    <button onclick="ViewImage(3)">Update FOV Center</button>
+</div>
+<div>
+    <p id="error_text"></p>
 </div>
 
 <div id="panels-div">
@@ -297,10 +299,12 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M66";
-var startup_info_text = "Added support for SkyGems telescopes";
+var startup_image = "M67";
+var startup_info_text = "Added reposition mode to visually move current framing. Thanks to Nick R for contributing ideas and code. Also added info text when hovering over input fields.";
 
 var version_text = 
+    "Version 1.67\n"+
+    "- Added reposition mode to visually move current framing. Thanks to Nick R for contributing the code. Also added info text when hovering over input fields.\n" +
     "Version 1.66\n"+
     "- Added support for SkyGems telescopes\n" +
     "Version 1.65\n"+
@@ -723,8 +727,6 @@ var viewer_panels = {
     status_text : "error_text",
     error_text : "error_text",
     startup_info_text: "startup_info_text",
-    current_coords: "current_coords",
-    moved_coords: "moved_coords",
     panel_view_x : 5,
     panel_view_y : 5,
     panel_view_div : "panel-view-div-",
@@ -744,7 +746,9 @@ var viewer_params = {
     grid_type : null,
     grid_size_x : null,
     grid_size_y : null,
-    isCustomMode : false
+    isCustomMode : false,
+    isRepositionModeFunc : isRepositionMode,
+    repositionTargetFunc : repositionTarget
 };
 
 var element_div_size = "700px";      // for height and width
@@ -769,8 +773,7 @@ var engine_native_resources = {
     object_altitude_get : function(){},
     moon_position : function(){},
     moon_topocentric_correction : function(){},
-    moon_distance : function(){},
-    aladin_position_changed: function(){}
+    moon_distance : function(){}
 };
 
 var engine_data = null;
@@ -1207,8 +1210,6 @@ function apply_url_set()
         viewer_panels.status_text = "textDiv";
         viewer_panels.error_text = "textDiv";
         viewer_panels.startup_info_text = "textDiv";
-        viewer_panels.current_coords = "textDiv";
-        viewer_panels.moved_coords = "textDiv";
     } else {
         url_view = "all";
         astro_mosaic_link = "";
@@ -1354,6 +1355,16 @@ function ViewTarget()
     ViewImage(0);
 }
 
+function repositionTarget(target_str)
+{
+    document.getElementById("target").value = target_str;
+}
+
+function isRepositionMode()
+{
+    return document.getElementById("repositionCheckbox").checked;
+}
+
 function update_telescope_service_list()
 {
     console.log('update_telescope_service_list');
@@ -1468,12 +1479,16 @@ function trim_spaces(str)
     return str;
 }
 
+function build_error_text(txt)
+{
+    return "<strong>" + txt + "</strong>";
+}
+
 // Main function to view image. Get parameters
 // and call correct view function
 // Values for oper_
 //      1 - Telescope service changed
 //      2 - Telescope changed
-//      3 - Reframe target
 function ViewImage(oper)
 {
     console.log('ViewImage', oper);
@@ -1492,7 +1507,7 @@ function ViewImage(oper)
     }
     var curdate = new Date(view_date);
     if (curdate == null || isNaN(curdate.valueOf())) {
-        document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format date (YYYY-MM-DD) " + view_date;
+        document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid ISO format date (YYYY-MM-DD) " + view_date);
         return;
     }
     checkFilterChanged();
@@ -1535,12 +1550,6 @@ function ViewImage(oper)
         }
     }
 
-  if (oper == 3) {
-    document.getElementById("target").value= document.getElementById(viewer_panels.moved_coords).innerHTML;
-    // if (document.getElementById("target").value != document.getElementById(viewer_panels.moved_coords).innerHTML){
-    //     document.getElementById("target").value= document.getElementById(viewer_panels.moved_coords).innerHTML;
-    //   } 
-  }
     if (url_view == "all") {
         var img_fov = document.getElementById("overlap_percentage").value;
     } else {
@@ -1567,14 +1576,9 @@ function ViewImage(oper)
 
     if (url_view == "all") {
         image_target = document.getElementById("target").value;
-    }
-    else if (document.getElementById("target").value != document.getElementByClass("aladin_location_text").value){
-      image_target= document.getElementByClassName("aladin_location_text").value;
-    }
-    else {
+    } else {
         image_target = startup_image;
     }
-    
     image_target = trim_spaces(image_target);
     console.log('image_target=', image_target, viewer_params, viewer_panels);
 
@@ -1632,6 +1636,7 @@ function ViewImage(oper)
             document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
         }
     }
+
 }
 
 function addTabRow(tab, v1, v2)
@@ -2036,12 +2041,12 @@ function checkFilterTimeChanged()
     } else {
         var hhmm = newvalue.split(':');
         if (hhmm.length != 2) {
-            document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid ISO format time (HH:MM)");
             return;
         }
         UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
         if (UTCtime_ms == null) {
-            document.getElementById(viewer_panels.error_text).innerHTML = "Invalid ISO format time (HH:MM)";
+            document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid ISO format time (HH:MM)");
             return;
         }
         console.log("checkFilterTimeChanged, time ", UTCtime_ms);
