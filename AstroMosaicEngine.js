@@ -1670,6 +1670,16 @@ function StartAstroMosaicViewerEngine(
         return aladin;
     }
 
+    function createMosaicTableElement(txt)
+    {
+        var tabdata = document.createElement("TD");
+        var celltext = document.createTextNode(txt);
+        tabdata.style.border = "1px solid #dddddd";
+        tabdata.style.padding = "4px";
+        tabdata.appendChild(celltext);
+        return tabdata;
+    }
+
     function EngineViewGrid(reposition)
     {
         var grid_size_x;
@@ -1795,15 +1805,22 @@ function StartAstroMosaicViewerEngine(
                 var tab = document.createElement("TABLE");
                 tab.style.width = "100%";
                 tab.style.borderCollapse="collapse";
-                for (y = 0; y < grid_size_y; y++) {
+                var tabrow = document.createElement("TR");
+                tab.appendChild(tabrow);
+                var tabdata = createMosaicTableElement("");
+                tabrow.appendChild(tabdata);
+                var colnames = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                for (var x = 0; x < grid_size_x; x++) {
+                    var tabdata = createMosaicTableElement(colnames[x]);
+                    tabrow.appendChild(tabdata);
+                }
+                for (var y = 0; y < grid_size_y; y++) {
                     var tabrow = document.createElement("TR");
                     tab.appendChild(tabrow);
-                    for (x = 0; x < grid_size_x; x++) {
-                        var tabdata = document.createElement("TD");
-                        var celltext = document.createTextNode(panel_radec[x][y]);
-                        tabdata.style.border = "1px solid #dddddd";
-                        tabdata.style.padding = "4px";
-                        tabdata.appendChild(celltext);
+                    var tabdata = createMosaicTableElement(y+1);
+                    tabrow.appendChild(tabdata);
+                    for (var x = 0; x < grid_size_x; x++) {
+                        var tabdata = createMosaicTableElement(panel_radec[x][y]);
                         tabrow.appendChild(tabdata);
                     }
                 }
