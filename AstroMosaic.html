@@ -299,11 +299,14 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var startup_image = "M68";
-var startup_info_text = "v1.68 Added James Webb Space Telescope (JWST) Near-Infrared Camera (NIRCam)<br>" +
+var startup_image = "M69";
+var startup_info_text = "v1.69 Added Simbad and NED catalogs. Added marker syntax to add custom markers on the view.<br>" +
+                        "v1.68 Added James Webb Space Telescope (JWST) Near-Infrared Camera (NIRCam)<br>" +
                         "v1.67 Added reposition mode to visually move current framing. Thanks to Nick R for contributing ideas and code. Also added info text when hovering over input fields.";
 
 var version_text = 
+    "Version 1.69\n"+
+    "- Added Simbad and NED catalogs. Added marker syntax to add custom markers on the view.\n"+
     "Version 1.68\n"+
     "- Added James Webb Space Telescope (JWST) Near-Infrared Camera (NIRCam)\n"+
     "Version 1.67\n"+
@@ -1652,23 +1655,33 @@ function ViewImage(oper)
 
 function addTabRow(tab, v1, v2)
 {
-    return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
+    if (v1 && v2) {
+        return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
+    } else {
+        return tab;
+    }
 }
 
 function dataObjectToTable(data)
 {
-    var tab = "<BR><TABLE>";
-    tab = addTabRow(tab, "Name", data.name);
-    tab = addTabRow(tab, "Type", data.info.type);
-    tab = addTabRow(tab, "RA/DEC",  data.info.radec);
-    tab = addTabRow(tab, "Constellation", data.info.constellation);
-    tab = addTabRow(tab, "Magnitude", data.info.mag);
-    tab = addTabRow(tab, "Distance (Mly)", data.info.distance);
-    tab = addTabRow(tab, "Notes", data.info.notes);
-    tab = addTabRow(
-            tab, 
-            "Url", 
-            '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
+    var tab = "<TABLE>";
+    if (data.info) {
+        tab = addTabRow(tab, "Name", data.name);
+        tab = addTabRow(tab, "Type", data.info.type);
+        tab = addTabRow(tab, "RA/DEC",  data.info.radec);
+        tab = addTabRow(tab, "Constellation", data.info.constellation);
+        tab = addTabRow(tab, "Magnitude", data.info.mag);
+        tab = addTabRow(tab, "Distance (Mly)", data.info.distance);
+        tab = addTabRow(tab, "Notes", data.info.notes);
+        tab = addTabRow(
+                tab, 
+                "Url", 
+                '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
+    } else {
+        for (var key in data) {
+            tab = addTabRow(tab, key.toString(), data[key].toString());
+        }
+    }
     tab = tab + "</TABLE>";
     return tab;
 }
@@ -2137,7 +2150,7 @@ function noWikiAvailable(alt_data, error_text)
     if (alt_data != null) {
         console.log("noWikiAvailable:show alt_data");
         var tab = dataObjectToTable(alt_data);
-        document.getElementById(info_panels.wiki_panel).style.height = "200px";
+        document.getElementById(info_panels.wiki_panel).style.height = ""; //"200px";
         document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
         document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + tab + "</p>";
     } else if (error_text != null) {

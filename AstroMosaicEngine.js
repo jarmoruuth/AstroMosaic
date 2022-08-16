@@ -164,6 +164,24 @@ function fillHorizonLimits(horizon_limits)
     return horizon_limits;
 }
 
+function filterImageTargetList(image_target_list)
+{
+    var new_image_target_list = [];
+    var marker_list = [];
+    for (var i = 0; i < image_target_list.length; i++) {
+        var s = image_target_list[i].trim();
+        if (s.startsWith("marker")) {
+            console.log("filterImageTargetList ", s);
+            s = s.substring(6).trim();
+            console.log("filterImageTargetList removed marker", s);
+            marker_list.push(s);
+        } else {
+            new_image_target_list.push(s);
+        }
+    }
+    return { image_target_list: new_image_target_list, marker_list: marker_list };
+} 
+
 /*************************************************************************
  *
  *      StartAstroMosaicViewerEngine
@@ -207,12 +225,14 @@ function StartAstroMosaicViewerEngine(
         yearchart : null
 
     };
+    var aladin_fov;
     var aladin_fov_extra = 1;
     var aladin_position = null;
     var aladin_view_ready = false;
 
     var image_target;
     var image_target_list = [];
+    var marker_list = [];
 
     var engine_error_text = null;
 
@@ -238,10 +258,17 @@ function StartAstroMosaicViewerEngine(
     if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c2 == 'd ') {
         console.log('image_target is number');
         image_target_list = image_target.split(',');
+        let obj = filterImageTargetList(image_target_list);
+        image_target_list = obj.image_target_list;
+        marker_list = obj.marker_list;
         for (var i = 0; i < image_target_list.length; i++) {
             image_target_list[i] = reformat_coordinates(image_target_list[i]);
         }
         console.log('image_target_list', image_target_list);
+        for (var i = 0; i < marker_list.length; i++) {
+            marker_list[i] = reformat_coordinates(marker_list[i]);
+        }
+        console.log('marker_list', marker_list);
         image_target = image_target_list[0];
         EngineViewImageByType();
     } else {
@@ -1590,7 +1617,7 @@ function StartAstroMosaicViewerEngine(
         return ra_hours.toFixed(5) + " " + dec.toFixed(5);
     }
 
-    function addAladinCatalogs(aladin)
+    function addAladinCatalogs(aladin, target)
     {
         if (engine_catalogs) {
             for (var i = 0; i < engine_catalogs.length; i++) {
@@ -1598,6 +1625,25 @@ function StartAstroMosaicViewerEngine(
                     if (!skip_slooh_catalog(current_telescope_service, engine_catalogs[i])) {
                         aladin.addCatalog(engine_catalogs[i].AladinCatalog);
                     }
+                }
+            }
+            let radec = aladin.getRaDec();
+            
+            let cat = A.catalogFromSimbad({ra: radec[0], dec: radec[1]}, aladin_fov);
+            cat.hide();
+            aladin.addCatalog(cat);
+
+            cat = A.catalogFromNED({ra: radec[0], dec: radec[1]});
+            cat.hide();
+            aladin.addCatalog(cat);
+
+            if (marker_list.length > 0) {
+                cat = A.catalog({name: 'Markers', sourceSize: 18});
+                aladin.addCatalog(cat);
+                for (var i = 0; i < marker_list.length; i++) {
+                    let marker_radec = get_ra_dec(marker_list[i]);
+                    console.log('Add marker ', marker_radec);
+                    cat.addSources(A.source(marker_radec[0], marker_radec[1]));
                 }
             }
         }
@@ -1644,7 +1690,7 @@ function StartAstroMosaicViewerEngine(
                     console.log('aladin objectClicked, no object');
                 }
             });
-         // Update on user move of view
+            // Update on user move of view
             aladin.on('positionChanged', function(pos){
               if (pos) {
                   console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
@@ -1705,7 +1751,6 @@ function StartAstroMosaicViewerEngine(
 
         // Show image and get coordinates from there to
         // calculate grid boxes.
-        var aladin_fov;
         if (grid_type == "mosaic") {
             if (grid_size_x > grid_size_y) {
                 aladin_fov = (grid_size_x+0.2)*Math.max(engine_params.fov_x, engine_params.fov_y)*aladin_fov_extra;
