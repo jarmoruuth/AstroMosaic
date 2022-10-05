@@ -1629,11 +1629,12 @@ function StartAstroMosaicViewerEngine(
             }
             let radec = aladin.getRaDec();
             
-            let cat = A.catalogFromSimbad({ra: radec[0], dec: radec[1]}, aladin_fov);
+            // Limit Simbad and NED catalogs to 1 degree to avoid excessive memory usage
+            let cat = A.catalogFromSimbad({ra: radec[0], dec: radec[1]}, 1);
             cat.hide();
             aladin.addCatalog(cat);
 
-            cat = A.catalogFromNED({ra: radec[0], dec: radec[1]});
+            cat = A.catalogFromNED({ra: radec[0], dec: radec[1]}, 1);
             cat.hide();
             aladin.addCatalog(cat);
 
