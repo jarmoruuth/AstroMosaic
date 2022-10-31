@@ -2161,5 +2161,14 @@ function StartAstroMosaicViewerEngine(
                 break;
             }
         }
+        while (y < 5) {
+            document.getElementById(engine_panels.panel_view_div+y.toString()+x.toString()).innerHTML = "";
+            document.getElementById(engine_panels.panel_view_text+y.toString()+x.toString()).innerHTML = "";
+            x = x + 1;
+            if (x >= 5) {
+                x = 0;
+                y = y + 1;
+            }
+        }
     }
 }
