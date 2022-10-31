@@ -182,7 +182,7 @@ function filterImageTargetList(image_target_list)
         }
     }
     return { image_target_list: new_image_target_list, marker_list: marker_list };
-} 
+}
 
 /*************************************************************************
  *
@@ -208,7 +208,6 @@ function StartAstroMosaicViewerEngine(
 
     var target_ra;
     var target_dec;
-    var grid_type = engine_params.grid_type;
 
     var hour_ms = 60*60*1000;
     var day_ms = 24*hour_ms;
@@ -239,9 +238,8 @@ function StartAstroMosaicViewerEngine(
     var engine_error_text = null;
 
     console.log('StartAstroMosaicViewerEngine', engine_view_type, target);
-    console.log('timezoneOffset', engine_params.timezoneOffset);
 
-    if (engine_native_resources) {
+    if (engine_view_type == 'get_engine_native_resources') {
         engine_native_resources.sun_rise_set = sun_rise_set;
         engine_native_resources.object_altitude_init = object_altitude_init;
         engine_native_resources.object_altaz = object_altaz;
@@ -249,15 +247,23 @@ function StartAstroMosaicViewerEngine(
         engine_native_resources.moon_position = moon_position;
         engine_native_resources.moon_topocentric_correction = moon_topocentric_correction;
         engine_native_resources.moon_distance = moon_distance;
+        return;
     }
 
-    image_target = target;
+    console.log('timezoneOffset', engine_params.timezoneOffset);
+
+    var grid_type = engine_params.grid_type;
+
+    image_target = target.trim();
     image_target_list = [];
     img_fov = 1 - img_fov / 100;
 
     var c = image_target.substr(0,1);
     var c2 = image_target.substr(0,2);
-    if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c2 == 'd ') {
+    console.log('StartAstroMosaicViewerEngine', 'c', c, 'c2', c2);
+    if (c == '{') {
+        EngineViewTargetPanels(image_target);
+    } else if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c2 == 'd ') {
         console.log('image_target is number');
         image_target_list = image_target.split(',');
         let obj = filterImageTargetList(image_target_list);
@@ -1589,7 +1595,7 @@ function StartAstroMosaicViewerEngine(
             return;
         }
         if (engine_view_type == "all" && grid_type == 'panels') {
-            EngineViewPanels();
+            EngineViewMosaicPanels();
         } else {
             if (engine_view_type == "target") {
                 EngineViewGrid(false);
@@ -2018,9 +2024,9 @@ function StartAstroMosaicViewerEngine(
         document.getElementById(engine_panels.aladin_panel_text).innerHTML = panel_radec;
     }
 
-    function EngineViewPanels()
+    function EngineViewMosaicPanels()
     {
-        console.log('EngineViewPanels');
+        console.log('EngineViewMosaicPanels');
 
         var grid_size_x = engine_params.grid_size_x;
         var grid_size_y = engine_params.grid_size_y;
@@ -2071,11 +2077,11 @@ function StartAstroMosaicViewerEngine(
                 var point_dec_min = Math.floor(point_dec_sec / 60);
                 point_dec_sec = point_dec_sec - point_dec_min * 60;
         
-                aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
-                aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
+                var aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
+                var aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
 
                 var panel_id = engine_panels.panel_view_div + y.toString() + x.toString();
-                console.log('EngineViewPanels, panel_id='+panel_id);
+                console.log('EngineViewMosaicPanels, panel_id='+panel_id);
                 if (engine_params.am_fov_x != engine_params.am_fov_y) {
                     var height = 300 * engine_params.am_fov_y / engine_params.am_fov_x;
                     document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
@@ -2097,6 +2103,63 @@ function StartAstroMosaicViewerEngine(
             row = row - 1;
             row_number = row_number + 1;
             y = y + 1;
+        }
+    }
+
+    /* View targets from JSON list.
+     * Example: { "targets": [ { "radec": "19.89624 18.77917", "name": "M71" }, { "radec": "12.38192  15.82228", "name": "M100" } ] }
+     */
+    function EngineViewTargetPanels(target_json)
+    {
+        console.log('EngineViewTargetPanels');
+
+        var obj = JSON.parse(target_json);
+        if (!obj) {
+            console.log('EngineViewTargetPanels failed to parse json:' + target_json);
+            return;
+        }
+
+        var target_list = obj.targets;
+        if (target_list.length == 0) {
+            console.log('EngineViewTargetPanels empty target list');
+            return;
+        }
+
+        engine_native_resources.reset_view();
+
+        var x = 0;
+        var y = 0;
+
+        for (var i = 0; i < target_list.length; i++) {
+            console.log('EngineViewTargetPanels radec:' + target_list[i].radec);
+            var radec = reformat_coordinates(target_list[i].radec);
+
+            console.log('EngineViewTargetPanels reformat_coordinates:', radec);
+
+            var panel_id = engine_panels.panel_view_div + y.toString() + x.toString();
+            console.log('EngineViewTargetPanels, panel_id='+panel_id);
+            if (engine_params.am_fov_x != engine_params.am_fov_y) {
+                var height = 300 * engine_params.am_fov_y / engine_params.am_fov_x;
+                document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
+            } else {
+                document.getElementById(panel_id).style.height = "300px";
+            }
+            if (A) {
+                engine_data.aladinarr[i] = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:engine_params.am_fov_x, target: radec,
+                                            showReticle:false, showZoomControl:false, showFullscreenControl:false, 
+                                            showLayersControl:false, showGotoControl:false,
+                                            showControl: false, cooFrame: "J2000", showFrame: false});
+            }
+            document.getElementById(engine_panels.panel_view_text+y.toString()+x.toString()).innerHTML = target_list[i].name + "<br>" +
+                                                                                                         " RA/DEC " + radec;
+            x = x + 1;
+            if (x >= 5) {
+                x = 0;
+                y = y + 1;
+            }
+            if (y >= 5) {
+                break;
+            }
         }
     }
 }

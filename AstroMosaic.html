@@ -280,6 +280,11 @@ p {
             <input type="checkbox" id="weatherCheckbox">Weather
         </form>    
     </div>
+    <div>
+        <form title="If selected, shows catalog targets in a panel view. Click refresh to update view." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="panelsCheckbox">Panels
+        </form>    
+    </div>
 </div>
 
 <div id="addTelescopeDiv" class="flex-container-top2">
@@ -361,13 +366,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.71 test1";
+var version_number = "1.71 test2";
 var startup_image = "M71";
-var startup_info_text = "v" + version_number + " Add own telescope";
+var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects.";
 
 var version_text = 
     "Version "+ version_number + "\n"+
-    "- Add own telescope.\n"+
+    "- Add own telescope, panel view for catalog objects.\n"+
     "Version 1.70\n"+
     "- Limit Simbad and NED catalog views to 1 degree to avoid excessive memory usage.\n"+
     "Version 1.69\n"+
@@ -1008,7 +1013,7 @@ function createMosaicPanels()
         // row
         var row = document.createElement("DIV");
         row.className = "flex-container";
-        for (var j = 0; j < 4; j++) {
+        for (var j = 0; j < 5; j++) {
             var col = document.createElement("DIV");
             var x = document.createElement("DIV");
             x.id = "panel-view-div-" + i.toString() + j.toString();
@@ -1046,6 +1051,8 @@ function startAstroMosaic(txt)
 function initAstroMosaic()
 {
     console.log("initAstroMosaic");
+
+    StartAstroMosaicViewerEngine('get_engine_native_resources', null, null, null, null, null, engine_native_resources);
 
     init_all_services();
 
@@ -1632,6 +1639,22 @@ function build_error_text(txt)
     return "<strong>" + txt + "</strong>";
 }
 
+function get_catalog_list_target(list)
+{
+    console.log("get_catalog_list_target");
+    var json = { targets: [] };
+    for (var i = 0; i < list.length && json.targets.length < 25; i++) {
+        var name = list[i][1];
+        if (name == "") {
+            continue;
+        }
+        var radec = list[i][0];
+        target = { radec: radec, name: name };
+        json.targets[json.targets.length] = target;
+    }
+    return JSON.stringify(json);
+}
+
 // Main function to view image. Get parameters
 // and call correct view function
 // Values for oper_
@@ -1727,7 +1750,11 @@ function ViewImage(oper)
 
     console.log("current_telescope", current_telescope.name, "horizonHard[0]", viewer_params.horizonHard[0]);
 
-    if (url_view == "all") {
+    init_catalog_view_list();
+
+    if (current_catalog_filtered_list != null && document.getElementById("panelsCheckbox").checked) {
+        image_target = get_catalog_list_target(current_catalog_filtered_list.list);
+    } else if (url_view == "all") {
         image_target = document.getElementById("target").value;
     } else {
         image_target = startup_image;
@@ -1745,7 +1772,7 @@ function ViewImage(oper)
         viewer_params.grid_size_y = 1;
     }
 
-    if (viewer_params.grid_type == 'panels') {
+    if (viewer_params.grid_type == 'panels' || image_target.substr(0,1) == '{') {
         if (screen_setup != 'panels') {
             // switch to panels view
             createMosaicPanels();
@@ -1775,8 +1802,6 @@ function ViewImage(oper)
                     engine_native_resources);
 
     console.log('returned from StartAstroMosaicViewerEngine');
-
-    init_catalog_view_list();
 
     if (url_view == "all" || url_view == "weather") {
         showWeatherForecast();
@@ -2561,4 +2586,4 @@ function showHideAddTelescope()
 
 </script>
 </body>
-</html>
+</html>target
