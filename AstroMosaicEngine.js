@@ -79,8 +79,10 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
     console.log('AstroMosaicEngine');
 
     var engine_params = {
-        fov_x : getAstroMosaicFov(params.fov_x),
-        fov_y : getAstroMosaicFov(params.fov_y),
+        fov_x : params.fov_x,
+        fov_y : params.fov_y,
+        am_fov_x : getAstroMosaicFov(params.fov_x),
+        am_fov_y : getAstroMosaicFov(params.fov_y),
         location_lat : params.location_lat,
         location_lng : params.location_lng,
         horizonSoft : params.horizonSoft,
@@ -1754,12 +1756,12 @@ function StartAstroMosaicViewerEngine(
         // calculate grid boxes.
         if (grid_type == "mosaic") {
             if (grid_size_x > grid_size_y) {
-                aladin_fov = (grid_size_x+0.2)*Math.max(engine_params.fov_x, engine_params.fov_y)*aladin_fov_extra;
+                aladin_fov = (grid_size_x+0.2)*Math.max(engine_params.am_fov_x, engine_params.am_fov_y)*aladin_fov_extra;
             } else {
-                aladin_fov = (grid_size_y+0.2)*Math.max(engine_params.fov_x, engine_params.fov_y)*aladin_fov_extra;
+                aladin_fov = (grid_size_y+0.2)*Math.max(engine_params.am_fov_x, engine_params.am_fov_y)*aladin_fov_extra;
             }
         } else {
-            aladin_fov = 1.2*Math.max(engine_params.fov_x, engine_params.fov_y)*aladin_fov_extra;
+            aladin_fov = 1.2*Math.max(engine_params.am_fov_x, engine_params.am_fov_y)*aladin_fov_extra;
         }
 
         if (reposition) {
@@ -1789,20 +1791,20 @@ function StartAstroMosaicViewerEngine(
         }
         y = 0;
         while (row >= -size_y) {
-            var row_dec = dec + row * img_fov * engine_params.fov_y;
+            var row_dec = dec + row * img_fov * engine_params.am_fov_y;
             col = size_x;
             x = 0;
             while (col >= -size_x) {
-                var col_ra = ra + col * (img_fov * engine_params.fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+                var col_ra = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
 
                 // now center ra/dec is col_ra/row_dec
                 // calculate corners
-                var row_dec1 = row_dec + engine_params.fov_y/2;
-                var row_dec2 = row_dec - engine_params.fov_y/2;
-                var col_ra1 = ra + col * (img_fov * engine_params.fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-                var col_ra2 = ra + col * (img_fov * engine_params.fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-                var col_ra1_delta = ((engine_params.fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-                var col_ra2_delta = ((engine_params.fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+                var row_dec1 = row_dec + engine_params.am_fov_y/2;
+                var row_dec2 = row_dec - engine_params.am_fov_y/2;
+                var col_ra1 = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+                var col_ra2 = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+                var col_ra1_delta = ((engine_params.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
+                var col_ra2_delta = ((engine_params.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
 
                 var panel = [
                     [col_ra1-col_ra1_delta, row_dec1], 
@@ -1893,10 +1895,10 @@ function StartAstroMosaicViewerEngine(
         // Show image and get coordinates from there to
         // calculate grid boxes.
         var aladin_fov;
-        if (engine_params.fov_x > engine_params.fov_y) {
-            aladin_fov = (grid_size+0.2)*engine_params.fov_x;
+        if (engine_params.am_fov_x > engine_params.am_fov_y) {
+            aladin_fov = (grid_size+0.2)*engine_params.am_fov_x;
         } else {
-            aladin_fov = (grid_size+0.2)*engine_params.fov_y;
+            aladin_fov = (grid_size+0.2)*engine_params.am_fov_y;
         }
 
         engine_data.aladin = EngineInitAladin(aladin_fov, coordinates[0]);
@@ -1912,7 +1914,7 @@ function StartAstroMosaicViewerEngine(
             console.log("panel "+i+" ra/dec=", col_ra, "/", row_dec);
 
             // calculate corners
-            drawBox(col_ra, row_dec, engine_params.fov_x, engine_params.fov_y);
+            drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y);
         }
     }
 
@@ -1950,8 +1952,8 @@ function StartAstroMosaicViewerEngine(
     {
         console.log('EngineViewGridOffaxis');
 
-        var total_fov_x = engine_params.fov_x + engine_params.offaxis.fov_x;
-        var total_fov_y = engine_params.fov_y;
+        var total_fov_x = engine_params.am_fov_x + engine_params.offaxis.am_fov_x;
+        var total_fov_y = engine_params.am_fov_y;
 
         // Show image and get coordinates from there to
         // calculate grid boxes.
@@ -1969,41 +1971,41 @@ function StartAstroMosaicViewerEngine(
         console.log("ra/dec=", col_ra, "/", row_dec);
 
         // telescope FoV
-        drawBox(col_ra, row_dec, engine_params.fov_x, engine_params.fov_y);
+        drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y);
 
         // offaxis guiding FoV
         switch (engine_params.offaxis.position) {
             case 'T':
                 drawBox(
                     col_ra, 
-                    row_dec + engine_params.fov_y/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_y/2,
-                    engine_params.offaxis.fov_x, 
-                    engine_params.offaxis.fov_y);
+                    row_dec + engine_params.am_fov_y/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_y/2,
+                    engine_params.offaxis.am_fov_x, 
+                    engine_params.offaxis.am_fov_y);
                 break;
             case 'B':
                 drawBox(
                     col_ra, 
-                    row_dec - engine_params.fov_y/2 - engine_params.offaxis.offset - engine_params.offaxis.fov_y/2,
-                    engine_params.offaxis.fov_x, 
-                    engine_params.offaxis.fov_y);
+                    row_dec - engine_params.am_fov_y/2 - engine_params.offaxis.am_offset - engine_params.offaxis.am_fov_y/2,
+                    engine_params.offaxis.am_fov_x, 
+                    engine_params.offaxis.am_fov_y);
                 break;
             case 'L':
                 drawBox(
                     col_ra + 
-                        (engine_params.fov_x/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_x/2) *
+                        (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) *
                         (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))), 
                     row_dec,
-                    engine_params.offaxis.fov_x, 
-                    engine_params.offaxis.fov_y);
+                    engine_params.offaxis.am_fov_x, 
+                    engine_params.offaxis.am_fov_y);
                 break;
             case 'R':
                 drawBox(
                     col_ra - 
-                        (engine_params.fov_x/2 + engine_params.offaxis.offset + engine_params.offaxis.fov_x/2) *
+                        (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) *
                         (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))),
                     row_dec,
-                    engine_params.offaxis.fov_x, 
-                    engine_params.offaxis.fov_y);
+                    engine_params.offaxis.am_fov_x, 
+                    engine_params.offaxis.am_fov_y);
                 break;
         }
 
@@ -2050,12 +2052,12 @@ function StartAstroMosaicViewerEngine(
         var row_number = 0;
         var y = 0;
         while (row >= -size_y) {
-            var row_dec = dec + row * img_fov * engine_params.fov_y;
+            var row_dec = dec + row * img_fov * engine_params.am_fov_y;
             col = size_x;
             var panel_number = 5 * row_number;
             var x = 0;
             while (col >= -size_x) {
-                var col_ra = ra + col * (img_fov * engine_params.fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+                var col_ra = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
                 // convert from degrees to hours
                 col_ra = col_ra * degToHours;
 
@@ -2074,14 +2076,14 @@ function StartAstroMosaicViewerEngine(
 
                 var panel_id = engine_panels.panel_view_div + y.toString() + x.toString();
                 console.log('EngineViewPanels, panel_id='+panel_id);
-                if (engine_params.fov_x != engine_params.fov_y) {
-                    var height = 300 * engine_params.fov_y / engine_params.fov_x;
+                if (engine_params.am_fov_x != engine_params.am_fov_y) {
+                    var height = 300 * engine_params.am_fov_y / engine_params.am_fov_x;
                     document.getElementById(panel_id).style.height = Math.floor(height).toString() + "px";
                 } else {
                     document.getElementById(panel_id).style.height = "300px";
                 }
                 if (A) {
-                    engine_data.aladinarr[i] = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:engine_params.fov_x, target: aladin_target_str,
+                    engine_data.aladinarr[i] = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:engine_params.am_fov_x, target: aladin_target_str,
                                                 showReticle:false, showZoomControl:false, showFullscreenControl:false, 
                                                 showLayersControl:false, showGotoControl:false,
                                                 showControl: false, cooFrame: "J2000", showFrame: false});
