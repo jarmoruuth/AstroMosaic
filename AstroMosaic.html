@@ -285,6 +285,16 @@ p {
             <input type="checkbox" id="panelsCheckbox">Panels
         </form>    
     </div>
+    <div>
+        <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="catalogSortCheckbox">Sort
+        </form>    
+    </div>
+    <div>
+        <form title="If selected, show azimuth in target visibility graph." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="showAzCheckbox">Az
+        </form>    
+    </div>
 </div>
 
 <div id="addTelescopeDiv" class="flex-container-top2">
@@ -366,13 +376,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.71 test3";
+var version_number = "1.71 test4";
 var startup_image = "M71";
-var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects.";
+var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view.";
 
 var version_text = 
     "Version "+ version_number + "\n"+
-    "- Add own telescope, panel view for catalog objects.\n"+
+    "- Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view.\n"+
     "Version 1.70\n"+
     "- Limit Simbad and NED catalog views to 1 degree to avoid excessive memory usage.\n"+
     "Version 1.69\n"+
@@ -809,8 +819,10 @@ var viewer_panels = {
     status_text : "error_text",
     error_text : "error_text",
     startup_info_text: "startup_info_text",
-    panel_view_x : 5,
-    panel_view_y : 5,
+    mosaic_panel_x : 5,
+    mosaic_panel_y : 5,
+    catalog_panel_x : 5,
+    catalog_panel_y : 5,
     panel_view_div : "panel-view-div-",
     panel_view_text : "panel-text-div-"
 };
@@ -829,6 +841,7 @@ var viewer_params = {
     grid_size_x : null,
     grid_size_y : null,
     isCustomMode : false,
+    showAz: false,
     isRepositionModeFunc : isRepositionMode,
     repositionTargetFunc : repositionTarget
 };
@@ -1001,7 +1014,7 @@ function createDefaultPanels(mobile_screen)
     }
 }
 
-function createMosaicPanels()
+function createMosaicPanels(max_x, max_y)
 {
     console.log("createMosaicPanels");
 
@@ -1009,11 +1022,11 @@ function createMosaicPanels()
 
     panels.innerHTML = "";
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < max_y; i++) {
         // row
         var row = document.createElement("DIV");
         row.className = "flex-container";
-        for (var j = 0; j < 5; j++) {
+        for (var j = 0; j < max_x; j++) {
             var col = document.createElement("DIV");
             var x = document.createElement("DIV");
             x.id = "panel-view-div-" + i.toString() + j.toString();
@@ -1338,7 +1351,7 @@ function addTelescopeButtonFunction()
             lng: parseFloat(document.getElementById("LngField").value),
             timezoneOffset : parseInt(document.getElementById("TzField").value),
             alt: 0, 
-            weather: null, 
+            weather: "detect_location", 
             horizon_limits: horizon_0, 
             meridian_transit: 0
     };
@@ -1347,6 +1360,8 @@ function addTelescopeButtonFunction()
 
     if (ret == 1) {
         update_telescope_service_list();
+    } else if (ret == 2) {
+        update_telescope_list(current_telescope_service.name);
     }
 
     ViewImage(ret);
@@ -1362,23 +1377,22 @@ function add_service(new_service_name, new_telescope, set_current_telescope)
             // found service
             console.log("found existing service " + new_service_name);
             for (var j = 0; j < service.telescopes.length; j++) {
-                if (service.telescopes[j].name = new_telescope.name) {
+                if (service.telescopes[j].name == new_telescope.name) {
                     // Update existing telescope
                     console.log("update existing telescope " + new_telescope.name);
                     service.telescopes[j] = new_telescope;
                     return 2;
                 }
-                if (j == service.telescopes.length) {
-                    // telescope not found, add a new one
-                    console.log("add new telescope " + new_telescope.name);
-                    service.telescopes[service.telescopes.length] = new_telescope;
-                }
-                if (set_current_telescope) {
-                    current_telescope_service = service;
-                    current_telescope_service_selected_index = i;
-                    current_telescope = current_telescope_service.telescopes[j];
-                    console.log("current_telescope", current_telescope.name);
-                }
+            }
+            // telescope not found, add a new one
+            console.log("add new telescope " + new_telescope.name);
+            service.telescopes[service.telescopes.length] = new_telescope;
+
+            if (set_current_telescope) {
+                current_telescope_service = service;
+                current_telescope_service_selected_index = i;
+                current_telescope = current_telescope_service.telescopes[j];
+                console.log("current_telescope", current_telescope.name);
             }
             return 2;
         }
@@ -1639,11 +1653,15 @@ function build_error_text(txt)
     return "<strong>" + txt + "</strong>";
 }
 
+/* Get targets from catalog list in a json format. Used for panel view 
+ * of catalog targets.
+ */
 function get_catalog_list_target(list)
 {
     console.log("get_catalog_list_target");
+    var max_targets = viewer_panels.catalog_panel_x * viewer_panels.catalog_panel_y;
     var json = { targets: [] };
-    for (var i = 0; i < list.length && json.targets.length < 25; i++) {
+    for (var i = 0; i < list.length && json.targets.length < max_targets; i++) {
         var name = list[i][1];
         if (name == "") {
             continue;
@@ -1652,7 +1670,7 @@ function get_catalog_list_target(list)
         target = { radec: radec, name: name };
         json.targets[json.targets.length] = target;
     }
-    return JSON.stringify(json);
+    return json;
 }
 
 // Main function to view image. Get parameters
@@ -1739,6 +1757,7 @@ function ViewImage(oper)
     viewer_params.horizonHard = current_telescope.horizon_limits.hard;
     viewer_params.meridian_transit = current_telescope.meridian_transit;
     viewer_params.timezoneOffset = current_telescope.timezoneOffset;
+    viewer_params.showAz = document.getElementById("showAzCheckbox").checked;
     if (current_telescope.hasOwnProperty('offaxis')) {
         viewer_params.offaxis = current_telescope.offaxis;
         viewer_params.offaxis.am_fov_x = getAstroMosaicFov(current_telescope.offaxis.fov_x);
@@ -1752,15 +1771,27 @@ function ViewImage(oper)
 
     init_catalog_view_list();
 
-    if (current_catalog_filtered_list != null && document.getElementById("panelsCheckbox").checked) {
-        image_target = get_catalog_list_target(current_catalog_filtered_list.list);
-    } else if (url_view == "all") {
+    json_image_target = null;
+
+    if (url_view == "all") {
         image_target = document.getElementById("target").value;
     } else {
         image_target = startup_image;
     }
-    image_target = trim_spaces(image_target);
-    console.log('image_target=', image_target, viewer_params, viewer_panels);
+
+    if (current_catalog_filtered_list != null && document.getElementById("panelsCheckbox").checked) {
+        json_image_target = get_catalog_list_target(current_catalog_filtered_list.list);
+    } else if (image_target.substr(0,1) == '{') {
+        console.log("JSON", image_target);
+        json_image_target = JSON.parse(image_target);
+    }
+
+    if (json_image_target) {
+        console.log('JSON target', json_image_target, viewer_params, viewer_panels);
+    } else {
+        image_target = trim_spaces(image_target);
+        console.log('image_target', image_target, viewer_params, viewer_panels);
+    }
 
     if (url_view == 'all') {
         viewer_params.grid_type = document.getElementById("grid_type").value;
@@ -1772,10 +1803,16 @@ function ViewImage(oper)
         viewer_params.grid_size_y = 1;
     }
 
-    if (viewer_params.grid_type == 'panels' || image_target.substr(0,1) == '{') {
+    if (json_image_target != null) {
+        if (screen_setup != 'catalog_panels') {
+            // switch to catalog_panels view
+            createMosaicPanels(viewer_panels.catalog_panel_x, viewer_panels.catalog_panel_y);
+            screen_setup = 'catalog_panels';
+        }
+    } else if (viewer_params.grid_type == 'panels') {
         if (screen_setup != 'panels') {
             // switch to panels view
-            createMosaicPanels();
+            createMosaicPanels(viewer_panels.mosaic_panel_x, viewer_panels.mosaic_panel_y);
             screen_setup = 'panels';
         }
     } else {
@@ -1799,7 +1836,8 @@ function ViewImage(oper)
                     viewer_panels, 
                     catalogs,
                     img_fov,
-                    engine_native_resources);
+                    engine_native_resources,
+                    json_image_target);
 
     console.log('returned from StartAstroMosaicViewerEngine');
 
@@ -1988,13 +2026,16 @@ function filter_visible_catalog_items(cat, lat, lng)
         var suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
         midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
     } else {
-        console.log("filter_visible_catalog_items:use specific time");
-        midnight = viewer_params.UTCdate_ms + catalog_filter_time;
+        if (viewer_params.timezoneOffset == null) {
+            console.log("filter_visible_catalog_items:use specific UTC time");
+            midnight = viewer_params.UTCdate_ms + catalog_filter_time;
+        } else {
+            console.log("filter_visible_catalog_items:use specific timezone time");
+            midnight = viewer_params.UTCdate_ms + catalog_filter_time + viewer_params.timezoneOffset*60*60*1000;
+        }
     }
     var fl = [];
     fl[fl.length] = ['', ''];
-    var catalog_objects = [];
-    catalog_objects[catalog_objects.length] = null;
 
     // if object altitude is above catalogFilterDegrees degrees in any of the following
     // points during the night we add it to list
@@ -2053,7 +2094,7 @@ function filter_visible_catalog_items(cat, lat, lng)
         // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
         var ra = cat.targets[i][1] * hoursToDeg;
         var dec = cat.targets[i][2];
-        var alt;
+        var alt = 0;
         var addToList = false;
         if (catalogFilterDegrees != null) {
             alt = engine_native_resources.object_altitude_get(aa1, ra, dec);
@@ -2101,13 +2142,18 @@ function filter_visible_catalog_items(cat, lat, lng)
                 name = name + ', ' + cat.targets[i][3];     // TYPE
             }
             fl[fl.length] = [ 
-                cat.targets[i][1].toFixed(5) + ' ' +  cat.targets[i][2].toFixed(5),
-                name
+                cat.targets[i][1].toFixed(5) + ' ' +  cat.targets[i][2].toFixed(5),     // 0 RA DEC
+                name,                                                                   // 1 name
+                cat.targets[i],                                                         // 2 catalog info
+                alt                                                                     // 3 altitude
             ];
-            catalog_objects[catalog_objects.length] = cat.targets[i];
         }
     }
-    return { list: fl, catalog_objects: catalog_objects };
+    if (fl.length > 0 && catalogFilterDegrees != null && document.getElementById("catalogSortCheckbox").checked) {
+        // sort list based on altitude
+        fl.sort(function(a, b){return b[3] - a[3]});
+    }
+    return { list: fl };
 }
 
 function init_catalog_view_list()
@@ -2487,7 +2533,7 @@ function showWiki()
             // numeric target, check if we have catalog target selected
             console.log("showWiki, numeric, try current_catalog");
             if (catalog_index != null && current_catalog_filtered_list != null) {
-                alt_data = catalogToDataObject(current_catalog_filtered_list.catalog_objects[catalog_index]);
+                alt_data = catalogToDataObject(current_catalog_filtered_list.list[catalog_index][2]);
                 wiki_target = alt_data.wikiname;
                 console.log("showWiki, use current_catalog_filtered_list", wiki_target);
             } else {
@@ -2503,7 +2549,7 @@ function showWiki()
         // showText
         if (catalog_index != null && current_catalog_filtered_list != null) {
             console.log("showWiki, text only, use current_catalog_filtered_list", wiki_target);
-            alt_data = catalogToDataObject(current_catalog_filtered_list.catalog_objects[catalog_index]);
+            alt_data = catalogToDataObject(current_catalog_filtered_list.list[catalog_index][2]);
             wiki_target = alt_data.wikiname;
         } else {
             console.log("showWiki, text only, no current_catalog_filtered_list");
