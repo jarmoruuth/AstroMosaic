@@ -286,7 +286,7 @@ p {
         </form>    
     </div>
     <div>
-        <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:ViewImage(0)">
+        <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:filterChanged(0)">
             <input type="checkbox" id="catalogSortCheckbox">Sort
         </form>    
     </div>
@@ -376,7 +376,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.71 test4";
+var version_number = "1.71 test5";
 var startup_image = "M71";
 var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view.";
 
@@ -2014,10 +2014,11 @@ function filter_visible_catalog_items(cat, lat, lng)
     var aa4;
     var aa5;
     var moonFilter = catalogFilterMoon;
+    var filtered = false;
 
     if (cat == null || cat.targets == null) {
         console.log("filter_visible_catalog_items:cat == null or cat.targets == null");
-        return { list: [['', ''], ['', 'No data loaded']] };
+        return { list: [['', '', null, 0]], filtered: false };
     }
 
     if (catalog_filter_time == null) {
@@ -2147,13 +2148,15 @@ function filter_visible_catalog_items(cat, lat, lng)
                 cat.targets[i],                                                         // 2 catalog info
                 alt                                                                     // 3 altitude
             ];
+        } else {
+            filtered = true;
         }
     }
     if (fl.length > 0 && catalogFilterDegrees != null && document.getElementById("catalogSortCheckbox").checked) {
         // sort list based on altitude
         fl.sort(function(a, b){return b[3] - a[3]});
     }
-    return { list: fl };
+    return { list: fl, filtered: filtered };
 }
 
 function init_catalog_view_list()
@@ -2181,11 +2184,13 @@ function init_catalog_view_list()
     current_catalog_filtered_list = filter_visible_catalog_items(current_catalog, viewer_params.location_lat, viewer_params.location_lng);
     if (current_catalog_filtered_list != null) {
 
+        console.log("init_catalog_view_list:filtered list");
+
         catalogDiv_select = create_catalog_select_list('catalogDiv_select', current_catalog_filtered_list.list);
         catalogDiv_select.onchange = function() { 
                                     // Get coordinates from catalogDiv_select.value and put them
                                     // to target box so we will show the target
-                                    console.log("init_catalog_view_list:set target=" + catalogDiv_select.value);
+                                    console.log("init_catalog_view_list:onchange set target=" + catalogDiv_select.value);
                                     document.getElementById("target").value = catalogDiv_select.value;
                                     catalog_index = catalogDiv_select.selectedIndex;
                                     if (catalog_index == 0) {
@@ -2205,6 +2210,13 @@ function init_catalog_view_list()
         document.getElementById("catalogDiv").appendChild(catalog_text);
 
         catalog_filters_changed = false;
+
+        if (current_catalog_filtered_list.filtered) {
+            catalogDiv_select.selectedIndex = 1;
+            console.log("init_catalog_view_list:initial set target=" + current_catalog_filtered_list.list[1][0]);
+            document.getElementById("target").value = current_catalog_filtered_list.list[1][0];
+            ViewImage(0);
+        }
     }
 }
 
