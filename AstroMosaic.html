@@ -216,6 +216,10 @@ p {
             Add telescope
        </form>    
     </div>
+    <div>
+        <br>
+        <button title="Show current telescope info and Create link to the current view." onclick="showCurrentViewInfo()">Info</button>
+    </div>
 </div>
 
 <div id="secondDiv" class="flex-container-top2">
@@ -364,8 +368,10 @@ p {
 
 <div id="footerDiv" class="footer">
     <p>Author: Jarmo Ruuth. Feedback: <a href="https://forums.ruuth.xyz" target="_blank">forums.ruuth.xyz</a> or <a href="mailto:astroimagetools@gmail.com" target="_blank">astroimagetools@gmail.com</a></p>
-    <p><button id="version-button" style="background-color:white" onclick="alert(version_text)">Version info</button>
-    <a href="AstroMosaicInfo.html#credits" target="_blank">Credits</a></small></p>
+    <p>
+        <button id="version-button" title="Show version history." style="background-color:white" onclick="alert(version_text)">Version info</button>
+        <a href="AstroMosaicInfo.html#credits" target="_blank">Credits</a></small>
+    </p>
 </div>
 
 </div>
@@ -376,13 +382,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.71 test5";
+var version_number = "1.71 test6";
 var startup_image = "M71";
-var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view.";
+var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view, Info button.";
 
 var version_text = 
     "Version "+ version_number + "\n"+
-    "- Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view.\n"+
+    "- Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view, Info button.\n"+
     "Version 1.70\n"+
     "- Limit Simbad and NED catalog views to 1 degree to avoid excessive memory usage.\n"+
     "Version 1.69\n"+
@@ -919,6 +925,7 @@ var url_telescope = null;
 var url_name = null;
 var url_grid_type = null;
 var url_overlap = null;
+var url_grid_size = null;
 var url_date = null;
 var url_services_json = null;
 var url_view = "all";
@@ -1096,14 +1103,8 @@ function init_all_services()
 {
     console.log("init_all_services");
 
-    // Update telescope FoV values.
     for (var i = 0; i < all_services.telescope_services.length; i++) {
         for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
-            if (all_services.telescope_services[i].telescopes[j].hasOwnProperty('offaxis')) {
-                all_services.telescope_services[i].telescopes[j].offaxis.am_fov_x = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.fov_x);
-                all_services.telescope_services[i].telescopes[j].offaxis.am_fov_y = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.fov_y);
-                all_services.telescope_services[i].telescopes[j].offaxis.am_offset = getAstroMosaicFov(all_services.telescope_services[i].telescopes[j].offaxis.offset);
-            }
             if (Array.isArray(all_services.telescope_services[i].telescopes[j].horizon_limits)) {
                 // Already array. Check if it is has enough enties. If not, repeat last item.
                 console.log("init_all_services", "horizon_limits is array");
@@ -1171,6 +1172,7 @@ function parse_url(searchParams)
     url_name = searchParams.get('name');
     url_grid_type = searchParams.get('grid_type');
     url_overlap = searchParams.get('overlap');
+    url_grid_size = searchParams.get('grid_size');
     url_date = searchParams.get('date');
     url_services_json = searchParams.get('services_json');
     url_view = searchParams.get('view');
@@ -1243,6 +1245,13 @@ function apply_url_set()
         document.getElementById("overlap_percentage").value = url_overlap;
     } else {
         document.getElementById("overlap_percentage").value = 20;
+    }
+    if (url_grid_size) {
+        let size_vals = url_grid_size.split(",");
+        let size_x = size_vals[0];
+        let size_y = size_vals[1];
+        document.getElementById("size_x").value = parseInt(size_x);
+        document.getElementById("size_y").value = parseInt(size_y);
     }
     if (url_date) {
         document.getElementById("view_date").value = url_date;
@@ -1353,7 +1362,8 @@ function addTelescopeButtonFunction()
             alt: 0, 
             weather: "detect_location", 
             horizon_limits: horizon_0, 
-            meridian_transit: 0
+            meridian_transit: 0,
+            is_user_telescope: true
     };
 
     var ret = add_service(service_name, new_telescope, true);
@@ -1435,7 +1445,8 @@ function set_url_add_service(url_add_service, clear_old_services)
                 lat: parseFloat(params[4]), lng: parseFloat(params[5]),
                 timezoneOffset : null,
                 alt: 0, weather: null, 
-                horizon_limits: horizon_0, meridian_transit: 0
+                horizon_limits: horizon_0, meridian_transit: 0,
+                is_user_telescope: true
             };
             for (pn = 6; pn < params.length; pn++) {
                 if (params[pn].startsWith("tz:")) {
@@ -1673,6 +1684,12 @@ function get_catalog_list_target(list)
     return json;
 }
 
+function clearStartupInfoText()
+{
+    document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
+    startup_info_text = null;
+}
+
 // Main function to view image. Get parameters
 // and call correct view function
 // Values for oper_
@@ -1849,7 +1866,7 @@ function ViewImage(oper)
             document.getElementById(viewer_panels.startup_info_text).innerHTML = startup_info_text;
             startup_info_text = null;
         } else {
-            document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
+            clearStartupInfoText();
         }
     }
 
@@ -2640,6 +2657,54 @@ function showHideAddTelescope()
     } else {
         x.style.display = "none";
     }
+}
+
+function showCurrentViewInfo()
+{
+    var info_text = "Service: " + current_telescope_service.name + ", " +
+                    "Telescope: " + current_telescope.name + ", " +
+                    "FoV x: " + current_telescope.fov_x + ", " +
+                    "FoV y: " + current_telescope.fov_x + ", " +
+                    "Lat: " + current_telescope.lat + ", " +
+                    "Lng: " + current_telescope.lng;
+    if (current_telescope.timezoneOffset) {
+        info_text = info_text + ", Tz: " + current_telescope.timezoneOffset;
+    } else {
+        info_text = info_text + ", Tz: UTC";
+    }
+
+    var link_text = "https://ruuth.xyz/AstroMosaic.html?";
+    if (current_telescope.is_user_telescope) {
+        // add_service=service-name,telescope-name,fov-x-minutes,fov-y-minutes,latitude,longitude[,tz:timezone][,weather:detect_location]
+        link_text = link_text + "add_service=" + current_telescope_service.name.replace(/ /g, "%20") + "," + 
+                                                 current_telescope.name.replace(/ /g, "%20") + "," +
+                                                 current_telescope.fov_x + "," + current_telescope.fov_y + "," +
+                                                 current_telescope.lat + "," + current_telescope.lng;
+        if (current_telescope.timezoneOffset) {
+            link_text = link_text + ",tz:" + current_telescope.timezoneOffset;
+        }
+        if (current_telescope.weather) {
+            link_text = link_text + ",weather:" + current_telescope.weather;
+        }
+        link_text = link_text + "&";
+    }
+    link_text = link_text + "target=" + document.getElementById("target").value.replace(/ /g, "%20") + 
+                            "&service=" + current_telescope_service.name.replace(/ /g, "%20") + 
+                            "&telescope=" + current_telescope.name.replace(/ /g, "%20");
+
+                            
+    if (document.getElementById("grid_type").value != 'fov') {
+        link_text = link_text + "&grid_type=" + document.getElementById("grid_type").value +
+                                "&overlap=" + document.getElementById("overlap_percentage").value +
+                                "&grid_size=" + document.getElementById("size_x").value + "," +
+                                                document.getElementById("size_y").value;
+    }
+
+    clearStartupInfoText();
+
+    document.getElementById(viewer_panels.status_text).innerHTML = info_text + "<br>" + link_text;
+
+    // alert(link_text);
 }
 
 </script>
