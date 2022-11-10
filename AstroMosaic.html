@@ -691,18 +691,18 @@ var all_services = {
             radec_format: 1, 
             default_telescope: 2,
             telescopes: [
-                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.86416, lng: 148.97639, timezoneOffset: null, alt: 648, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
                 
-                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.50103, lng: -2.40857, timezoneOffset: null, alt: 1025, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
             
-                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.47253, lng: -70.76300, timezoneOffset: null, alt: 1025, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
             ] 
         },
         { 
@@ -2664,7 +2664,7 @@ function showCurrentViewInfo()
     var info_text = "Service: " + current_telescope_service.name + ", " +
                     "Telescope: " + current_telescope.name + ", " +
                     "FoV x: " + current_telescope.fov_x + ", " +
-                    "FoV y: " + current_telescope.fov_x + ", " +
+                    "FoV y: " + current_telescope.fov_y + ", " +
                     "Lat: " + current_telescope.lat + ", " +
                     "Lng: " + current_telescope.lng;
     if (current_telescope.timezoneOffset) {
