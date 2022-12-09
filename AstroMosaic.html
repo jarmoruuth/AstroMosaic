@@ -382,12 +382,14 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.71";
-var startup_image = "M71";
-var startup_info_text = "v" + version_number + " Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view, Info button.";
+var version_number = "1.72";
+var startup_image = "M72";
+var startup_info_text = "v" + version_number + " Fix to embedding into iFrame.";
 
 var version_text = 
     "Version "+ version_number + "\n"+
+    "- Fix to embedding into iFrame.\n"+
+    "Version 1.71\n"+
     "- Add own telescope, panel view for catalog objects, sort catalog based on altitude, azimuth view, Info button.\n"+
     "Version 1.70\n"+
     "- Limit Simbad and NED catalog views to 1 degree to avoid excessive memory usage.\n"+
@@ -1774,7 +1776,11 @@ function ViewImage(oper)
     viewer_params.horizonHard = current_telescope.horizon_limits.hard;
     viewer_params.meridian_transit = current_telescope.meridian_transit;
     viewer_params.timezoneOffset = current_telescope.timezoneOffset;
-    viewer_params.showAz = document.getElementById("showAzCheckbox").checked;
+    if (url_view == "all") {
+        viewer_params.showAz = document.getElementById("showAzCheckbox").checked;
+    } else {
+        viewer_params.showAz = false;
+    }
     if (current_telescope.hasOwnProperty('offaxis')) {
         viewer_params.offaxis = current_telescope.offaxis;
         viewer_params.offaxis.am_fov_x = getAstroMosaicFov(current_telescope.offaxis.fov_x);
