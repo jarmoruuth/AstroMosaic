@@ -99,7 +99,8 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         backgroundColor : params.backgroundColor,
         isRepositionModeFunc : null,
         repositionTargetFunc : null,
-        showAz: false
+        showAz: false,
+        planet_id: null
     };
 
     var engine_panels = {
@@ -184,6 +185,73 @@ function filterImageTargetList(image_target_list)
     }
     return { image_target_list: new_image_target_list, marker_list: marker_list };
 }
+
+// orbital elements of planets
+var planets = [
+    {
+        name: "Mercury",
+        N: [ 48.3313, 0.0000324587 ],
+        i: [ 7.0047, 0.00000005 ],
+        w: [ 29.1241, 0.0000101444 ],
+        a: [ 0.387098, 0 ],
+        e: [ 0.205635, -0.000000000559 ],
+        M: [ 168.6562, 4.0923344368 ]
+    },
+    {
+        name: "Venus",
+        N: [ 76.6799, 0.0000246590 ],
+        i: [ 3.3946, 0.0000000275 ],
+        w: [ 54.8910, 0.0000138374 ],
+        a: [ 0.723330, 0 ],
+        e: [ 0.006773, 0.000000001302 ],
+        M: [ 48.0052, 1.6021302244 ]
+    },
+    {
+        name: "Mars",
+        N: [ 49.5574, 0.0000211081 ],
+        i: [ 1.8497, -0.0000000178 ],
+        w: [ 286.5016, 0.0000292961 ],
+        a: [ 1.523688, 0 ],
+        e: [ 0.093405, 0.000000002516 ],
+        M: [ 18.6021, 0.5240207766 ]
+    },
+    {
+        name: "Jupiter",
+        N: [ 100.4542, 0.000026854 ],
+        i: [ 1.3030, -0.0000001557 ],
+        w: [ 273.8777, 0.0000164505 ],
+        a: [ 5.20256, 0 ],
+        e: [ 0.048498, 0.000000004469 ],
+        M: [ 19.8950, 0.0830853001 ]
+    },
+    {
+        name: "Saturn",
+        N: [ 113.6634, 0.0000238980 ],
+        i: [ 2.4886, -0.0000001081 ],
+        w: [ 339.3939, 0.0000297661 ],
+        a: [ 9.55475, 0 ],
+        e: [ 0.055546, -0.000000009499 ],
+        M: [ 316.9670, 0.0334442282 ]
+    },
+    {
+        name: "Uranus",
+        N: [ 74.0005, 0.000013978 ],
+        i: [ 0.7733, 0.000000019 ],
+        w: [ 96.6612, 0.000030565 ],
+        a: [ 19.18171, -0.0000000155 ],
+        e: [ 0.047318, 0.00000000745 ],
+        M: [ 142.5905, 0.011725806 ]
+    },
+    {
+        name: "Neptune",
+        N: [ 131.7806, 0.000030173 ],
+        i: [ 1.7700, -0.000000255 ],
+        w: [ 272.8461, -0.000006027 ],
+        a: [ 30.05826, 0.00000003313 ],
+        e: [ 0.008606, 0.00000000215 ],
+        M: [ 260.2471, 0.005995147 ]
+    }
+];
 
 /*************************************************************************
  *
@@ -292,6 +360,8 @@ function StartAstroMosaicViewerEngine(
         EngineViewImageByName();
     }
     return engine_data;
+
+    
 
     function build_error_text(txt)
     {
@@ -483,6 +553,72 @@ function StartAstroMosaicViewerEngine(
         return altitude;
     }
 
+    function planet_position(date, planet)
+    {
+        var date = Date.UTC(1990, 3, 19);
+
+        // Days from J2000
+        var d = getJD(date);
+        var pi = Math.PI;
+        var nloop;
+        //console.log("planet position d=",d,"JD=",JD1970+d/day_ms);
+
+        var N = scale_to_360(planet.N[0] + planet.N[1] * d);
+        var i = scale_to_360(planet.i[0] + planet.i[1] * d);
+        var w = scale_to_360(planet.w[0] + planet.w[1] * d);
+        var a = scale_to_360(planet.a[0] + planet.a[1] * d);
+        var e = scale_to_360(planet.e[0] + planet.e[1] * d);
+        var M = scale_to_360(planet.M[0] + planet.M[1] * d);
+        //console.log("N",N,"i",i,"w",w,"a",a,"e",e,"M",M);
+
+        var E = M + e*(180/pi) * sind(M) * ( 1.0 + e * cosd(M) );
+        for (nloop = 0; nloop < 100; nloop++) {
+            var E0 = E;
+            E = E0 - (E0 - e * (180/pi) * sind(E0) - M) / (1- e * cosd(E0));
+            if (Math.abs(E-E0) <= 0.00001) {
+                break;
+            }
+        }
+        //console.log("E", E, "nloop", nloop);
+
+        var x = a * ( cosd(E) - e );
+        var y = a * Math.sqrt(1.0 - e*e) * sind(E);
+        //console.log("x,y",x,y);
+
+        var r = Math.sqrt( x*x + y*y );
+        var v = scale_to_360(Math.atan2( y, x ) * radToDeg);
+        //console.log("r,v",r,v);
+
+        // planet heliocentric position in ecliptic rectangular coordinates
+        var xeclip = r * ( cosd(N) * cosd(v+w) - sind(N) * sind(v+w) * cosd(i) );
+        var yeclip = r * ( sind(N) * cosd(v+w) + cosd(N) * sind(v+w) * cosd(i) );
+        var zeclip = r * ( sind(v+w) * sind(i) );
+        //console.log("planet heliocentric xeclip=",xeclip,",yeclip=",yeclip,",zeclip=",zeclip);
+
+        var sunpos = sun_position(date);
+
+        // convert the planets' heliocentric positions to geocentric positions
+        xeclip += sunpos.xeclip;
+        yeclip += sunpos.yeclip;
+        zeclip += sunpos.zeclip;
+        //console.log("planet geocentricx eclip=",xeclip,",yeclip=",yeclip,",zeclip=",zeclip);
+
+        var oblecl = 23.4;
+
+        // rotate ecliptic coordinates to equatorial coordinates
+        var xequat = xeclip;
+        var yequat = yeclip * cosd(oblecl) - zeclip * sind(oblecl);
+        var zequat = yeclip * sind(oblecl) + zeclip * cosd(oblecl);
+        //console.log("planet xequat=",xequat,",yequat=",yequat,",zequat=",zequat);
+
+        // calculate RA and Dec
+        var RA  = scale_to_360(Math.atan2( yequat, xequat ) * radToDeg);
+        var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
+
+        //console.log("planet ra",RA,",dec",Dec);
+        return {ra:RA, dec:Dec};
+    }
+
     // Simplified version of moon position at given time.
     // - there are a lot of variables that affect correct moon position that
     //    are ignored here
@@ -582,6 +718,7 @@ function StartAstroMosaicViewerEngine(
         var E = scale_to_360((M + (180/pi) * e * sind(M) * (1 + e * cosd(M))));
         //console.log("E", E);
 
+        // Sun's rectangular coordinates
         var x = cosd(E) - e;
         var y = sind(E) * Math.sqrt(1 - e*e);
         //console.log("x,y", x,y);
@@ -593,21 +730,22 @@ function StartAstroMosaicViewerEngine(
         var lon = scale_to_360(v + w);
         //console.log("lon", lon);
 
+        // Sun's ecliptic rectangular coordinates
         x = r * cosd(lon);
         y = r * sind(lon);
-        //console.log("x,y", x,y);
+        //console.log("sun x,y", x,y);
 
         var xequat = x;
         var yequat = y * cosd(oblecl);
         var zequat = y * sind(oblecl);
-        //console.log("xequat,yequat", xequat,yequat);
+        //console.log("sun xequat,yequat", xequat,yequat);
 
         var RA  = Math.atan2( yequat, xequat ) * radToDeg;
         var Dec = Math.atan2( zequat, Math.sqrt(xequat*xequat+yequat*yequat) ) * radToDeg;
 
         //console.log("Sun_position", RA, Dec);
 
-        return {ra:RA, dec:Dec};
+        return {ra:RA, dec:Dec, xeclip: x, yeclip: y, zeclip: 0.0};
     }
 
     // Simplified version of rise and set times.
@@ -806,6 +944,9 @@ function StartAstroMosaicViewerEngine(
         }
         engine_data.daydata.addColumn('number', 'Not visible');        // object altitude below hard horizon or meridian transit
         engine_data.daydata.addColumn('number', 'Moon alt');           // moon altitude
+        if (engine_params.planet_id >= 0) {
+            engine_data.daydata.addColumn('number', planets[engine_params.planet_id].name);         // planet altitude
+        }
         if (engine_params.showAz) {
             engine_data.daydata.addColumn('number', 'Az');             // object azimuth
         }
@@ -851,6 +992,13 @@ function StartAstroMosaicViewerEngine(
             var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
             moonalt = moon_topocentric_correction(moonalt);
 
+            if (engine_params.planet_id >= 0) {
+                var planetpos = planet_position(d, planets[engine_params.planet_id]);
+                var planetalt = object_altaz(d, planetpos.ra, planetpos.dec, lat, lng).alt;
+                if (planetalt < 0) {
+                    planetalt = 0;
+                }
+            }
             var visiblealt = null;     // target visible
             var softalt = null;        // target below soft horizon
             var hardalt = null;        // target below hard horizon or meridian transit
@@ -913,6 +1061,9 @@ function StartAstroMosaicViewerEngine(
             }
             row.push(getAltitudeCellObject(hardalt));
             row.push(getAltitudeCellObject(moonalt));
+            if (engine_params.planet_id >= 0) {
+                row.push(getAltitudeCellObject(planetalt));
+            }
             if (engine_params.showAz) {
                 row.push(getAzimuthCellObject(objectaz));
             }
@@ -975,7 +1126,10 @@ function StartAstroMosaicViewerEngine(
             seriesStyle.push({ color: 'orange', lineDashStyle: [4, 2] });
         }
         seriesStyle.push({ color: 'red', lineDashStyle: [2, 2] });
-        seriesStyle.push({ color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 });
+        seriesStyle.push({ color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }); // Blue
+        if (engine_params.planet_id >= 0) {
+            seriesStyle.push({ color: 'Magenta', lineDashStyle: [2, 1, 2], lineWidth: 1 });
+        }
         if (engine_params.showAz) {
             seriesStyle.push({ color: 'gray', lineDashStyle: [2, 2], targetAxisIndex: 1 });
         }

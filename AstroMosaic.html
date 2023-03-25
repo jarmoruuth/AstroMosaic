@@ -299,6 +299,13 @@ p {
             <input type="checkbox" id="showAzCheckbox">Az
         </form>    
     </div>
+    <div>
+        <form>
+        Planet:
+        <select id="view-planet" onchange="javascript:ViewImage(0)">
+        </select>
+        </form>
+    </div>
 </div>
 
 <div id="addTelescopeDiv" class="flex-container-top2">
@@ -864,6 +871,7 @@ var viewer_params = {
     grid_size_y : null,
     isCustomMode : false,
     showAz: false,
+    planet_id: null,
     isRepositionModeFunc : isRepositionMode,
     repositionTargetFunc : repositionTarget
 };
@@ -948,8 +956,6 @@ var url_view = "all";
 
 document.getElementById("size_x").value = 3;
 document.getElementById("size_y").value = 3;
-
-showHideAddTelescope();
 
 if (typeof URLSearchParams === "function") {
     searchParams = new URLSearchParams(url.search.slice(1));
@@ -1110,6 +1116,7 @@ function initAstroMosaic()
     update_telescope_service_list();
     update_telescope_list(current_telescope_service.name);
     update_catalog_list();
+    init_planet_list();
 
     engine_native_resources.aladin_object_clicked = showWikiTarget;
     engine_native_resources.reset_view = wikiReset;
@@ -1561,6 +1568,42 @@ function isRepositionMode()
     return document.getElementById("repositionCheckbox").checked;
 }
 
+function init_planet_list()
+{
+    console.log('update_planet_list');
+
+    if (url_view != "all") {
+        return;
+    }
+
+    var x = document.getElementById("view-planet");
+
+    var option = document.createElement("option");
+    option.text = "None";
+    x.add(option);
+
+    // Update list of planets
+    for (i = 0; i < planets.length; i++) {
+        option = document.createElement("option");
+        option.text = planets[i].name;
+        x.add(option);
+    }
+}
+
+function showHideAddTelescope()
+{
+    var checked = document.getElementById("addTelescopeCheckbox").checked;
+    console.log("showHideAddTelescope", checked);
+
+    var x = document.getElementById('addTelescopeDiv');
+    if (checked) {
+        x.style.display = "flex";
+    } else {
+        x.style.display = "none";
+    }
+}
+
+
 function update_telescope_service_list()
 {
     console.log('update_telescope_service_list');
@@ -1769,6 +1812,15 @@ function ViewImage(oper)
                 }
                 current_telescope = current_telescope_service.telescopes[i];
             }
+        }
+    }
+
+    viewer_params.planet_id = null;
+    var planet_name = document.getElementById("view-planet").value;
+    for (var i = 0; i < planets.length; i++) {
+        if (planet_name == planets[i].name) {
+            viewer_params.planet_id = i;
+            break;
         }
     }
 
