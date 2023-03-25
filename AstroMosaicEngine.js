@@ -555,8 +555,6 @@ function StartAstroMosaicViewerEngine(
 
     function planet_position(date, planet)
     {
-        var date = Date.UTC(1990, 3, 19);
-
         // Days from J2000
         var d = getJD(date);
         var pi = Math.PI;
@@ -575,7 +573,7 @@ function StartAstroMosaicViewerEngine(
         for (nloop = 0; nloop < 100; nloop++) {
             var E0 = E;
             E = E0 - (E0 - e * (180/pi) * sind(E0) - M) / (1- e * cosd(E0));
-            if (Math.abs(E-E0) <= 0.00001) {
+            if (Math.abs(E-E0) <= 0.001) {
                 break;
             }
         }
@@ -944,7 +942,7 @@ function StartAstroMosaicViewerEngine(
         }
         engine_data.daydata.addColumn('number', 'Not visible');        // object altitude below hard horizon or meridian transit
         engine_data.daydata.addColumn('number', 'Moon alt');           // moon altitude
-        if (engine_params.planet_id >= 0) {
+        if (engine_params.planet_id != null) {
             engine_data.daydata.addColumn('number', planets[engine_params.planet_id].name);         // planet altitude
         }
         if (engine_params.showAz) {
@@ -992,11 +990,11 @@ function StartAstroMosaicViewerEngine(
             var moonalt = object_altaz(d, moonpos.ra, moonpos.dec, lat, lng).alt;
             moonalt = moon_topocentric_correction(moonalt);
 
-            if (engine_params.planet_id >= 0) {
+            if (engine_params.planet_id != null) {
                 var planetpos = planet_position(d, planets[engine_params.planet_id]);
                 var planetalt = object_altaz(d, planetpos.ra, planetpos.dec, lat, lng).alt;
                 if (planetalt < 0) {
-                    planetalt = 0;
+                    planetalt = null;
                 }
             }
             var visiblealt = null;     // target visible
@@ -1061,7 +1059,7 @@ function StartAstroMosaicViewerEngine(
             }
             row.push(getAltitudeCellObject(hardalt));
             row.push(getAltitudeCellObject(moonalt));
-            if (engine_params.planet_id >= 0) {
+            if (engine_params.planet_id != null) {
                 row.push(getAltitudeCellObject(planetalt));
             }
             if (engine_params.showAz) {
@@ -1126,12 +1124,12 @@ function StartAstroMosaicViewerEngine(
             seriesStyle.push({ color: 'orange', lineDashStyle: [4, 2] });
         }
         seriesStyle.push({ color: 'red', lineDashStyle: [2, 2] });
-        seriesStyle.push({ color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }); // Blue
-        if (engine_params.planet_id >= 0) {
-            seriesStyle.push({ color: 'Magenta', lineDashStyle: [2, 1, 2], lineWidth: 1 });
+        seriesStyle.push({ color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 });     // Moon, Blue
+        if (engine_params.planet_id != null) {
+            seriesStyle.push({ color: 'Magenta', lineDashStyle: [2, 1, 2], lineWidth: 1 }); // Planet, Magenta
         }
         if (engine_params.showAz) {
-            seriesStyle.push({ color: 'gray', lineDashStyle: [2, 2], targetAxisIndex: 1 });
+            seriesStyle.push({ color: 'gray', lineDashStyle: [2, 2], targetAxisIndex: 1 }); // Azimuth
         }
 
         var options = setChartOptions('Target visibility', hAxisTitle, seriesStyle, 'HH:mm', engine_params.showAz);
@@ -1212,6 +1210,9 @@ function StartAstroMosaicViewerEngine(
         engine_data.yeardata.addColumn('number', 'Visible');            // object altitude
         engine_data.yeardata.addColumn('number', 'Not visible');        // moon altitude
         engine_data.yeardata.addColumn('number', 'Moon alt');           // moon altitude
+        if (engine_params.planet_id != null) {
+            engine_data.yeardata.addColumn('number', planets[engine_params.planet_id].name + ' alt');     // planet altitude
+        }
 
         var interval = day_ms; // day
         
@@ -1238,6 +1239,14 @@ function StartAstroMosaicViewerEngine(
             var moonalt = object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
             moonalt = moon_topocentric_correction(moonalt);
 
+            if (engine_params.planet_id != null) {
+                var planetpos = planet_position(midnight, planets[engine_params.planet_id]);
+                var planetalt = object_altaz(midnight, planetpos.ra, planetpos.dec, lat, lng).alt;
+                if (planetalt < 0) {
+                    planetalt = null;
+                }
+            }
+
             var visiblealt = null;     // target visible
             var hardalt = null;        // target below 30 degrees
 
@@ -1255,19 +1264,24 @@ function StartAstroMosaicViewerEngine(
                         getAltitudeCellObject(hardalt),
                         getAltitudeCellObject(moonalt)
                       ];
+            if (engine_params.planet_id != null) {
+                row[row.length] = getAltitudeCellObject(planetalt);
+            }
             rowdata[rowdata.length] = row;
         }
 
         engine_data.yeardata.addRows(rowdata);
 
+        var seriesStyle = [ { color: 'green' } ];
+        seriesStyle.push({ color: 'red', lineDashStyle: [2, 2] });
+        seriesStyle.push({ color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 });
+        if (engine_params.planet_id != null) {
+            seriesStyle.push({ color: 'Magenta', lineDashStyle: [2, 1, 2], lineWidth: 1 });
+        }
         var options = setChartOptions(
                         'Target visibility at midnight over next 12 months',
                         'Month',
-                        { 
-                            0: { color: 'green' },
-                            1: { color: 'red', lineDashStyle: [2, 2] },
-                            2: { color: '#1c91c0', lineDashStyle: [4, 1, 2], lineWidth: 1 }
-                        },
+                        seriesStyle,
                         "MMM YYYY",
                         false);
 
@@ -2020,12 +2034,12 @@ function StartAstroMosaicViewerEngine(
                     [col_ra1-col_ra1_delta, row_dec1]
                 ];
 
-                var line_color = '#ee2345';
+                var line_color = 'White';
 
                 if ((grid_type == "mosaic" || (x == 1 && y == 1)) && engine_data.aladin) {
-                    var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+                    let overlay = A.graphicOverlay({color: line_color, lineWidth: 2, name: 'FoV'});
                     engine_data.aladin.addOverlay(overlay);
-                    overlay.add(A.polyline(panel));
+                    overlay.add(A.polyline(panel, {color: line_color, lineWidth: 2, name: 'FoV'}));
                 }
                 col = col - 1;
 
@@ -2089,6 +2103,44 @@ function StartAstroMosaicViewerEngine(
                 document.getElementById(engine_panels.aladin_panel_text).innerHTML = astro_mosaic_link;
             }
         }
+        if (engine_view_type == "all") {
+            /* Add moon and optionally planet path to the Aladin view */
+            var midday = engine_params.UTCdate_ms + day_ms/2;
+            var suntimes = sun_rise_set(midday, engine_params.location_lat, engine_params.location_lng, -12);
+            var interval = 15*60*1000; // 15 minutes
+            var draw_full_day = 1;  // if 0 draw only during astronomical twilight
+            if (draw_full_day) {
+                var starttime = midday;
+                var endtime = starttime + day_ms;
+            } else {
+                var starttime = suntimes.sunset - suntimes.sunset % interval;
+                var endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
+            }
+            var moonpath = [];
+            for (var d = starttime; d <= endtime; d = d + interval) {
+                var moonpos = moon_position(d);
+                moonpath.push([moonpos.ra, moonpos.dec]);
+            }
+            console.log("Add moon path, len " + moonpath.length);
+            let moonoverlay = A.graphicOverlay({color: '#1c91c0', lineWidth: 2, name: 'Moon'});
+            engine_data.aladin.addOverlay(moonoverlay);
+            moonoverlay.add(A.polyline(moonpath, {color: '#1c91c0', lineWidth: 2, name: 'Moon'}));
+            if (engine_params.planet_id != null) {
+                // planets move slowly so print four week
+                var starttime = engine_params.UTCdate_ms;
+                var endtime = starttime + 4*7*day_ms;
+                var interval = 24*60*60*1000; // 24 hours
+                var planetpath = [];
+                for (var d = starttime; d <= endtime; d = d + interval) {
+                    var planetpos = planet_position(d, planets[engine_params.planet_id]);
+                    planetpath.push([planetpos.ra, planetpos.dec]);
+                }
+                console.log("Add planet path, path = ", planetpath, " len " + planetpath.length);
+                let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name});
+                engine_data.aladin.addOverlay(planetoverlay);
+                planetoverlay.add(A.polyline(planetpath, {color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name}));
+            }
+        }
         aladin_view_ready = true; 
     }
 
@@ -2120,11 +2172,11 @@ function StartAstroMosaicViewerEngine(
             console.log("panel "+i+" ra/dec=", col_ra, "/", row_dec);
 
             // calculate corners
-            drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y);
+            drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y, 'FoV');
         }
     }
 
-    function drawBox(col_ra, row_dec, fov_x, fov_y)
+    function drawBox(col_ra, row_dec, fov_x, fov_y, name)
     {
         console.log('drawBox', col_ra, row_dec, fov_x, fov_y);
 
@@ -2144,11 +2196,15 @@ function StartAstroMosaicViewerEngine(
             [col_ra1-col_ra1_delta, row_dec1]
         ];
 
-        var line_color = '#ee2345';
+        if (name == 'FoV') {
+            var line_color = 'White';
+        } else {
+            var line_color = '#ee2345';
+        }
         if (engine_data.aladin) {
-            var overlay = A.graphicOverlay({color: line_color, lineWidth: 2});
+            var overlay = A.graphicOverlay({color: line_color, lineWidth: 2, name: name});
             engine_data.aladin.addOverlay(overlay);
-            overlay.add(A.polyline(panel));
+            overlay.add(A.polyline(panel, {color: line_color, lineWidth: 2, name: name}));
         }
     }
 
@@ -2177,7 +2233,7 @@ function StartAstroMosaicViewerEngine(
         console.log("ra/dec=", col_ra, "/", row_dec);
 
         // telescope FoV
-        drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y);
+        drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y, 'FoV');
 
         // offaxis guiding FoV
         switch (engine_params.offaxis.position) {
@@ -2186,14 +2242,16 @@ function StartAstroMosaicViewerEngine(
                     col_ra, 
                     row_dec + engine_params.am_fov_y/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_y/2,
                     engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y);
+                    engine_params.offaxis.am_fov_y,
+                    'Offaxis');
                 break;
             case 'B':
                 drawBox(
                     col_ra, 
                     row_dec - engine_params.am_fov_y/2 - engine_params.offaxis.am_offset - engine_params.offaxis.am_fov_y/2,
                     engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y);
+                    engine_params.offaxis.am_fov_y,
+                    'Offaxis');
                 break;
             case 'L':
                 drawBox(
@@ -2202,7 +2260,8 @@ function StartAstroMosaicViewerEngine(
                         (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))), 
                     row_dec,
                     engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y);
+                    engine_params.offaxis.am_fov_y,
+                    'Offaxis');
                 break;
             case 'R':
                 drawBox(
@@ -2211,7 +2270,8 @@ function StartAstroMosaicViewerEngine(
                         (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))),
                     row_dec,
                     engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y);
+                    engine_params.offaxis.am_fov_y,
+                    'Offaxis');
                 break;
         }
 
