@@ -317,6 +317,7 @@ function StartAstroMosaicViewerEngine(
         engine_native_resources.moon_position = moon_position;
         engine_native_resources.moon_topocentric_correction = moon_topocentric_correction;
         engine_native_resources.moon_distance = moon_distance;
+        engine_native_resources.getTargetAboveRightNow = getTargetAboveRightNow;
         return;
     }
 
@@ -468,14 +469,7 @@ function StartAstroMosaicViewerEngine(
         return days;
     }
 
-    // Calculate object altitude. 
-    // Useful links:
-    //      https://astronomy.stackexchange.com/questions/24859/local-sidereal-time
-    //      https://observability.date/notes
-    //      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
-    //      http://www.stjarnhimlen.se/comp/tutorial.html
-    //      http://www.stargazing.net/kepler/altaz.html
-    function object_altaz(date, ra, dec, lat, lng)
+    function getLocalSiderealTime(lng, date)
     {
         // universal time in decimal hours
         var H = (date % day_ms) / hour_ms;
@@ -489,6 +483,36 @@ function StartAstroMosaicViewerEngine(
 
         // get hours
         LST = LST % 360;
+
+        return LST;
+    }
+
+    function getTargetAboveRightNow(lat, lng, date)
+    {
+        // Ra is the same as the local sidereal time
+        // Calculate local sidereal time in degrees
+        var ra = getLocalSiderealTime(lng, date);
+        if (ra > 180) {
+            ra = 360 - ra;
+        }
+
+        // Dec is the same as latitude
+        var dec = lat;
+
+        return [ra, dec];
+    }
+
+    // Calculate object altitude. 
+    // Useful links:
+    //      https://astronomy.stackexchange.com/questions/24859/local-sidereal-time
+    //      https://observability.date/notes
+    //      http://njsas.org/projects/tidal_forces/altaz/pausch/riset.html
+    //      http://www.stjarnhimlen.se/comp/tutorial.html
+    //      http://www.stargazing.net/kepler/altaz.html
+    function object_altaz(date, ra, dec, lat, lng)
+    {
+        // calculate local sidereal time in degrees
+        var LST = getLocalSiderealTime(lng, date);
 
         // calculate local hour angle in degrees
         var LHA = LST - ra;
@@ -518,19 +542,8 @@ function StartAstroMosaicViewerEngine(
     // Do calculations that are not based on RA/DEC
     function object_altitude_init(date, lat, lng)
     {
-        // universal time in decimal hours
-        var H = (date % day_ms) / hour_ms;
-
-        // Julian date including fraction - 2451545.0,
-        // that is days from J2000
-        var D = getJ2000_2(date);
-
         // calculate local sidereal time in degrees
-        var LST = 100.4606184 + 0.9856473662862 * D + H * hoursToDeg + lng;
-
-        // get hours
-        LST = LST % 360;
-
+        var LST = getLocalSiderealTime(lng, date);
 
         var aa =  {Lst: LST, Sinlat: sind(lat), Coslat: cosd(lat)}
 
@@ -1959,7 +1972,7 @@ function StartAstroMosaicViewerEngine(
         grid_size_x = engine_params.grid_size_x;
         grid_size_y = engine_params.grid_size_y;
 
-        if (grid_size_x == 1 && grid_size_y == 1) {
+        if (grid_size_x == 1 && grid_size_y == 1 && grid_type != "visual") {
             grid_type = "fov";
         }
         if (grid_type == "mosaic") {
@@ -2036,7 +2049,7 @@ function StartAstroMosaicViewerEngine(
 
                 var line_color = 'White';
 
-                if ((grid_type == "mosaic" || (x == 1 && y == 1)) && engine_data.aladin) {
+                if ((grid_type == "mosaic" || (x == 1 && y == 1)) && engine_data.aladin && grid_type != "visual") {
                     let overlay = A.graphicOverlay({color: line_color, lineWidth: 2, name: 'FoV'});
                     engine_data.aladin.addOverlay(overlay);
                     overlay.add(A.polyline(panel, {color: line_color, lineWidth: 2, name: 'FoV'}));
@@ -2045,7 +2058,7 @@ function StartAstroMosaicViewerEngine(
 
                 var col_ra_hours = col_ra * degToHours;
 
-                if (grid_type == "mosaic") {
+                if (grid_type == "mosaic" || grid_type == "visual") {
                     if (current_telescope_service.radec_format == 0) {
                         panel_radec[x][y] = col_ra_hours.toFixed(5) + 
                                             " " + row_dec.toFixed(5);
@@ -2136,7 +2149,7 @@ function StartAstroMosaicViewerEngine(
                     var planetpos = planet_position(d, planets[engine_params.planet_id]);
                     planetpath.push([planetpos.ra, planetpos.dec]);
                 }
-                console.log("Add planet path, path = ", planetpath, " len " + planetpath.length);
+                console.log("Add planet path, len " + planetpath.length);
                 let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name});
                 engine_data.aladin.addOverlay(planetoverlay);
                 planetoverlay.add(A.polyline(planetpath, {color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name}));

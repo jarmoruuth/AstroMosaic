@@ -27,7 +27,7 @@ var viewer_params = {
     horizonHard : [30],         // hard horizon limit or null
     meridian_transit : null,    // meridian transit or null
     UTCdate_ms : null,          // UTC date in milliseconds at the start of the day, null for current date
-    timezoneOffset: null,       // difference between UTC time and local time, in minutes, null for UTC, should match with lat/lng
+    timezoneOffset: null,       // difference between UTC time and local time, in hours, null for UTC, should match with lat/lng
     isCustomMode : true,        // use custom colors
     chartTextColor : "white",   // custom chart text color
     gridlinesColor : "gray",    // custom chart grid lines color
@@ -36,7 +36,7 @@ var viewer_params = {
 
 // we could use local time zone but it should match with lat/lng
 // var d = new Date();
-// viewer_params.timezoneOffset = d.getTimezoneOffset();
+// viewer_params.timezoneOffset = d.getTimezoneOffset() / 60;
 
 AstroMosaicEngine("M82", viewer_params, "target-div", "day-div", "year-div");
 
