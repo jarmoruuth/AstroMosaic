@@ -2125,6 +2125,7 @@ function StartAstroMosaicViewerEngine(
             let moonoverlay = A.graphicOverlay({color: '#1c91c0', lineWidth: 2, name: 'Moon'});
             engine_data.aladin.addOverlay(moonoverlay);
             moonoverlay.add(A.polyline(moonpath, {color: '#1c91c0', lineWidth: 2, name: 'Moon'}));
+            moonoverlay.add(A.circle(moonpath[0][0], moonpath[0][1], 0.5, {color: '#1c91c0'})); // Add a circle to starting point, size 0.5 degrees is close to actual size
             if (engine_params.planet_id != null) {
                 // planets move slowly so print four week
                 var starttime = engine_params.UTCdate_ms;
@@ -2139,6 +2140,7 @@ function StartAstroMosaicViewerEngine(
                 let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name});
                 engine_data.aladin.addOverlay(planetoverlay);
                 planetoverlay.add(A.polyline(planetpath, {color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name}));
+                planetoverlay.add(A.circle(planetpath[0][0], planetpath[0][1], 0.1, {color: 'Magenta'}));   // Add a circle to starting point, it is bigger than actual size
             }
         }
         aladin_view_ready = true; 
