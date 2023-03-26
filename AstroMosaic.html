@@ -306,7 +306,7 @@ p {
         </form>    
     </div>
     <div>
-        <form>
+        <form title="Select a planet to be viewed in visibility charts and sky atlas.">
         Planet:
         <select id="view-planet" onchange="javascript:ViewImage(0)">
         </select>
@@ -400,8 +400,8 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.73";
-var startup_image = "M73";
+var version_number = "1.74 test1";
+var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added Telescope Live CMOS cameras.";
 
 var version_text = 
@@ -711,7 +711,7 @@ var all_services = {
     { 
             name: "Telescope Live", 
             radec_format: 1, 
-            default_telescope: 2,
+            default_telescope: 5,
             telescopes: [
                 { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
                 { name: "AUS-2-CMOS", fov_x: 323, fov_y: 215, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },

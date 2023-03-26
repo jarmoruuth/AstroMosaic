@@ -1903,7 +1903,8 @@ function StartAstroMosaicViewerEngine(
             aladin = A.aladin('#'+engine_panels.aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
                             showReticle:false, showZoomControl:false, showFullscreenControl:fullscreen, 
                             showLayersControl:layers, showGotoControl:false, 
-                            showControl: false, cooFrame: "J2000", showFrame: false});
+                            showControl: false, cooFrame: "J2000", showFrame: false,
+                            showSimbadPointerControl: true });
         } else {
             document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
         }
