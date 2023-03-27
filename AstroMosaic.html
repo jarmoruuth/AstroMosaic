@@ -400,7 +400,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74 test1";
+var version_number = "1.74 test2";
 var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
 
@@ -906,6 +906,7 @@ var info_panels = {
 
 var engine_native_resources = {
     aladin_object_clicked : function(){},
+    aladin_object_hovered : function(){},
     reset_view : function(){},
     sun_rise_set : function(){},
     object_altitude_init : function(){},
@@ -1137,6 +1138,7 @@ function initAstroMosaic()
     init_planet_list();
 
     engine_native_resources.aladin_object_clicked = showWikiTarget;
+    engine_native_resources.aladin_object_hovered = showObjectHovered;
     engine_native_resources.reset_view = wikiReset;
 }
 
@@ -2572,9 +2574,37 @@ function reformatTargetName(name)
     return newname;
 }
 
+function showObjectHovered(data)
+{
+    if (data.name == undefined) {
+        return;
+    }
+    var txt = data.name;
+    if (data.info != undefined) {
+        txt += ', Type: ' + data.info.type;
+        txt += ', RA/DEC: ' + data.info.radec;
+        if (data.info.constellation != '') {
+            txt += ', Constellation: ' + data.info.constellation;
+        }
+        if (data.info.mag != 0) {
+            txt += ', Magnitude: ' + data.info.mag;
+        }
+        if (data.info.distance != 0) {
+            txt += ', Distance (Mly): ' + data.info.distance;
+        }
+        if (data.info.notes != '') {
+            txt += ', Notes: ' + data.info.notes;
+        } 
+    }
+
+    document.getElementById(viewer_panels.startup_info_text).innerHTML = txt;
+}
+
 function showWikiTarget(data)
 {
-    showWikiTargetOrAlt(data.wikiname, data);
+    if (data.wikiname != undefined) {
+        showWikiTargetOrAlt(data.wikiname, data);
+    }
 }
 
 function showWikiTargetOrAlt(wiki_target, alt_data)
