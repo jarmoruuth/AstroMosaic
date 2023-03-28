@@ -400,7 +400,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74 test2";
+var version_number = "1.74 test3";
 var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
 
@@ -2002,6 +2002,7 @@ function dataObjectToTable(data)
                 '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
     } else if (data.pathinfo) {
         var tab = '<p style="padding: 5px;">' + data.pathname + '</p>';
+        var tab = tab + tabstart;
         tab = addTabRow(tab, "<b>Date</b>", "<b>RA DEC</b>");
         for (var i = 0; i < data.pathinfo.length; i++) {
             tab = addTabRow(tab, data.pathinfo[i][0], data.pathinfo[i][1]);
