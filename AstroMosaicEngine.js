@@ -307,6 +307,9 @@ function StartAstroMosaicViewerEngine(
 
     var engine_error_text = null;
 
+    var catalogSimbad = null;
+    var catalogNED = null;
+
     console.log('StartAstroMosaicViewerEngine', engine_view_type, target);
 
     if (engine_view_type == 'get_engine_native_resources') {
@@ -1852,7 +1855,64 @@ function StartAstroMosaicViewerEngine(
         return ra_hours.toFixed(5) + " " + dec.toFixed(5);
     }
 
-    function addAladinCatalogs(aladin, target)
+    function addSimbadNedAladinCatalogs(aladin, reposition)
+    {
+        let radec = aladin.getRaDec();
+        
+        if (catalogSimbad != null) {
+            var isShowing = catalogSimbad[0].isShowing;
+            console.log("existing catalogSimbad, isShowing = " + isShowing);
+            if (!reposition && catalogSimbad[1] != radec[0] && catalogSimbad[2] != radec[1]) {
+                console.log("remove simbad catalog");
+                catalogSimbad[0].hide();
+                catalogSimbad = null;
+            }
+        } else {
+            var isShowing = false;
+        }
+        if (catalogSimbad == null) {
+            console.log("add simbad catalog");
+            catalogSimbad = [];
+            // Limit Simbad and NED catalogs to 1 degree to avoid excessive memory usage
+            catalogSimbad[0] = A.catalogFromSimbad({ra: radec[0], dec: radec[1]}, 1);
+            catalogSimbad[1] = radec[0];
+            catalogSimbad[2] = radec[1];
+            if (isShowing) {
+                catalogSimbad[0].show();
+            } else {
+                catalogSimbad[0].hide();
+            }
+        }
+        aladin.addCatalog(catalogSimbad[0]);
+
+        if (catalogNED != null) {
+            isShowing = catalogNED[0].isShowing;
+            console.log("existing catalogNED, isShowing = " + isShowing);
+            if (!reposition && catalogNED[1] != radec[0] && catalogNED[2] != radec[1]) {
+                console.log("remove NED catalog");
+                catalogNED[0].hide();
+                catalogNED = null;
+            }
+        } else {
+            isShowing = false;
+        }
+        if (catalogNED == null) {
+            console.log("add NED catalog")
+            catalogNED = [];
+            catalogNED[0] = A.catalogFromNED({ra: radec[0], dec: radec[1]}, 1);
+            catalogNED[1] = radec[0];
+            catalogNED[2] = radec[1];
+            if (isShowing) {
+                catalogNED[0].show();
+            } else {
+                catalogNED[0].hide();
+            }
+        }
+        aladin.addCatalog(catalogNED[0]);
+        console.log("addAladinCatalogs, radec = " + radec);
+    }
+
+    function addAladinCatalogs(aladin, reposition)
     {
         if (engine_catalogs) {
             for (var i = 0; i < engine_catalogs.length; i++) {
@@ -1862,16 +1922,6 @@ function StartAstroMosaicViewerEngine(
                     }
                 }
             }
-            let radec = aladin.getRaDec();
-            
-            // Limit Simbad and NED catalogs to 1 degree to avoid excessive memory usage
-            let cat = A.catalogFromSimbad({ra: radec[0], dec: radec[1]}, 1);
-            cat.hide();
-            aladin.addCatalog(cat);
-
-            cat = A.catalogFromNED({ra: radec[0], dec: radec[1]}, 1);
-            cat.hide();
-            aladin.addCatalog(cat);
 
             if (marker_list.length > 0) {
                 cat = A.catalog({name: 'Markers', sourceSize: 18});
@@ -1882,6 +1932,8 @@ function StartAstroMosaicViewerEngine(
                     cat.addSources(A.source(marker_radec[0], marker_radec[1]));
                 }
             }
+
+            addSimbadNedAladinCatalogs(aladin, reposition);
         }
     }
 
@@ -1909,7 +1961,7 @@ function StartAstroMosaicViewerEngine(
             document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
         }
         if (aladin) {
-            addAladinCatalogs(aladin);
+            addAladinCatalogs(aladin, false);
         }
 
         aladin_position = getAladinPosition(aladin);
@@ -1928,10 +1980,7 @@ function StartAstroMosaicViewerEngine(
                 }
             });
             aladin.on('objectHovered', function(object) {
-                var msg;
-                if (object) {
-                    msg = 'You hovered object ' + object.data + ' located at ' + object.ra + ', ' + object.dec;
-                    console.log(msg);
+                if (object && object.data) {
                     engine_native_resources.aladin_object_hovered(object.data);
                 }
             });            // Update on user move of view
@@ -2018,7 +2067,7 @@ function StartAstroMosaicViewerEngine(
 
         if (reposition) {
             engine_data.aladin.removeLayers();
-            addAladinCatalogs(engine_data.aladin);
+            addAladinCatalogs(engine_data.aladin, true);
         } else {
             engine_data.aladin = EngineInitAladin(aladin_fov, image_target);
         }
@@ -2153,14 +2202,26 @@ function StartAstroMosaicViewerEngine(
             for (var d = starttime; d <= endtime; d = d + interval) {
                 var moonpos = moon_position(d);
                 moonpath.push([moonpos.ra, moonpos.dec]);
+                var moonpathinfo = [];
+                for (var d2 = d; d2 < d + interval; d2 = d2 + 10*60*1000) { // every 10 minutes
+                    var moonpos2 = moon_position(d2);
+                    if (engine_params.timezoneOffset == null) {
+                        var pathdate = new Date(d2);
+                    } else {
+                        var pathdate = new Date(d2 + engine_params.timezoneOffset);
+                    }
+                    moonpathinfo.push([amISOdatestring(pathdate), (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5)]);
+                }
                 if (engine_params.timezoneOffset == null) {
                     var moondate = new Date(d);
                 } else {
                     var moondate = new Date(d + engine_params.timezoneOffset);
                 }
                 moonsources.push(A.source(moonpos.ra, moonpos.dec, 
-                                { name: 'Moon at ' + amISOdatestring(moondate) + 
-                                        ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5) }));
+                                { name: 'Moon, ' + amISOdatestring(moondate) + 
+                                        ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
+                                  pathname: 'Moon',
+                                  pathinfo: moonpathinfo }));
             }
             console.log("Add moon path, len " + moonpath.length);
             let moonoverlay = A.graphicOverlay({color: '#1c91c0', lineWidth: 2, name: 'Moon'});
@@ -2175,20 +2236,32 @@ function StartAstroMosaicViewerEngine(
                 // planets move slowly so print four week
                 var starttime = engine_params.UTCdate_ms;
                 var endtime = starttime + 4*7*day_ms;
-                var interval = 24*60*60*1000; // 24 hours
+                var interval = 12*60*60*1000; // 12 hours
                 var planetpath = [];
                 var planetsources = [];
                 for (var d = starttime; d <= endtime; d = d + interval) {
                     var planetpos = planet_position(d, planets[engine_params.planet_id]);
                     planetpath.push([planetpos.ra, planetpos.dec]);
+                    var planetpathinfo = [];
+                    for (var d2 = d; d2 < d + interval; d2 = d2 + 60*60*1000) { // every 60 minutes
+                        var planetpos2 = planet_position(d2, planets[engine_params.planet_id]);
+                        if (engine_params.timezoneOffset == null) {
+                            var pathdate = new Date(d2);
+                        } else {
+                            var pathdate = new Date(d2 + engine_params.timezoneOffset);
+                        }
+                        planetpathinfo.push([amISOdatestring(pathdate), (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5)]);
+                    }
                     if (engine_params.timezoneOffset == null) {
                         var planetdate = new Date(d);
                     } else {
                         var planetdate = new Date(d + engine_params.timezoneOffset);
                     }
                     planetsources.push(A.source(planetpos.ra, planetpos.dec, 
-                                        { name: planets[engine_params.planet_id].name + ' at ' + amISOdatestring(planetdate) + 
-                                                ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5) }));
+                                        { name: planets[engine_params.planet_id].name + ', ' + amISOdatestring(planetdate) + 
+                                                ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
+                                          pathname: planets[engine_params.planet_id].name,
+                                          pathinfo: planetpathinfo }));
                 }
                 console.log("Add planet path, len " + planetpath.length);
                 let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name});

@@ -801,7 +801,7 @@ var all_services = {
             name: "Current location",
             radec_format: 1, 
             telescopes: [
-                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: null, horizon_limits: [0], meridian_transit: 0  }
+                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
             ] 
         }
     ],
@@ -1137,8 +1137,8 @@ function initAstroMosaic()
     update_catalog_list();
     init_planet_list();
 
-    engine_native_resources.aladin_object_clicked = showWikiTarget;
-    engine_native_resources.aladin_object_hovered = showObjectHovered;
+    engine_native_resources.aladin_object_clicked = aladinObjectClicked;
+    engine_native_resources.aladin_object_hovered = aladinObjectHovered;
     engine_native_resources.reset_view = wikiReset;
 }
 
@@ -1815,7 +1815,8 @@ function ViewImage(oper)
             }
             if (current_telescope.timezoneOffset == null) {
                 // first time, get timezone offset
-                current_telescope.timezoneOffset = curdate.getTimezoneOffset() / 60;    // convert minutes to hours
+                var current_date  = new Date();
+                current_telescope.timezoneOffset = -current_date.getTimezoneOffset() / 60;    // convert minutes to hours
                 console.log("Current location timezoneOffset ", current_telescope.timezoneOffset);
             }
         }
@@ -1976,7 +1977,8 @@ function ViewImage(oper)
 function addTabRow(tab, v1, v2)
 {
     if (v1 && v2) {
-        return tab + "<TR><TD>" + v1 + "</TD><TD>" + v2 + "</TD></TR>";
+        var tdstyle = 'style="padding: 5px; border: 1px solid black; border-collapse: collapse;"';
+        return tab + '<TR><TD ' + tdstyle + '>' + v1 + '</TD><TD ' + tdstyle + '>' + v2 + "</TD></TR>";
     } else {
         return tab;
     }
@@ -1984,8 +1986,9 @@ function addTabRow(tab, v1, v2)
 
 function dataObjectToTable(data)
 {
-    var tab = "<TABLE>";
+    var tabstart = '<TABLE style="border-collapse: collapse;">';
     if (data.info) {
+        var tab = tabstart;
         tab = addTabRow(tab, "Name", data.name);
         tab = addTabRow(tab, "Type", data.info.type);
         tab = addTabRow(tab, "RA/DEC",  data.info.radec);
@@ -1997,7 +2000,14 @@ function dataObjectToTable(data)
                 tab, 
                 "Url", 
                 '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
+    } else if (data.pathinfo) {
+        var tab = '<p style="padding: 5px;">' + data.pathname + '</p>';
+        tab = addTabRow(tab, "<b>Date</b>", "<b>RA DEC</b>");
+        for (var i = 0; i < data.pathinfo.length; i++) {
+            tab = addTabRow(tab, data.pathinfo[i][0], data.pathinfo[i][1]);
+        }
     } else {
+        var tab = tabstart;
         for (var key in data) {
             tab = addTabRow(tab, key.toString(), data[key].toString());
         }
@@ -2485,16 +2495,16 @@ function wikiReset()
     wikiIframe = null;
 }
 
-function noWikiAvailable(alt_data, error_text)
+function noWikiAvailableShowText(alt_data, error_text)
 {
     if (alt_data != null) {
-        console.log("noWikiAvailable:show alt_data");
+        console.log("noWikiAvailableShowText:show alt_data");
         var tab = dataObjectToTable(alt_data);
         document.getElementById(info_panels.wiki_panel).style.height = ""; //"200px";
         document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
         document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + tab + "</p>";
     } else if (error_text != null) {
-        console.log("noWikiAvailable:show error_text");
+        console.log("noWikiAvailableShowText:show error_text");
         document.getElementById(info_panels.wiki_panel).style.height = "50px";
         document.getElementById(info_panels.wiki_panel).style.width = info_panels.wiki_panel_width;
         document.getElementById(info_panels.wiki_panel).innerHTML = "<p>" + error_text + "</p>";
@@ -2574,36 +2584,44 @@ function reformatTargetName(name)
     return newname;
 }
 
-function showObjectHovered(data)
+function aladinObjectHovered(data)
 {
-    if (data.name == undefined) {
-        return;
-    }
-    var txt = data.name;
-    if (data.info != undefined) {
-        txt += ', Type: ' + data.info.type;
-        txt += ', RA/DEC: ' + data.info.radec;
-        if (data.info.constellation != '') {
-            txt += ', Constellation: ' + data.info.constellation;
+    var txt = null;
+    if (data.name != undefined) {
+        txt = data.name;
+        if (data.info != undefined) {
+            txt += ', Type: ' + data.info.type;
+            txt += ', RA/DEC: ' + data.info.radec;
+            if (data.info.constellation != '') {
+                txt += ', Constellation: ' + data.info.constellation;
+            }
+            if (data.info.mag != 0) {
+                txt += ', Magnitude: ' + data.info.mag;
+            }
+            if (data.info.distance != 0) {
+                txt += ', Distance (Mly): ' + data.info.distance;
+            }
+            if (data.info.notes != '') {
+                txt += ', Notes: ' + data.info.notes;
+            }
         }
-        if (data.info.mag != 0) {
-            txt += ', Magnitude: ' + data.info.mag;
-        }
-        if (data.info.distance != 0) {
-            txt += ', Distance (Mly): ' + data.info.distance;
-        }
-        if (data.info.notes != '') {
-            txt += ', Notes: ' + data.info.notes;
-        } 
+    } else if (data.MAIN_ID != undefined) {
+        txt = data.MAIN_ID;
+        txt += ', RA/DEC: ' + data.RA + " / " + data.DEC;
     }
 
-    document.getElementById(viewer_panels.startup_info_text).innerHTML = txt;
+    if (txt) {
+        document.getElementById(viewer_panels.startup_info_text).innerHTML = txt;
+    }
 }
 
-function showWikiTarget(data)
+function aladinObjectClicked(data)
 {
     if (data.wikiname != undefined) {
         showWikiTargetOrAlt(data.wikiname, data);
+    } else if (data.MAIN_ID != undefined || data.pathinfo != undefined) {
+        wikiReset();
+        noWikiAvailableShowText(data, null);
     }
 }
 
@@ -2612,7 +2630,7 @@ function showWikiTargetOrAlt(wiki_target, alt_data)
     var showWiki = document.getElementById("wikiCheckbox").checked;
     if (!showWiki) {
         wikiReset();
-        noWikiAvailable(alt_data, null);
+        noWikiAvailableShowText(alt_data, null);
         return;
     }
 
@@ -2622,7 +2640,7 @@ function showWikiTargetOrAlt(wiki_target, alt_data)
     wiki_target = reformatTargetName(wiki_target);
     var wiki_url = url + wiki_target.replace(/ /g, "%20");
 
-    console.log("showWikiTarget", wiki_target, wiki_url);
+    console.log("showWikiTargetOrAlt", wiki_target, wiki_url);
 
     fetch(wiki_url)
         .then(
@@ -2632,7 +2650,7 @@ function showWikiTargetOrAlt(wiki_target, alt_data)
                     return;
                 }
                 response.json().then(function(jsonData) {
-                    console.log('showWikiTarget, get page id, got response from HTTP GET', wiki_target);
+                    console.log('showWikiTargetOrAlt, get page id, got response from HTTP GET', wiki_target);
                     if (jsonData.query && jsonData.query.pages) {
                         var pageid = jsonData.query.pages[0].pageid;
                     } else {
@@ -2644,7 +2662,7 @@ function showWikiTargetOrAlt(wiki_target, alt_data)
                         var error_text = "Failed to get Wiki page id from json for " + wiki_target;
                         console.log(error_text);
                         wikiReset();
-                        noWikiAvailable(alt_data, error_text);
+                        noWikiAvailableShowText(alt_data, error_text);
                     }
                 })
             }
@@ -2653,7 +2671,7 @@ function showWikiTargetOrAlt(wiki_target, alt_data)
             var error_text = 'Problem accessing Wiki. Fetch Error :' + err;
             console.log(error_text);
             wikiReset();
-            noWikiAvailable(alt_data, error_text);
+            noWikiAvailableShowText(alt_data, error_text);
         }
     );
 }
