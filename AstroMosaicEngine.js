@@ -365,8 +365,6 @@ function StartAstroMosaicViewerEngine(
     }
     return engine_data;
 
-    
-
     function build_error_text(txt)
     {
         return "<strong>" + txt + "</strong>";
@@ -498,6 +496,8 @@ function StartAstroMosaicViewerEngine(
         if (ra > 180) {
             ra = 360 - ra;
         }
+
+        ra = ra * degToHours;
 
         // Dec is the same as latitude
         var dec = lat;
@@ -1653,9 +1653,9 @@ function StartAstroMosaicViewerEngine(
     {
         if (degrees) {
             // convert degrees to hours
-            console.log("decimal_to_mmss, degrees, ", v);
+            //console.log("decimal_to_mmss, degrees, ", v);
             v = '' + parseFloat(v) * degToHours;
-            console.log("decimal_to_mmss, degrees to hours, ", v);
+            //console.log("decimal_to_mmss, degrees to hours, ", v);
         }
         var sign = '';
         v = v.trim();
@@ -1684,7 +1684,7 @@ function StartAstroMosaicViewerEngine(
         }
 
         var ret = sign + ("0" + x).slice(-2) + ':' + ("0" + mins).slice(-2) + ':' + secs.toFixed(2);
-        console.log("decimal_to_mmss, ret", ret);
+        //console.log("decimal_to_mmss, ret", ret);
 
         return ret;
     }
@@ -1917,14 +1917,14 @@ function StartAstroMosaicViewerEngine(
         if (engine_catalogs) {
             for (var i = 0; i < engine_catalogs.length; i++) {
                 if (engine_catalogs[i].AladinCatalog != null) {
-                    if (!skip_slooh_catalog(current_telescope_service, engine_catalogs[i])) {
+                    if (!engine_native_resources.skip_slooh_catalog(engine_params.current_telescope_service, engine_catalogs[i])) {
                         aladin.addCatalog(engine_catalogs[i].AladinCatalog);
                     }
                 }
             }
 
             if (marker_list.length > 0) {
-                cat = A.catalog({name: 'Markers', sourceSize: 18});
+                var cat = A.catalog({name: 'Markers', sourceSize: 18});
                 aladin.addCatalog(cat);
                 for (var i = 0; i < marker_list.length; i++) {
                     let marker_radec = get_ra_dec(marker_list[i]);
@@ -1986,7 +1986,7 @@ function StartAstroMosaicViewerEngine(
             });            // Update on user move of view
             aladin.on('positionChanged', function(pos) {
               if (pos) {
-                  console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
+                  //console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
                   var tempcoords = (pos.ra*degToHours).toFixed(5) + " " + (pos.dec).toFixed(5);
                   if (engine_params.isRepositionModeFunc != null
                         && engine_params.isRepositionModeFunc()
@@ -2117,7 +2117,15 @@ function StartAstroMosaicViewerEngine(
 
                 var line_color = 'White';
 
-                if ((grid_type == "mosaic" || (x == 1 && y == 1)) && engine_data.aladin && grid_type != "visual") {
+                if (grid_type == "visual") {
+                    if (x == 1 && y == 1) {
+                        // Add a circle to represent the 60 degree radius
+                        var radius = 45;
+                        var overlay = A.graphicOverlay({color: 'white', lineWidth: 1, name: radius + ' degrees'});
+                        engine_data.aladin.addOverlay(overlay);
+                        overlay.add(A.circle(ra, dec, radius, {color: 'white'}));
+                    }
+                } else if ((grid_type == "mosaic" || (x == 1 && y == 1)) && engine_data.aladin) {
                     let overlay = A.graphicOverlay({color: line_color, lineWidth: 2, name: 'FoV'});
                     engine_data.aladin.addOverlay(overlay);
                     overlay.add(A.polyline(panel, {color: line_color, lineWidth: 2, name: 'FoV'}));
@@ -2127,7 +2135,7 @@ function StartAstroMosaicViewerEngine(
                 var col_ra_hours = col_ra * degToHours;
 
                 if (grid_type == "mosaic" || grid_type == "visual") {
-                    if (current_telescope_service.radec_format == 0) {
+                    if (engine_params.current_telescope_service.radec_format == 0) {
                         panel_radec[x][y] = col_ra_hours.toFixed(5) + 
                                             " " + row_dec.toFixed(5);
                     } else {

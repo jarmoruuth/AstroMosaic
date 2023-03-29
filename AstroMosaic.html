@@ -400,7 +400,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74 test3";
+var version_number = "1.74 test4";
 var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
 
@@ -801,7 +801,8 @@ var all_services = {
             name: "Current location",
             radec_format: 1, 
             telescopes: [
-                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
+                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "Now", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
             ] 
         }
     ],
@@ -887,6 +888,7 @@ var viewer_params = {
     isCustomMode : false,
     showAz: false,
     planet_id: null,
+    current_telescope_service: null,
     isRepositionModeFunc : isRepositionMode,
     repositionTargetFunc : repositionTarget
 };
@@ -915,7 +917,8 @@ var engine_native_resources = {
     moon_position : function(){},
     moon_topocentric_correction : function(){},
     moon_distance : function(){},
-    getTargetAboveRightNow : function(){}
+    getTargetAboveRightNow : function(){},
+    skip_slooh_catalog: function(){}
 };
 
 var engine_data = null;
@@ -1140,6 +1143,7 @@ function initAstroMosaic()
     engine_native_resources.aladin_object_clicked = aladinObjectClicked;
     engine_native_resources.aladin_object_hovered = aladinObjectHovered;
     engine_native_resources.reset_view = wikiReset;
+    engine_native_resources.skip_slooh_catalog = skip_slooh_catalog;
 }
 
 function init_all_services()
@@ -1762,6 +1766,8 @@ function clearStartupInfoText()
 //      2 - Telescope changed
 function ViewImage(oper)
 {
+    var is_telescope_fov = true;
+
     console.log('ViewImage', oper);
 
     if (url_view == "all") {
@@ -1796,6 +1802,7 @@ function ViewImage(oper)
         catalog_reset();
     }
 
+
     if (oper == 1) {
         // Telescope service changed
         var telescope_service_name = document.getElementById("current-telescope-service").value;
@@ -1803,26 +1810,6 @@ function ViewImage(oper)
         update_telescope_list(telescope_service_name);
         update_catalog_list();
         catalog_filters_changed = true;
-        if (telescope_service_name == "Current location") {
-            if (current_telescope.lat == null) {
-                // first time, get current location
-                // set some default in case we fail to get current location
-                current_telescope.lat = 0;
-                current_telescope.lng = 0;
-                // get current location
-                getCurrentTelescopeLocation();
-                return; // wait for getCurrentTelescopeLocation to call us again
-            }
-            if (current_telescope.timezoneOffset == null) {
-                // first time, get timezone offset
-                var current_date  = new Date();
-                current_telescope.timezoneOffset = -current_date.getTimezoneOffset() / 60;    // convert minutes to hours
-                console.log("Current location timezoneOffset ", current_telescope.timezoneOffset);
-            }
-        }
-        // Set target to whatever is above right now
-        var target_above = engine_native_resources.getTargetAboveRightNow(current_telescope.lat, current_telescope.lng, viewer_params.UTCdate_ms);
-        document.getElementById("target").value = target_above[0].toFixed(5) + " " + target_above[1].toFixed(5);
     }
 
     if (oper == 2) {
@@ -1839,6 +1826,53 @@ function ViewImage(oper)
                 current_telescope = current_telescope_service.telescopes[i];
             }
         }
+    }
+
+    if (current_telescope.lat == null) {
+        // first time, get current location
+        // set some default in case we fail to get current location
+        setAllUnknownTelescopeLocations(0, 0);
+        // get current location
+        getCurrentTelescopeLocation();
+        return; // wait for getCurrentTelescopeLocation to call us again
+    }
+    if (current_telescope.timezoneOffset == null) {
+        // first time, get timezone offset
+        var current_date  = new Date();
+        current_telescope.timezoneOffset = -current_date.getTimezoneOffset() / 60;    // convert minutes to hours
+        console.log("Current location timezoneOffset ", current_telescope.timezoneOffset);
+    }
+
+    if (current_telescope_service.name == "Current location") {
+        console.log("ViewImage, current location");
+        is_telescope_fov = false;
+        if (current_telescope.name == "Now") {
+            console.log("ViewImage, now");
+            var curdate = new Date();
+            var UTCdatetime_ms = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), curdate.getUTCDate(), 
+                                          curdate.getUTCHours(), curdate.getUTCMinutes());
+            var d = new Date(UTCdatetime_ms + current_telescope.timezoneOffset * 3600 * 1000);
+            var isostr = d.toISOString().substr(0, 16);
+            document.getElementById("view_date").value = isostr.substr(0, 10) + " " + isostr.substr(11, 5);
+        } else {
+            if (view_date.length >= 16) {
+                // date and time
+                console.log("ViewImage, date and time");
+                var UTCdatetime_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
+                                             parseInt(view_date.substr(8, 2)), parseInt(view_date.substr(11, 2)), 
+                                             parseInt(view_date.substr(14, 2)));
+            } else {
+                console.log("ViewImage, date only");
+                var UTCdatetime_ms = viewer_params.UTCdate_ms;
+            }
+            // we assume date is local date so we adjust timezone offset to get UTC date
+            UTCdatetime_ms = UTCdatetime_ms - current_telescope.timezoneOffset * 3600 * 1000;
+        }
+        // Set target to whatever is above right now
+        var target_above = engine_native_resources.getTargetAboveRightNow(current_telescope.lat, current_telescope.lng, UTCdatetime_ms);
+        document.getElementById("target").value = target_above[0].toFixed(5) + " " + target_above[1].toFixed(5);
+        var d = new Date(UTCdatetime_ms);
+        console.log("ViewImage, date", d.toISOString().substr(0, 16), current_telescope.lat, current_telescope.lng);
     }
 
     viewer_params.planet_id = null;
@@ -1909,10 +1943,10 @@ function ViewImage(oper)
     }
 
     if (url_view == 'all') {
-        if (current_telescope.name == 'Visual') {
-            viewer_params.grid_type = 'visual';
-        } else {
+        if (is_telescope_fov) {
             viewer_params.grid_type = document.getElementById("grid_type").value;
+        } else {
+            viewer_params.grid_type = 'visual';
         }
         viewer_params.grid_size_x = parseInt(document.getElementById("size_x").value);
         viewer_params.grid_size_y = parseInt(document.getElementById("size_y").value);
@@ -1941,6 +1975,7 @@ function ViewImage(oper)
             screen_setup = 'default';
         }
     }
+    viewer_params.current_telescope_service = current_telescope_service;
 
     showWiki();
 
@@ -2805,13 +2840,26 @@ function getCurrentTelescopeLocation()
     getLocation(setCurrentTelescopePosition);
 }
 
-function setCurrentTelescopePosition(position) 
+function setAllUnknownTelescopeLocations(lat, lng)
+{
+    for (var i = 0; i < telescope_services.length; i++) {
+        for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
+            if (all_services.telescope_services[i].telescopes[j].lat == null ||
+                (all_services.telescope_services[i].telescopes[j].lat == 0 && all_services.telescope_services[i].telescopes[j].lng == 0)) 
+            {
+                console.log("setCurrentTelescopePosition", all_services.telescope_services[i].telescopes[j].name, "set to", lat.toString(), lng.toString(), "from geolocation");
+                all_services.telescope_services[i].telescopes[j].lat = lat;
+                all_services.telescope_services[i].telescopes[j].lng = lng;
+            }
+        }
+    }
+}
+
+function setCurrentTelescopePosition(position)
 {
     console.log("setCurrentTelescopePosition", position.coords.latitude.toString(), position.coords.longitude.toString());
-    current_telescope.lat = position.coords.latitude;
-    current_telescope.lng = position.coords.longitude; 
-
-    ViewImage(1);
+    setAllUnknownTelescopeLocations(position.coords.latitude, position.coords.longitude);
+    ViewImage(0);
 }
 
 function showHideAddTelescope()
