@@ -137,6 +137,9 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         var day = d.getUTCDate();
         engine_params.UTCdate_ms = Date.UTC(year, month, day, 0, 0, 0, 0);
     }
+    var curdate = new Date();
+    engine_params.UTCdate_now_ms = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), curdate.getUTCDate(), 
+                                            curdate.getUTCHours(), curdate.getUTCMinutes());
 
     return StartAstroMosaicViewerEngine("", target, engine_params, engine_panels, null, 20, null);
 }
@@ -2195,13 +2198,17 @@ function StartAstroMosaicViewerEngine(
         if (engine_view_type == "all") {
             /* Add moon and optionally planet path to the Aladin view */
             var midday = engine_params.UTCdate_ms + day_ms/2;
-            var suntimes = sun_rise_set(midday, engine_params.location_lat, engine_params.location_lng, -12);
             var interval = 60*60*1000; // 60 minutes
             var draw_full_day = 1;  // if 0 draw only during astronomical twilight
             if (draw_full_day) {
-                var starttime = midday;
+                if (engine_params.grid_type == "visual") {
+                    var starttime = engine_params.UTCdate_ms;
+                } else {
+                    var starttime = midday;
+                }
                 var endtime = starttime + day_ms;
             } else {
+                var suntimes = sun_rise_set(midday, engine_params.location_lat, engine_params.location_lng, -12);
                 var starttime = suntimes.sunset - suntimes.sunset % interval;
                 var endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
             }
@@ -2216,30 +2223,64 @@ function StartAstroMosaicViewerEngine(
                     if (engine_params.timezoneOffset == null) {
                         var pathdate = new Date(d2);
                     } else {
-                        var pathdate = new Date(d2 + engine_params.timezoneOffset);
+                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
                     }
                     moonpathinfo.push([amISOdatestring(pathdate), (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5)]);
                 }
-                if (engine_params.timezoneOffset == null) {
-                    var moondate = new Date(d);
-                } else {
-                    var moondate = new Date(d + engine_params.timezoneOffset);
-                }
-                moonsources.push(A.source(moonpos.ra, moonpos.dec, 
-                                { name: 'Moon, ' + amISOdatestring(moondate) + 
-                                        ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
-                                  pathname: 'Moon',
-                                  pathinfo: moonpathinfo }));
+                if (d != engine_params.UTCdate_now_ms) {
+                    if (engine_params.timezoneOffset == null) {
+                        var moondate = new Date(d);
+                    } else {
+                        var moondate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
+                    }
+                    moonsources.push(A.source(moonpos.ra, moonpos.dec, 
+                                    { name: 'Moon, ' + amISOdatestring(moondate) + 
+                                            ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
+                                      pathname: 'Moon',
+                                      pathinfo: moonpathinfo }));
+                    }
             }
-            console.log("Add moon path, len " + moonpath.length);
-            let moonoverlay = A.graphicOverlay({color: '#1c91c0', lineWidth: 2, name: 'Moon'});
-            engine_data.aladin.addOverlay(moonoverlay);
-            moonoverlay.add(A.polyline(moonpath, {color: '#1c91c0', lineWidth: 2, name: 'Moon'}));
 
-            var cat = A.catalog({sourceSize: 20, shape: 'circle', color: '#1c91c0' });
+            // Add path
+            console.log("Add moon path, len " + moonpath.length);
+            let moonoverlay = A.graphicOverlay({color: '#1c91c0', lineWidth: 2, name: 'Moon line'});
+            engine_data.aladin.addOverlay(moonoverlay);
+            moonoverlay.add(A.polyline(moonpath, {color: '#1c91c0', lineWidth: 2, name: 'Moon line'}));
+
+            // Add catalog with clickable/hoverable objects
+            var cat = A.catalog({sourceSize: 20, shape: 'circle', color: '#1c91c0', name: 'Moon' });
             engine_data.aladin.addCatalog(cat);
             cat.addSources(moonsources);
         
+            if (starttime <= engine_params.UTCdate_now_ms && endtime >= engine_params.UTCdate_now_ms) {
+                // current time is within the path
+                var moonpos = moon_position(engine_params.UTCdate_now_ms);
+                var moonsources = [];
+                var moonposinfo = [];
+                for (var d2 = engine_params.UTCdate_now_ms; d2 < engine_params.UTCdate_now_ms + interval; d2 = d2 + 10*60*1000) { // every 10 minutes
+                    var moonpos2 = moon_position(d2);
+                    if (engine_params.timezoneOffset == null) {
+                        var pathdate = new Date(d2);
+                    } else {
+                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
+                    }
+                    moonposinfo.push([amISOdatestring(pathdate), (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5)]);
+                }
+                if (engine_params.timezoneOffset == null) {
+                    var moondate = new Date(engine_params.UTCdate_now_ms);
+                } else {
+                    var moondate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset * 3600 * 1000);
+                }
+                moonsources.push(A.source(moonpos.ra, moonpos.dec,
+                                { name: 'Moon now, ' + amISOdatestring(moondate) +
+                                        ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
+                                    pathname: 'Moon now',
+                                    pathinfo: moonposinfo }));
+                var cat = A.catalog({sourceSize: 28, shape: 'circle', color: '#1c91c0', name: 'Moon now' });
+                engine_data.aladin.addCatalog(cat);
+                cat.addSources(moonsources);
+            }
+
             if (engine_params.planet_id != null) {
                 // planets move slowly so print four week
                 var starttime = engine_params.UTCdate_ms;
@@ -2256,29 +2297,62 @@ function StartAstroMosaicViewerEngine(
                         if (engine_params.timezoneOffset == null) {
                             var pathdate = new Date(d2);
                         } else {
-                            var pathdate = new Date(d2 + engine_params.timezoneOffset);
+                            var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
                         }
                         planetpathinfo.push([amISOdatestring(pathdate), (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5)]);
                     }
-                    if (engine_params.timezoneOffset == null) {
-                        var planetdate = new Date(d);
-                    } else {
-                        var planetdate = new Date(d + engine_params.timezoneOffset);
+                    if (d != engine_params.UTCdate_now_ms) {
+                        if (engine_params.timezoneOffset == null) {
+                            var planetdate = new Date(d);
+                        } else {
+                            var planetdate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
+                        }
+                        planetsources.push(A.source(planetpos.ra, planetpos.dec, 
+                                            { name: planets[engine_params.planet_id].name + ', ' + amISOdatestring(planetdate) + 
+                                                    ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
+                                            pathname: planets[engine_params.planet_id].name,
+                                            pathinfo: planetpathinfo }));
                     }
-                    planetsources.push(A.source(planetpos.ra, planetpos.dec, 
-                                        { name: planets[engine_params.planet_id].name + ', ' + amISOdatestring(planetdate) + 
-                                                ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
-                                          pathname: planets[engine_params.planet_id].name,
-                                          pathinfo: planetpathinfo }));
                 }
+                // Add path
                 console.log("Add planet path, len " + planetpath.length);
-                let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name});
+                let planetoverlay = A.graphicOverlay({color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name + ' line'});
                 engine_data.aladin.addOverlay(planetoverlay);
-                planetoverlay.add(A.polyline(planetpath, {color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name}));
+                planetoverlay.add(A.polyline(planetpath, {color: 'Magenta', lineWidth: 2, name: planets[engine_params.planet_id].name + ' line'}));
 
-                var cat = A.catalog({sourceSize: 10, shape: 'circle', color: 'Magenta' });
+                // Add catalog with clickable/hoverable objects
+                var cat = A.catalog({sourceSize: 10, shape: 'circle', color: 'Magenta', name: planets[engine_params.planet_id].name });
                 engine_data.aladin.addCatalog(cat);
                 cat.addSources(planetsources);
+
+                if (starttime <= engine_params.UTCdate_now_ms && endtime >= engine_params.UTCdate_now_ms) {
+                    // current time is within the path
+                    var planetpos = planet_position(engine_params.UTCdate_now_ms, planets[engine_params.planet_id]);
+                    var planetsources = [];
+                    var planetposinfo = [];
+                    for (var d2 = engine_params.UTCdate_now_ms; d2 < engine_params.UTCdate_now_ms + interval; d2 = d2 + 60*60*1000) { // every 60 minutes
+                        var planetpos2 = planet_position(d2, planets[engine_params.planet_id]);
+                        if (engine_params.timezoneOffset == null) {
+                            var pathdate = new Date(d2);
+                        } else {
+                            var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
+                        }
+                        planetposinfo.push([amISOdatestring(pathdate), (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5)]);
+                    }
+                    if (engine_params.timezoneOffset == null) {
+                        var planetdate = new Date(engine_params.UTCdate_now_ms);
+                    } else {
+                        var planetdate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset);
+                    }
+                    planetsources.push(A.source(planetpos.ra, planetpos.dec,
+                                       { name: planets[engine_params.planet_id].name + ' now, ' + amISOdatestring(planetdate) +
+                                            ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
+                                         pathname: planets[engine_params.planet_id].name + ' now',
+                                         pathinfo: planetposinfo }));
+                    var cat = A.catalog({sourceSize: 18, shape: 'circle', color: 'Magenta', name: planets[engine_params.planet_id].name + ' now' });
+                    engine_data.aladin.addCatalog(cat);
+                    cat.addSources(planetsources);
+                }
             }
         }
         aladin_view_ready = true; 

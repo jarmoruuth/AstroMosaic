@@ -400,7 +400,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74 test4";
+var version_number = "1.74 test5";
 var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
 
@@ -1843,14 +1843,17 @@ function ViewImage(oper)
         console.log("Current location timezoneOffset ", current_telescope.timezoneOffset);
     }
 
+    var curdate = new Date();
+    viewer_params.UTCdate_now_ms = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), curdate.getUTCDate(), 
+                                            curdate.getUTCHours(), curdate.getUTCMinutes());
+
     if (current_telescope_service.name == "Current location") {
         console.log("ViewImage, current location");
         is_telescope_fov = false;
         if (current_telescope.name == "Now") {
             console.log("ViewImage, now");
-            var curdate = new Date();
-            var UTCdatetime_ms = Date.UTC(curdate.getUTCFullYear(), curdate.getUTCMonth(), curdate.getUTCDate(), 
-                                          curdate.getUTCHours(), curdate.getUTCMinutes());
+            var UTCdatetime_ms = viewer_params.UTCdate_now_ms;
+            viewer_params.UTCdate_ms = UTCdatetime_ms;
             var d = new Date(UTCdatetime_ms + current_telescope.timezoneOffset * 3600 * 1000);
             var isostr = d.toISOString().substr(0, 16);
             document.getElementById("view_date").value = isostr.substr(0, 10) + " " + isostr.substr(11, 5);
@@ -1861,6 +1864,7 @@ function ViewImage(oper)
                 var UTCdatetime_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
                                              parseInt(view_date.substr(8, 2)), parseInt(view_date.substr(11, 2)), 
                                              parseInt(view_date.substr(14, 2)));
+                viewer_params.UTCdate_ms = UTCdatetime_ms;
             } else {
                 console.log("ViewImage, date only");
                 var UTCdatetime_ms = viewer_params.UTCdate_ms;
