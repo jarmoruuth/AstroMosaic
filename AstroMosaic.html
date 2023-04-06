@@ -400,7 +400,7 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74";
+var version_number = "1.74.1";
 var startup_image = "M74";
 var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
 
@@ -801,8 +801,8 @@ var all_services = {
             name: "Current location",
             radec_format: 1, 
             telescopes: [
-                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  },
-                { name: "Now", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: null, alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
+                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "Now", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
             ] 
         }
     ],
@@ -1836,7 +1836,7 @@ function ViewImage(oper)
         getCurrentTelescopeLocation();
         return; // wait for getCurrentTelescopeLocation to call us again
     }
-    if (current_telescope.timezoneOffset == null) {
+    if (current_telescope.timezoneOffset == "detect_timezone") {
         // first time, get timezone offset
         var current_date  = new Date();
         current_telescope.timezoneOffset = -current_date.getTimezoneOffset() / 60;    // convert minutes to hours
