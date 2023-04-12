@@ -400,13 +400,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74.1";
+var version_number = "1.74.2";
 var startup_image = "M74";
-var startup_info_text = "v" + version_number + " Added planet view, current location view, Simbad pointer.";
+var startup_info_text = "v" + version_number + "Added planet view, current location view, Simbad pointer.";
 
 var version_text = 
-    "Version 1.74 test1\n"+
-    "- Added Telescope Live CMOS cameras.\n" +
+    "Version 1.74\n"+
+    "- Added planet view, current location view, Simbad pointer.\n" +
     "Version 1.73\n"+
     "- Added Telescope Live CMOS cameras.\n" +
     "Version 1.72\n"+
@@ -1794,7 +1794,7 @@ function ViewImage(oper)
     //console.log("curdate", curdate);
     viewer_params.UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
                                         parseInt(view_date.substr(8, 2)));
-
+    viewer_params.UTCdatetime_ms = null;
     if (catalog_date != viewer_params.UTCdate_ms) {
         // time changed, reset catalog view list
         console.log("ViewImage, date changed, reset catalog view");
@@ -1852,31 +1852,24 @@ function ViewImage(oper)
         is_telescope_fov = false;
         if (current_telescope.name == "Now") {
             console.log("ViewImage, now");
-            var UTCdatetime_ms = viewer_params.UTCdate_now_ms;
-            viewer_params.UTCdate_ms = UTCdatetime_ms;
-            var d = new Date(UTCdatetime_ms + current_telescope.timezoneOffset * 3600 * 1000);
+            viewer_params.UTCdatetime_ms = viewer_params.UTCdate_now_ms;
+            var d = new Date(viewer_params.UTCdatetime_ms + current_telescope.timezoneOffset * 3600 * 1000);
             var isostr = d.toISOString().substr(0, 16);
             document.getElementById("view_date").value = isostr.substr(0, 10) + " " + isostr.substr(11, 5);
         } else {
             if (view_date.length >= 16) {
                 // date and time
                 console.log("ViewImage, date and time");
-                var UTCdatetime_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
-                                             parseInt(view_date.substr(8, 2)), parseInt(view_date.substr(11, 2)), 
-                                             parseInt(view_date.substr(14, 2)));
-                viewer_params.UTCdate_ms = UTCdatetime_ms;
-            } else {
-                console.log("ViewImage, date only");
-                var UTCdatetime_ms = viewer_params.UTCdate_ms;
+                viewer_params.UTCdatetime_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
+                                                        parseInt(view_date.substr(8, 2)), parseInt(view_date.substr(11, 2)), 
+                                                        parseInt(view_date.substr(14, 2)));
+                // we assume time is local time so we adjust timezone offset to get UTC time
+                viewer_params.UTCdatetime_ms = viewer_params.UTCdatetime_ms - current_telescope.timezoneOffset * 3600 * 1000;
             }
-            // we assume date is local date so we adjust timezone offset to get UTC date
-            UTCdatetime_ms = UTCdatetime_ms - current_telescope.timezoneOffset * 3600 * 1000;
         }
         // Set target to whatever is above right now
-        var target_above = engine_native_resources.getTargetAboveRightNow(current_telescope.lat, current_telescope.lng, UTCdatetime_ms);
+        var target_above = engine_native_resources.getTargetAboveRightNow(current_telescope.lat, current_telescope.lng, viewer_params.UTCdatetime_ms);
         document.getElementById("target").value = target_above[0].toFixed(5) + " " + target_above[1].toFixed(5);
-        var d = new Date(UTCdatetime_ms);
-        console.log("ViewImage, date", d.toISOString().substr(0, 16), current_telescope.lat, current_telescope.lng);
     }
 
     viewer_params.planet_id = null;

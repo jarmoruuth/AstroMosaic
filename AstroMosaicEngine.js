@@ -982,8 +982,12 @@ function StartAstroMosaicViewerEngine(
 
         var draw_full_day = 0;  // if 0 draw only during astronomical twilight
 
-        // sun rise and set times that closely match dome open times
-        var suntimes = sun_rise_set(midday, lat, lng, -12);
+        if (grid_type == "visual") {
+            var suntimes = sun_rise_set(midday, lat, lng, 0);
+        } else {
+            // sun rise and set times that closely match dome open times
+            var suntimes = sun_rise_set(midday, lat, lng, -12);
+        }
 
         var starttime;
         var endtime;
@@ -991,7 +995,11 @@ function StartAstroMosaicViewerEngine(
             starttime = midday;
             endtime = starttime + day_ms;
         } else {
-            starttime = suntimes.sunset - suntimes.sunset % interval;
+            if (engine_params.UTCdatetime_ms != null && engine_params.UTCdatetime_ms < suntimes.sunset) {
+                starttime = engine_params.UTCdatetime_ms;
+            } else {
+                starttime = suntimes.sunset - suntimes.sunset % interval;
+            }
             endtime = suntimes.sunrise + interval - suntimes.sunrise % interval;
         }
         var prevaz = null;
@@ -2201,8 +2209,8 @@ function StartAstroMosaicViewerEngine(
             var interval = 60*60*1000; // 60 minutes
             var draw_full_day = 1;  // if 0 draw only during astronomical twilight
             if (draw_full_day) {
-                if (engine_params.grid_type == "visual") {
-                    var starttime = engine_params.UTCdate_ms;
+                if (engine_params.grid_type == "visual" && engine_params.UTCdatetime_ms != null) {
+                    var starttime = engine_params.UTCdatetime_ms;
                 } else {
                     var starttime = midday;
                 }
@@ -2282,8 +2290,12 @@ function StartAstroMosaicViewerEngine(
             }
 
             if (engine_params.planet_id != null) {
-                // planets move slowly so print four week
-                var starttime = engine_params.UTCdate_ms;
+                // planets move slowly so print four weeks of path
+                if (engine_params.UTCdatetime_ms != null) {
+                    var starttime = engine_params.UTCdatetime_ms;
+                } else {
+                    var starttime = engine_params.UTCdate_ms;
+                }
                 var endtime = starttime + 4*7*day_ms;
                 var interval = 12*60*60*1000; // 12 hours
                 var planetpath = [];
