@@ -281,12 +281,12 @@ p {
         </form>    
     </div>
     <div>
-        <form title="If selected, show target test information when available." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="textCheckbox">Text
+        <form title="If selected, show current seeing at telescope location. Seeing uses predefined locations or tries to detect the current location." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="seeingCheckbox">Seeing
         </form>    
     </div>
     <div>
-        <form title="If selected, show current weather at telescope location." action="javascript:ViewImage(0)">
+        <form title="If selected, show current weather at telescope location. Weather uses telescope latitude and longitude." action="javascript:ViewImage(0)">
             <input type="checkbox" id="weatherCheckbox">Weather
         </form>    
     </div>
@@ -400,13 +400,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74.2";
+var version_number = "1.74.3";
 var startup_image = "M74";
-var startup_info_text = "v" + version_number + "Added planet view, current location view, Simbad pointer.";
+var startup_info_text = "v" + version_number + "Added planet view, current location view, Simbad pointer, weather and seeing.";
 
 var version_text = 
     "Version 1.74\n"+
-    "- Added planet view, current location view, Simbad pointer.\n" +
+    "- Added planet view, current location view, Simbad pointer, weather and seeing.\n" +
     "Version 1.73\n"+
     "- Added Telescope Live CMOS cameras.\n" +
     "Version 1.72\n"+
@@ -715,99 +715,99 @@ var all_services = {
             radec_format: 1, 
             default_telescope: 5,
             telescopes: [
-                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
-                { name: "AUS-2-CMOS", fov_x: 323, fov_y: 215, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, weather: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, seeing: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
+                { name: "AUS-2-CMOS", fov_x: 323, fov_y: 215, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, seeing: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
                 
-                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-1-CMOS", fov_x: 323, fov_y: 215, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-2-CMOS", fov_x: 23, fov_y: 15, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-3-CMOS", fov_x: 323, fov_y: 215, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, weather: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-1-CMOS", fov_x: 323, fov_y: 215, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2-CMOS", fov_x: 23, fov_y: 15, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3-CMOS", fov_x: 323, fov_y: 215, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
             
-                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-1-CMOS", fov_x: 32, fov_y: 21, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-1-CMOS", fov_x: 32, fov_y: 21, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
 
-                { name: "USA-NM-1-CMOS", fov_x: 100, fov_y: 100, lat: 31.94653, lng: -108.89821, timezoneOffset: null, alt: 1000, weather: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+                { name: "USA-NM-1-CMOS", fov_x: 100, fov_y: 100, lat: 31.94653, lng: -108.89821, timezoneOffset: null, alt: 1000, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
             ] 
         },
         { 
             name: "Slooh", 
             radec_format: 0, 
             telescopes: [
-                { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, weather: "slooh-teide", horizon_limits: "slooh-teide1", meridian_transit: 60 }, 
-                { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
-                { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
-                { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide3", meridian_transit: 60  }, 
-                { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, weather: "slooh-teide", horizon_limits: "slooh-teide4", meridian_transit: 60  }, 
+                { name: "T1", fov_x: 37, fov_y: 37, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, seeing: "slooh-teide", horizon_limits: "slooh-teide1", meridian_transit: 60 }, 
+                { name: "T2", fov_x: 43, fov_y: 43, lat: 28.29970, lng: -16.50826, alt: 2372, timezoneOffset: null, seeing: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T2UWF", fov_x: 107.6, fov_y: 72.12, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, seeing: "slooh-teide", horizon_limits: "slooh-teide2", meridian_transit: 60  }, 
+                { name: "T3", fov_x: 99.14, fov_y: 74.56, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, seeing: "slooh-teide", horizon_limits: "slooh-teide3", meridian_transit: 60  }, 
+                { name: "T4", fov_x: 15.57, fov_y: 12.03, lat: 28.29970, lng: -16.50826, timezoneOffset: null, alt: 2372, seeing: "slooh-teide", horizon_limits: "slooh-teide4", meridian_transit: 60  }, 
 
-                { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
-                { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, weather: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }
+                { name: "C1", fov_x: 31.18, fov_y: 20.51, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, seeing: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C1UWF", fov_x: 81.49, fov_y: 82, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, seeing: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2", fov_x: 43, fov_y: 43, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, seeing: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2FR", fov_x: 65, fov_y: 65, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, seeing: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }, 
+                { name: "C2LPT", fov_x: 8.24, fov_y: 5.18, lat: -33.269, lng: -70.534, timezoneOffset: null, alt: 1450, seeing: "slooh-chile", horizon_limits: "slooh-chile", meridian_transit: 60  }
             ]
         },
         { 
             name: "RoboScopes", 
             radec_format: 1, 
             telescopes: [
-                { name: "Pier 4", fov_x: 796, fov_y: 514, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [20], meridian_transit: 60  },
-                { name: "Pier 6", fov_x: 324, fov_y: 324, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
-                { name: "Pier 7", fov_x: 79, fov_y: 60, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
-                { name: "Pier 8", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
-                { name: "Pier 9", fov_x: 29, fov_y: 19, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [35], meridian_transit: 60  },
-                { name: "Pier 10", fov_x: 105, fov_y: 70, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
-                { name: "Pier 11", fov_x: 336, fov_y: 256, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
-                { name: "Pier 12", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, weather: "rs-spa", horizon_limits: [30], meridian_transit: 60  }
+                { name: "Pier 4", fov_x: 796, fov_y: 514, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 60  },
+                { name: "Pier 6", fov_x: 324, fov_y: 324, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
+                { name: "Pier 7", fov_x: 79, fov_y: 60, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
+                { name: "Pier 8", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
+                { name: "Pier 9", fov_x: 29, fov_y: 19, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [35], meridian_transit: 60  },
+                { name: "Pier 10", fov_x: 105, fov_y: 70, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 60  },
+                { name: "Pier 11", fov_x: 336, fov_y: 256, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 60  },
+                { name: "Pier 12", fov_x: 43, fov_y: 43, lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 60  }
             ] 
         },
         { 
             name: "SkyGems", 
             radec_format: 1, 
             telescopes: [
-                { name: "Hakos iDK 20", fov_x: 37, fov_y: 37, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
-                { name: "Hakos H8 2.8", fov_x: 205, fov_y: 137, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
-                { name: "Hakos RC360", fov_x: 40, fov_y: 40, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
-                { name: "FSQ106 Namibia", fov_x: 116, fov_y: 87, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, weather: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "Hakos iDK 20", fov_x: 37, fov_y: 37, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, seeing: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "Hakos H8 2.8", fov_x: 205, fov_y: 137, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, seeing: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "Hakos RC360", fov_x: 40, fov_y: 40, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, seeing: null, horizon_limits: [22], meridian_transit: 60  },
+                { name: "FSQ106 Namibia", fov_x: 116, fov_y: 87, lat: -23.236384, lng: 16.3594727, timezoneOffset: null, alt: 1835, seeing: null, horizon_limits: [22], meridian_transit: 60  },
 
-                { name: "Spain Veloce 200 RH", fov_x: 102, fov_y: 77, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, weather: "rs-spa", horizon_limits: [36], meridian_transit: 60  },
-                { name: "Spain CDK500", fov_x: 37, fov_y: 37, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, weather: "rs-spa", horizon_limits: [12], meridian_transit: 60  },
+                { name: "Spain Veloce 200 RH", fov_x: 102, fov_y: 77, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, seeing: "rs-spa", horizon_limits: [36], meridian_transit: 60  },
+                { name: "Spain CDK500", fov_x: 37, fov_y: 37, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, seeing: "rs-spa", horizon_limits: [12], meridian_transit: 60  },
 
-                { name: "Dream Astrograph New Mexico", fov_x: 101, fov_y: 101, lat: 34.2, lng: -108.1, timezoneOffset: null, alt: 2371, weather: "sg-newmex", horizon_limits: [35], meridian_transit: 60  }
+                { name: "Dream Astrograph New Mexico", fov_x: 101, fov_y: 101, lat: 34.2, lng: -108.1, timezoneOffset: null, alt: 2371, seeing: "sg-newmex", horizon_limits: [35], meridian_transit: 60  }
             ] 
         },
         { 
             name: "Hubble", 
             radec_format: 1, 
             telescopes: [
-                { name: "WFC3", fov_x: 2.66666667, fov_y: 2.66666667, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, weather: null, horizon_limits: [0], meridian_transit: 0  }
+                { name: "WFC3", fov_x: 2.66666667, fov_y: 2.66666667, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, seeing: null, horizon_limits: [0], meridian_transit: 0  }
             ] 
         },
         { 
             name: "JWST", 
             radec_format: 1, 
             telescopes: [
-                { name: "NIRCam A+B", fov_x: 2.2, fov_y: 5.1, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, weather: null, horizon_limits: [0], meridian_transit: 0  },
-                { name: "NIRCam", fov_x: 2.2, fov_y: 2.2, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, weather: null, horizon_limits: [0], meridian_transit: 0  }
+                { name: "NIRCam A+B", fov_x: 2.2, fov_y: 5.1, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, seeing: null, horizon_limits: [0], meridian_transit: 0  },
+                { name: "NIRCam", fov_x: 2.2, fov_y: 2.2, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, seeing: null, horizon_limits: [0], meridian_transit: 0  }
             ]
         },
         { 
             name: "Current location",
             radec_format: 1, 
             telescopes: [
-                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  },
-                { name: "Now", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, weather: "detect_location", horizon_limits: [0], meridian_transit: 0  }
+                { name: "Visual", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "Now", fov_x: 3000, fov_y: 3000, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  }
             ] 
         }
     ],
-    weather_services: [ // Seeing widgets from https://www.meteoblue.com/
-        { name: "slooh-teide", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>' },
+    seeing_services: [ // Seeing widgets from https://www.meteoblue.com/
+        { name: "slooh-teide", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/parque-nacional-del-teide_spain_2510570?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/parque-nacional-del-teide_spain_2510570?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
         { name: "slooh-chile", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/la-dehesa_chile_3886112?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/la-dehesa_chile_3886112?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
         { name: "tl-chi", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/portezuelo-del-chaco_chile_3895723?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/portezuelo-del-chaco_chile_3895723?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
         { name: "tl-spa", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/el-chaparral-alto_spain_2518568?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 695px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/el-chaparral-alto_spain_2518568?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'},
@@ -817,6 +817,11 @@ var all_services = {
         { name: "sg-newmex", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing/34.2N-108.1E2264_America%2FDenver?geoloc=fixed&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 753px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing/34.2N-108.1E2264_America%2FDenver?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank" rel="noopener">meteoblue</a></div>'},
         { name: "detect_location", url: '<iframe src="https://www.meteoblue.com/en/weather/widget/seeing?geoloc=detect&noground=0"  frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 520px; height: 711px"></iframe><div><!-- DO NOT REMOVE THIS LINK --><a href="https://www.meteoblue.com/en/weather/forecast/seeing?utm_source=weather_widget&utm_medium=linkus&utm_content=seeing&utm_campaign=Weather%2BWidget" target="_blank">meteoblue</a></div>'}
     ],
+    weather_service: {
+        url: '<iframe width="650" height="450" src="https://embed.windy.com/embed2.html?lat=REPLACE_LAT&lon=REPLACE_LNG&detailLat=REPLACE_LAT&detailLon=REPLACE_LNG&width=650&height=450&zoom=5&level=surface&overlay=clouds&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default&radarRange=-1" frameborder="0"></iframe>',
+        width: 650,
+        height: 450
+    },
     horizon_limits: [
         {   name: "slooh-chile",
             hard: [ 7.75,5.75,3.5,1.75,1.75,1.75,6.75,1.5,1,0.75,0.5,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0.75,1.25,0.75,0.5,0.5,4,13.5,11,
@@ -900,6 +905,7 @@ var element_div_size2_w = "600px";
 
 // screen locations for viewer
 var info_panels = {
+    seeing_panel : "seeing-div",
     weather_panel : "weather-div",
     wiki_panel : "wiki-div",
     wiki_panel_width : element_div_size,
@@ -1041,6 +1047,7 @@ function createDefaultPanels(mobile_screen)
         appendCellDiv(panels, "aladin-div", size1, size1, true);
         appendCellDiv(panels, "day-div", size2_h, size2_w, true);
         appendCellDiv(panels, "year-div", size2_h, size2_w, url_view != "all");
+        appendCellDiv(panels, "seeing-div", "0px", "0px", false);
         appendCellDiv(panels, "weather-div", "0px", "0px", false);
         appendCellDiv(panels, "wiki-div", "0px", "0px", false);
     } else {
@@ -1055,12 +1062,19 @@ function createDefaultPanels(mobile_screen)
         panels.appendChild(row);
 
         var row = createRowDiv(i++);
-        var col = document.createElement("DIV");
-        appendCellDiv(col, "weather-div", "0px", "0px", false);
-        row.appendChild(col);
+
         var col = document.createElement("DIV");
         appendCellDiv(col, "wiki-div", "0px", "0px", false);
         row.appendChild(col);
+        
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "seeing-div", "0px", "0px", false);
+        row.appendChild(col);
+        
+        var col = document.createElement("DIV");
+        appendCellDiv(col, "weather-div", "0px", "0px", false);
+        row.appendChild(col);
+        
         panels.appendChild(row);
     }
 }
@@ -1407,7 +1421,7 @@ function addTelescopeButtonFunction()
             lng: parseFloat(document.getElementById("LngField").value),
             timezoneOffset : parseInt(document.getElementById("TzField").value),
             alt: 0, 
-            weather: "detect_location", 
+            seeing: "detect_location", 
             horizon_limits: horizon_0, 
             meridian_transit: 0,
             is_user_telescope: true
@@ -1472,7 +1486,7 @@ function add_service(new_service_name, new_telescope, set_current_telescope)
 // Add a new service from url, old services are not removed. 
 // If service exists, only new telescopes are added to that service.
 // New service is set as default.
-// Format is: service_name, telescope_name, fov_x, fov_y, lat, lng [, weather:weather_service_name|tz:timezone_in_hours]
+// Format is: service_name, telescope_name, fov_x, fov_y, lat, lng [, seeing:weather_service_name|tz:timezone_in_hours]
 function set_url_add_service(url_add_service, clear_old_services)
 {
     console.log("set_url_add_service", url_add_service);
@@ -1491,7 +1505,7 @@ function set_url_add_service(url_add_service, clear_old_services)
                 name: params[1], fov_x: parseFloat(params[2]), fov_y: parseFloat(params[3]), 
                 lat: parseFloat(params[4]), lng: parseFloat(params[5]),
                 timezoneOffset : null,
-                alt: 0, weather: null, 
+                alt: 0, seeing: null, 
                 horizon_limits: horizon_0, meridian_transit: 0,
                 is_user_telescope: true
             };
@@ -1502,17 +1516,17 @@ function set_url_add_service(url_add_service, clear_old_services)
                     console.log("service, tz=" +  tz);
                     new_telescope.timezoneOffset = parseInt(tz);
                 } else {
-                    if (params[pn].startsWith("weather:")) {
+                    if (params[pn].startsWith("seeing:")) {
                         var weather_service_name = params[pn].substring(8);
                     } else {
-                        // for compatibility with older Url syntax, allow without "weather:" prefix
+                        // for compatibility with older Url syntax, allow without "seeing:" prefix
                         var weather_service_name = params[pn];
                     }
                     console.log("service, weather_service_name=" +  weather_service_name);
                     // check if name matches with weather service
-                    for (var i = 0; i < all_services.weather_services.length; i++) {
-                        if (all_services.weather_services[i].name == weather_service_name) {
-                            new_telescope.weather = weather_service_name;
+                    for (var i = 0; i < all_services.seeing_services.length; i++) {
+                        if (all_services.seeing_services[i].name == weather_service_name) {
+                            new_telescope.seeing = weather_service_name;
                             break;
                         }
                     }
@@ -1992,7 +2006,7 @@ function ViewImage(oper)
 
     console.log('returned from StartAstroMosaicViewerEngine');
 
-    if (url_view == "all" || url_view == "weather") {
+    if (url_view == "all" || url_view == "weather" || url_view == "seeing") {
         showWeatherForecast();
     }
     if (url_view == "all") {
@@ -2726,12 +2740,6 @@ function showWiki()
         return;
     }
     var showWiki = document.getElementById("wikiCheckbox").checked;
-    var showText = document.getElementById("textCheckbox").checked;
-    if (!showWiki && !showText) {
-        console.log("showWiki:do not show");
-        clearWikiPanel();
-        return;
-    }
     console.log("showWiki");
 
     if (showWiki) {
@@ -2772,38 +2780,80 @@ function showWiki()
 // Seeing widget from https://www.meteoblue.com/
 function showWeatherForecast(telescope_location_chile)
 {
-    if (url_view != "weather" && !document.getElementById("weatherCheckbox").checked) {
+    var show_seeing = document.getElementById("seeingCheckbox").checked;
+    var show_weather = document.getElementById("weatherCheckbox").checked;
+
+    console.log("showWeatherForecast", show_seeing, show_weather);
+
+    if (url_view == "seeing") {
+        show_seeing = true;
+    }
+    if (url_view == "weather") {
+        show_weather = true;
+    }
+    if (!show_seeing) {
         var elem = document.getElementById(info_panels.weather_panel);
         if (elem) {
             elem.innerHTML = "";
             elem.style.height = "0px";
             elem.style.width = "0px";
         }
-        return;
     }
-    if (current_telescope.weather == null) {
-        return;
+    if (!show_weather) {
+        var elem = document.getElementById(info_panels.weather_panel);
+        if (elem) {
+            elem.innerHTML = "";
+            elem.style.height = "0px";
+            elem.style.width = "0px";
+        }
     }
-    if (current_telescope.weather.substring(0, 4) != 'http') {
-        console.log("showWeatherForecast", "find service", current_telescope.weather);
-        for (var i = 0; i < all_services.weather_services.length; i++) {
-            if (all_services.weather_services[i].name == current_telescope.weather) {
-                current_telescope.weather_url = all_services.weather_services[i].url;
+    
+    if (current_telescope.seeing == null) {
+        show_seeing = false;
+    }
+
+    if (current_telescope.lat == null && current_telescope.lng == null || current_telescope.lat == 0 && current_telescope.lng == 0) {
+        // no location, no weather
+        console.log("showWeatherForecast", "no location, no weather");
+        show_weather = false;
+    }
+
+    if (show_seeing) {
+        console.log("showWeatherForecast", "find service", current_telescope.seeing);
+        for (var i = 0; i < all_services.seeing_services.length; i++) {
+            if (all_services.seeing_services[i].name == current_telescope.seeing) {
+                current_telescope.seeing_url = all_services.seeing_services[i].url;
                 break;
             }
         }
-        if (i == all_services.weather_services.length) {
-            console.log("showWeatherForecast", "service not found", current_telescope.weather);
-            current_telescope.weather = null;
-            return;
+        if (i == all_services.seeing_services.length) {
+            console.log("showWeatherForecast", "service not found", current_telescope.seeing);
+            show_seeing = false;
         }
     }
+
+    if (!show_seeing && !show_weather) {
+        return;
+    }
+
+    if (show_weather) {
+        current_telescope.weather_url = all_services.weather_service.url.replace("REPLACE_LAT", current_telescope.lat.toString());
+        current_telescope.weather_url = current_telescope.weather_url.replace("REPLACE_LNG", current_telescope.lng.toString());
+    }
+
     // Add a delay before showing weather, otherwise it will be shown
     // first and screen jumps up and down
     setTimeout(function(){ 
-        if (url_view == "weather" || document.getElementById("weatherCheckbox").checked) {
-            document.getElementById(info_panels.weather_panel).style.height = element_div_size;
-            document.getElementById(info_panels.weather_panel).style.width = element_div_size;
+        if (show_seeing) {
+            console.log("showWeatherForecast", "seeing url", current_telescope.seeing_url);
+            document.getElementById(info_panels.seeing_panel).style.height = element_div_size;
+            document.getElementById(info_panels.seeing_panel).style.width = element_div_size;
+            document.getElementById(info_panels.seeing_panel).innerHTML = current_telescope.seeing_url;
+        }
+        if (show_weather) {
+            console.log("showWeatherForecast", "weather url", current_telescope.weather_url);
+            document.getElementById(info_panels.weather_panel).style.height = element_div_size; // all_services.weather_service.height;
+            document.getElementById(info_panels.weather_panel).style.width = element_div_size; // all_services.weather_service.width;
             document.getElementById(info_panels.weather_panel).innerHTML = current_telescope.weather_url;
         }
     }, 1000);
@@ -2888,7 +2938,7 @@ function showCurrentViewInfo()
 
     var link_text = "https://ruuth.xyz/AstroMosaic.html?";
     if (current_telescope.is_user_telescope) {
-        // add_service=service-name,telescope-name,fov-x-minutes,fov-y-minutes,latitude,longitude[,tz:timezone][,weather:detect_location]
+        // add_service=service-name,telescope-name,fov-x-minutes,fov-y-minutes,latitude,longitude[,tz:timezone][,seeing:detect_location]
         link_text = link_text + "add_service=" + current_telescope_service.name.replace(/ /g, "%20") + "," + 
                                                  current_telescope.name.replace(/ /g, "%20") + "," +
                                                  current_telescope.fov_x + "," + current_telescope.fov_y + "," +
@@ -2896,8 +2946,8 @@ function showCurrentViewInfo()
         if (current_telescope.timezoneOffset) {
             link_text = link_text + ",tz:" + current_telescope.timezoneOffset;
         }
-        if (current_telescope.weather) {
-            link_text = link_text + ",weather:" + current_telescope.weather;
+        if (current_telescope.seeing) {
+            link_text = link_text + ",seeing:" + current_telescope.seeing;
         }
         link_text = link_text + "&";
     }
