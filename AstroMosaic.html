@@ -18,16 +18,9 @@
 }
 
 .h2text {
-  padding-bottom: 20px;
+  padding-bottom: 10px;
   text-align: left;
   margin-left: 80px;
-}
-
-.banner {
-  padding: 5px;
-  margin: 5px;
-  background: whitesmoke;
-  color: darkred;
 }
 
 .flex-container-top {
@@ -77,10 +70,8 @@ p {
 .dropbtn {
   background-color: lightgray;
   color: white;
-  padding: 16px;
   font-size: 16px;
   border: none;
-  padding: 5px;
   margin: 5px;
 }
 
@@ -203,23 +194,6 @@ p {
         <br>
         <button title="Refresh current view." onclick="ViewImage(0)">Refresh</button>
     </div>
-    <div>
-        <br>
-        <form title="If selected, reposition image framing by moving the image using the mouse." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="repositionCheckbox">Reposition
-       </form>    
-    </div>
-    <div>
-        <br>
-        <form title="Show add telescope controls.">
-            <input type="checkbox" id="addTelescopeCheckbox" onclick="showHideAddTelescope()">
-            Add telescope
-       </form>    
-    </div>
-    <div>
-        <br>
-        <button title="Show the current telescope info and create a link (Url) to the current view." onclick="showCurrentViewInfo()">Info</button>
-    </div>
 </div>
 
 <div id="secondDiv" class="flex-container-top2">
@@ -259,7 +233,7 @@ p {
         </form>    
     </div>
     <div>
-        <form title="Show only catalog objects that are further away from the moon than selected angle.">
+        <form title="Show only catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.">
             Moon:
             <select id="catalogFilterMoon" onchange="javascript:filterChanged()">
                 <option value="all">All</option>
@@ -270,47 +244,16 @@ p {
         </form>
     </div>
     <div>
-        <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have a magnitude available." action="javascript:filterMagnitudeChanged()">
+        <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have the magnitude info available." action="javascript:filterMagnitudeChanged()">
             Magnitude:
-            <input type="text" id="catalogFilterMagnitude" size=5>
+            <input type="text" id="catalogFilterMagnitude" size=3>
         </form>    
     </div>
     <div>
-        <form title="If selected, show target Wiki page when available." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="wikiCheckbox">Wiki
+        <form title="Show only catalog objects that are larger than the selected size in arcminutes. NOTE! Some objects do not have the size info available." action="javascript:filterTargetSizeChanged()">
+            Size:
+            <input type="text" id="catalogFilterTargetSize" size=3>
         </form>    
-    </div>
-    <div>
-        <form title="If selected, show current seeing at telescope location. Seeing uses predefined locations or tries to detect the current location." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="seeingCheckbox">Seeing
-        </form>    
-    </div>
-    <div>
-        <form title="If selected, show current weather at telescope location. Weather uses telescope latitude and longitude." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="weatherCheckbox">Weather
-        </form>    
-    </div>
-    <div>
-        <form title="If selected, shows catalog targets in a panel view. Click refresh to update view." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="panelsCheckbox">Panels
-        </form>    
-    </div>
-    <div>
-        <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:filterChanged(0)">
-            <input type="checkbox" id="catalogSortCheckbox">Sort
-        </form>    
-    </div>
-    <div>
-        <form title="If selected, show azimuth in target visibility graph." action="javascript:ViewImage(0)">
-            <input type="checkbox" id="showAzCheckbox">Az
-        </form>    
-    </div>
-    <div>
-        <form title="Select a planet to be viewed in visibility charts and sky atlas.">
-        Planet:
-        <select id="view-planet" onchange="javascript:ViewImage(0)">
-        </select>
-        </form>
     </div>
 </div>
 
@@ -368,7 +311,59 @@ p {
         </button>
     </div>
 </div>
-
+<div id="optionsDiv" class="flex-container-top2">
+    <div>
+        <form title="If selected, reposition image framing by moving the image using the mouse." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="repositionCheckbox">Reposition
+       </form>    
+    </div>
+    <div>
+        <form title="Show add telescope controls.">
+            <input type="checkbox" id="addTelescopeCheckbox" onclick="showHideAddTelescope()">
+            Add telescope
+       </form>    
+    </div>
+    <div>
+        <button title="Show the current telescope info and create a link (Url) to the current view." onclick="showCurrentViewInfo()">Info</button>
+    </div>
+    <div>
+        <form title="If selected, show target Wiki page when available." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="wikiCheckbox">Wiki
+        </form>    
+    </div>
+    <div>
+        <form title="If selected, show current seeing at telescope location. Seeing uses predefined locations or tries to detect the current location." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="seeingCheckbox">Seeing
+        </form>    
+    </div>
+    <div>
+        <form title="If selected, show current weather at telescope location. Weather uses telescope latitude and longitude." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="weatherCheckbox">Weather
+        </form>    
+    </div>
+    <div>
+        <form title="If selected, shows catalog targets in a panel view. Click refresh to update view." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="panelsCheckbox">Panels
+        </form>    
+    </div>
+    <div>
+        <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:filterChanged(0)">
+            <input type="checkbox" id="catalogSortCheckbox">Sort
+        </form>    
+    </div>
+    <div>
+        <form title="If selected, show azimuth in target visibility graph." action="javascript:ViewImage(0)">
+            <input type="checkbox" id="showAzCheckbox">Az
+        </form>    
+    </div>
+    <div>
+        <form title="Select a planet to be viewed in visibility charts and sky atlas.">
+        Planet:
+        <select id="view-planet" onchange="javascript:ViewImage(0)">
+        </select>
+        </form>
+    </div>
+</div>
 <div>
     <p id="startup_info_text"></p>
 </div>
@@ -400,11 +395,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.74.3";
-var startup_image = "M74";
-var startup_info_text = "v" + version_number + "Added planet view, current location view, Simbad pointer, weather and seeing.";
+var version_number = "1.75 test2";
+var startup_image = "M75";
+var startup_info_text = "v" + version_number + " Filtering by target size";
 
 var version_text = 
+    "Version 1.75 test1\n"+
+    "- Filtering by target size.\n" +
     "Version 1.74\n"+
     "- Added planet view, current location view, Simbad pointer, weather and seeing.\n" +
     "Version 1.73\n"+
@@ -572,132 +569,134 @@ var day_ms = 24*hour_ms;
 // catalog in place at startup and loading catalogs may take time.
 var messier_catalog = { 
 "Credits" : "Information retrieved from Sesame",
-"format" : ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"],
+"format" : ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO", "SIZE"],
 "data" : [
-["M 1",5.57554,22.0145,"SuperNova Remnant","",0,0,"",""],
-["M 2",21.55751,-0.82325,"Globular Cluster","",0,0,"",""],
-["M 3",13.70323,28.37728,"Globular Cluster","",0,0,"",""],
-["M 4",16.39312,-26.52575,"Globular Cluster","",0,0,"",""],
-["M 5",15.30923,2.08103,"Globular Cluster","",0,0,"",""],
-["M 6",17.67222,-32.25333,"Open (galactic) Cluster","",0,0,"",""],
-["M 7",17.8975,-34.79333,"Open (galactic) Cluster","",0,0,"",""],
-["M 8",18.06028,-24.38667,"HII (ionized) region","",0,0,"",""],
-["M 9",17.31994,-18.51625,"Globular Cluster","",0,0,"",""],
-["M 10",16.95251,-4.10031,"Globular Cluster","",0,0,"",""],
-["M 11",18.85139,-6.27,"Open (galactic) Cluster","",0,0,"",""],
-["M 12",16.78727,-1.94853,"Globular Cluster","",0,0,"",""],
-["M 13",16.6949,36.46132,"Globular Cluster","",0,0,"",""],
-["M 14",17.62671,-3.24592,"Globular Cluster","",0,0,"",""],
-["M 15",21.49954,12.167,"Globular Cluster","",0,0,"",""],
-["M 16",18.31333,-13.80667,"Open (galactic) Cluster","",0,0,"",""],
-["M 17",18.34639,-16.17167,"Open (galactic) Cluster","",0,0,"",""],
-["M 18",18.33278,-17.10167,"Open (galactic) Cluster","",0,0,"",""],
-["M 19",17.0438,-26.26794,"Globular Cluster","",0,0,"",""],
-["M 20",18.045,-22.97167,"Open (galactic) Cluster","",0,0,"",""],
-["M 21",18.07028,-22.49,"Open (galactic) Cluster","",0,0,"",""],
-["M 22",18.60665,-23.90475,"Globular Cluster","",0,0,"",""],
-["M 23",17.95111,-18.985,"Open (galactic) Cluster","",0,0,"",""],
-["M 24",18.28,-18.55,"Association of Stars","",0,0,"",""],
-["M 25",18.52972,-19.11667,"Open (galactic) Cluster","",0,0,"",""],
-["M 26",18.755,-9.38333,"Open (galactic) Cluster","",0,0,"",""],
-["M 27",19.99343,22.7212,"Planetary Nebula","",0,0,"",""],
-["M 28",18.40914,-24.86983,"Globular Cluster","",0,0,"",""],
-["M 29",20.39889,38.52333,"Open (galactic) Cluster","",0,0,"",""],
-["M 30",21.67281,-23.17986,"Globular Cluster","",0,0,"",""],
-["M 31",0.71231,41.26875,"Galaxy","",0,0,"",""],
-["M 32",0.71162,40.86517,"Interacting Galaxies","",0,0,"",""],
-["M 33",1.56414,30.65994,"Galaxy in Group of Galaxies","",0,0,"",""],
-["M 34",2.70139,42.76167,"Open (galactic) Cluster","",0,0,"",""],
-["M 35",6.14833,24.33333,"Open (galactic) Cluster","",0,0,"",""],
-["M 36",5.605,34.14,"Open (galactic) Cluster","",0,0,"",""],
-["M 37",5.87167,32.55333,"Open (galactic) Cluster","",0,0,"",""],
-["M 38",5.47861,35.855,"Open (galactic) Cluster","",0,0,"",""],
-["M 39",21.53,48.43333,"Open (galactic) Cluster","",0,0,"",""],
-["M 40",12.37015,58.08294,"Composite object","",0,0,"",""],
-["M 41",6.76694,-20.75667,"Open (galactic) Cluster","",0,0,"",""],
-["M 42",5.58814,-5.39111,"HII (ionized) region","",0,0,"",""],
-["M 43",5.59194,-5.27,"HII (ionized) region","",0,0,"",""],
-["M 44",8.67333,19.66667,"Open (galactic) Cluster","",0,0,"",""],
-["M 45",3.78333,24.11667,"Open (galactic) Cluster","",0,0,"",""],
-["M 46",7.69611,-14.81,"Open (galactic) Cluster","",0,0,"",""],
-["M 47",7.60972,-14.48333,"Open (galactic) Cluster","",0,0,"",""],
-["M 48",8.22861,-5.75,"Open (galactic) Cluster","",0,0,"",""],
-["M 49",12.49633,8.00041,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 50",7.04653,-8.33778,"Open (galactic) Cluster","",0,0,"",""],
-["M 51",13.49797,47.19526,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 52",23.41333,61.59333,"Open (galactic) Cluster","",0,0,"",""],
-["M 53",13.21535,18.16817,"Globular Cluster","",0,0,"",""],
-["M 54",18.91759,-30.47986,"Globular Cluster","",0,0,"",""],
-["M 55",19.66659,-30.96475,"Globular Cluster","",0,0,"",""],
-["M 56",19.27655,30.18347,"Globular Cluster","",0,0,"",""],
-["M 57",18.89308,33.02913,"Planetary Nebula","",0,0,"",""],
-["M 58",12.62878,11.81809,"Seyfert Galaxy","",0,0,"",""],
-["M 59",12.70064,11.64693,"Galaxy in Group of Galaxies","",0,0,"",""],
-["M 60",12.72778,11.55261,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 61",12.36526,4.47377,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 62",17.02017,-30.11236,"Globular Cluster","",0,0,"",""],
-["M 63",13.26369,42.02937,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 64",12.94547,21.68266,"Seyfert Galaxy","",0,0,"",""],
-["M 65",11.31554,13.09221,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 66",11.33751,12.99129,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 67",8.855,11.8,"Open (galactic) Cluster","",0,0,"",""],
-["M 68",12.65777,-26.74406,"Globular Cluster","",0,0,"",""],
-["M 69",18.52308,-32.34808,"Globular Cluster","",0,0,"",""],
-["M 70",18.72021,-32.29211,"Globular Cluster","",0,0,"",""],
-["M 71",19.89625,18.77919,"Globular Cluster","",0,0,"",""],
-["M 72",20.89103,-12.53731,"Globular Cluster","",0,0,"",""],
-["M 73",20.98333,-12.63333,"Cluster of Stars","",0,0,"",""],
-["M 74",1.6116,15.78346,"Galaxy","",0,0,"",""],
-["M 75",20.10134,-21.92226,"Globular Cluster","",0,0,"",""],
-["M 76",1.70546,51.57543,"Planetary Nebula","",0,0,"",""],
-["M 77",2.71133,-0.01329,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 78",5.77939,0.07917,"Reflection Nebula","",0,0,"",""],
-["M 79",5.40294,-24.52425,"Globular Cluster","",0,0,"",""],
-["M 80",16.284,-22.97608,"Globular Cluster","",0,0,"",""],
-["M 81",9.92588,69.06529,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 82",9.93123,69.6797,"Interacting Galaxies","",0,0,"",""],
-["M 83",13.61692,-29.86576,"Starburst Galaxy","",0,0,"",""],
-["M 84",12.41771,12.88698,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 85",12.42335,18.19108,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 86",12.43661,12.94597,"Galaxy in Group of Galaxies","",0,0,"",""],
-["M 87",12.51373,12.39112,"Brightest galaxy in a Cluster (BCG)","",0,0,"",""],
-["M 88",12.53312,14.42041,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 89",12.59439,12.55634,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 90",12.61384,13.16287,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 91",12.59068,14.49632,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 92",17.28539,43.13594,"Globular Cluster","",0,0,"",""],
-["M 93",7.74167,-23.85667,"Open (galactic) Cluster","",0,0,"",""],
-["M 94",12.8481,41.12015,"Seyfert Galaxy","",0,0,"",""],
-["M 95",10.7327,11.70361,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 96",10.77937,11.81994,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 97",11.24659,55.01902,"Planetary Nebula","",0,0,"",""],
-["M 98",12.23008,14.90047,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 99",12.31378,14.41649,"HII Galaxy","",0,0,"",""],
-["M 100",12.38193,15.8223,"Active Galaxy Nucleus","",0,0,"",""],
-["M 101",14.0535,54.34875,"Galaxy in Pair of Galaxies","",0,0,"",""],
-["M 102",15.10821,55.76331,"Seyfert Galaxy","",0,0,"",""],
-["M 103",1.55639,60.65,"Open (galactic) Cluster","",0,0,"",""],
-["M 104",12.66651,-11.62305,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 105",10.79711,12.58163,"LINER-type Active Galaxy Nucleus","",0,0,"",""],
-["M 106",12.31601,47.30372,"Seyfert 2 Galaxy","",0,0,"",""],
-["M 107",16.54218,-13.05378,"Globular Cluster","",0,0,"",""],
-["M 108",11.19194,55.67412,"Starburst Galaxy","",0,0,"",""],
-["M 109",11.96,53.37452,"Galaxy in Group of Galaxies","",0,0,"",""],
-["M 110",0.67279,41.68542,"Galaxy in Group of Galaxies","",0,0,"",""]
-]
+["M 1", 5.57554, 22.0145, "SuperNova Remnant", "", 0, 0, "", "", 7.0],
+["M 2", 21.55751, -0.82325, "Globular Cluster", "", 0, 0, "", "", 12.9],
+["M 3", 13.70323, 28.37728, "Globular Cluster", "", 0, 0, "", "", 16.2],
+["M 4", 16.39312, -26.52575, "Globular Cluster", "", 0, 0, "", "", 26.3],
+["M 5", 15.30923, 2.08103, "Globular Cluster", "", 0, 0, "", "", 17.4],
+["M 6", 17.67222, -32.25333, "Open (galactic) Cluster", "", 0, 0, "", "", 20.0],
+["M 7", 17.8975, -34.79333, "Open (galactic) Cluster", "", 0, 0, "", "", 100.1],
+["M 8", 18.06028, -24.38667, "HII (ionized) region", "", 0, 0, "", "", 0],
+["M 9", 17.31994, -18.51625, "Globular Cluster", "", 0, 0, "", "", 8.7],
+["M 10", 16.95251, -4.10031, "Globular Cluster", "", 0, 0, "", "", 15.1],
+["M 11", 18.85139, -6.27, "Open (galactic) Cluster", "", 0, 0, "", "", 8.9],
+["M 12", 16.78727, -1.94853, "Globular Cluster", "", 0, 0, "", "", 14.5],
+["M 13", 16.6949, 36.46132, "Globular Cluster", "", 0, 0, "", "", 33.0],
+["M 14", 17.62671, -3.24592, "Globular Cluster", "", 0, 0, "", "", 13.5],
+["M 15", 21.49954, 12.167, "Globular Cluster", "", 0, 0, "", "", 12.3],
+["M 16", 18.31333, -13.80667, "Open (galactic) Cluster", "", 0, 0, "", "", 5.05],
+["M 17", 18.34639, -16.17167, "Open (galactic) Cluster", "", 0, 0, "", "", 1.63],
+["M 18", 18.33278, -17.10167, "Open (galactic) Cluster", "", 0, 0, "", "", 5.0],
+["M 19", 17.0438, -26.26794, "Globular Cluster", "", 0, 0, "", "", 9.6],
+["M 20", 18.045, -22.97167, "Open (galactic) Cluster", "", 0, 0, "", "", 28.0],
+["M 21", 18.07028, -22.49, "Open (galactic) Cluster", "", 0, 0, "", "", 14.0],
+["M 22", 18.60665, -23.90475, "Globular Cluster", "", 0, 0, "", "", 24.0],
+["M 23", 17.95111, -18.985, "Open (galactic) Cluster", "", 0, 0, "", "", 35.0],
+["M 24", 18.28, -18.55, "Association of Stars", "", 0, 0, "", "", 120.0],
+["M 25", 18.52972, -19.11667, "Open (galactic) Cluster", "", 0, 0, "", "", 31.3],
+["M 26", 18.755, -9.38333, "Open (galactic) Cluster", "", 0, 0, "", "", 7.1],
+["M 27", 19.99343, 22.7212, "Planetary Nebula", "", 0, 0, "", "", 0.133],
+["M 28", 18.40914, -24.86983, "Globular Cluster", "", 0, 0, "", "", 11.2],
+["M 29", 20.39889, 38.52333, "Open (galactic) Cluster", "", 0, 0, "", "", 12.7],
+["M 30", 21.67281, -23.17986, "Globular Cluster", "", 0, 0, "", "", 11.0],
+["M 31", 0.71231, 41.26875, "Galaxy", "", 0, 0, "", "", 199.53],
+["M 32", 0.71162, 40.86517, "Interacting Galaxies", "", 0, 0, "", "", 0],
+["M 33", 1.56414, 30.65994, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 60.26],
+["M 34", 2.70139, 42.76167, "Open (galactic) Cluster", "", 0, 0, "", "", 48.4],
+["M 35", 6.14833, 24.33333, "Open (galactic) Cluster", "", 0, 0, "", "", 38.3],
+["M 36", 5.605, 34.14, "Open (galactic) Cluster", "", 0, 0, "", "", 10.3],
+["M 37", 5.87167, 32.55333, "Open (galactic) Cluster", "", 0, 0, "", "", 19.3],
+["M 38", 5.47861, 35.855, "Open (galactic) Cluster", "", 0, 0, "", "", 19.6],
+["M 39", 21.53, 48.43333, "Open (galactic) Cluster", "", 0, 0, "", "", 120.4],
+["M 40", 12.37015, 58.08294, "Composite object", "", 0, 0, "", "", 0],
+["M 41", 6.76694, -20.75667, "Open (galactic) Cluster", "", 0, 0, "", "", 39.8],
+["M 42", 5.58814, -5.39111, "HII (ionized) region", "", 0, 0, "", "", 66.0],
+["M 43", 5.59194, -5.27, "HII (ionized) region", "", 0, 0, "", "", 0],
+["M 44", 8.67333, 19.66667, "Open (galactic) Cluster", "", 0, 0, "", "", 118.2],
+["M 45", 3.78333, 24.11667, "Open (galactic) Cluster", "", 0, 0, "", "", 1200.0],
+["M 46", 7.69611, -14.81, "Open (galactic) Cluster", "", 0, 0, "", "", 25.3],
+["M 47", 7.60972, -14.48333, "Open (galactic) Cluster", "", 0, 0, "", "", 31.1],
+["M 48", 8.22861, -5.75, "Open (galactic) Cluster", "", 0, 0, "", "", 44.3],
+["M 49", 12.49633, 8.00041, "Seyfert 2 Galaxy", "", 0, 0, "", "", 10.96],
+["M 50", 7.04653, -8.33778, "Open (galactic) Cluster", "", 0, 0, "", "", 31.6],
+["M 51", 13.49797, 47.19526, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 10.0],
+["M 52", 23.41333, 61.59333, "Open (galactic) Cluster", "", 0, 0, "", "", 16.0],
+["M 53", 13.21535, 18.16817, "Globular Cluster", "", 0, 0, "", "", 12.6],
+["M 54", 18.91759, -30.47986, "Globular Cluster", "", 0, 0, "", "", 9.1],
+["M 55", 19.66659, -30.96475, "Globular Cluster", "", 0, 0, "", "", 19.0],
+["M 56", 19.27655, 30.18347, "Globular Cluster", "", 0, 0, "", "", 7.1],
+["M 57", 18.89308, 33.02913, "Planetary Nebula", "", 0, 0, "", "", 1.153],
+["M 58", 12.62878, 11.81809, "Seyfert Galaxy", "", 0, 0, "", "", 5.62],
+["M 59", 12.70064, 11.64693, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 5.5],
+["M 60", 12.72778, 11.55261, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 7.94],
+["M 61", 12.36526, 4.47377, "Seyfert 2 Galaxy", "", 0, 0, "", "", 6.17],
+["M 62", 17.02017, -30.11236, "Globular Cluster", "", 0, 0, "", "", 14.1],
+["M 63", 13.26369, 42.02937, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 13.18],
+["M 64", 12.94547, 21.68266, "Seyfert Galaxy", "", 0, 0, "", "", 9.77],
+["M 65", 11.31554, 13.09221, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 8.32],
+["M 66", 11.33751, 12.99129, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 8.51],
+["M 67", 8.855, 11.8, "Open (galactic) Cluster", "", 0, 0, "", "", 25.0],
+["M 68", 12.65777, -26.74406, "Globular Cluster", "", 0, 0, "", "", 12.0],
+["M 69", 18.52308, -32.34808, "Globular Cluster", "", 0, 0, "", "", 7.1],
+["M 70", 18.72021, -32.29211, "Globular Cluster", "", 0, 0, "", "", 7.8],
+["M 71", 19.89625, 18.77919, "Globular Cluster", "", 0, 0, "", "", 7.2],
+["M 72", 20.89103, -12.53731, "Globular Cluster", "", 0, 0, "", "", 5.9],
+["M 73", 20.98333, -12.63333, "Cluster of Stars", "", 0, 0, "", "", 0],
+["M 74", 1.6116, 15.78346, "Galaxy", "", 0, 0, "", "", 9.33],
+["M 75", 20.10134, -21.92226, "Globular Cluster", "", 0, 0, "", "", 2.383],
+["M 76", 1.70546, 51.57543, "Planetary Nebula", "", 0, 0, "", "", 2.307],
+["M 77", 2.71133, -0.01329, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 6.92],
+["M 78", 5.77939, 0.07917, "Reflection Nebula", "", 0, 0, "", "", 0],
+["M 79", 5.40294, -24.52425, "Globular Cluster", "", 0, 0, "", "", 8.7],
+["M 80", 16.284, -22.97608, "Globular Cluster", "", 0, 0, "", "", 8.9],
+["M 81", 9.92588, 69.06529, "Seyfert 2 Galaxy", "", 0, 0, "", "", 21.38],
+["M 82", 9.93123, 69.6797, "Interacting Galaxies", "", 0, 0, "", "", 0],
+["M 83", 13.61692, -29.86576, "Starburst Galaxy", "", 0, 0, "", "", 13.8],
+["M 84", 12.41771, 12.88698, "Seyfert 2 Galaxy", "", 0, 0, "", "", 6.46],
+["M 85", 12.42335, 18.19108, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 7.76],
+["M 86", 12.43661, 12.94597, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 10.47],
+["M 87", 12.51373, 12.39112, "Brightest galaxy in a Cluster (BCG)", "", 0, 0, "", "", 9.12],
+["M 88", 12.53312, 14.42041, "Seyfert 2 Galaxy", "", 0, 0, "", "", 7.76],
+["M 89", 12.59439, 12.55634, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 6.92],
+["M 90", 12.61384, 13.16287, "Seyfert 2 Galaxy", "", 0, 0, "", "", 9.77],
+["M 91", 12.59068, 14.49632, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 5.37],
+["M 92", 17.28539, 43.13594, "Globular Cluster", "", 0, 0, "", "", 11.2],
+["M 93", 7.74167, -23.85667, "Open (galactic) Cluster", "", 0, 0, "", "", 24.2],
+["M 94", 12.8481, 41.12015, "Seyfert Galaxy", "", 0, 0, "", "", 11.48],
+["M 95", 10.7327, 11.70361, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 7.08],
+["M 96", 10.77937, 11.81994, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 7.24],
+["M 97", 11.24659, 55.01902, "Planetary Nebula", "", 0, 0, "", "", 3.333],
+["M 98", 12.23008, 14.90047, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 9.55],
+["M 99", 12.31378, 14.41649, "HII Galaxy", "", 0, 0, "", "", 5.13],
+["M 100", 12.38193, 15.8223, "Active Galaxy Nucleus", "", 0, 0, "", "", 7.59],
+["M 101", 14.0535, 54.34875, "Galaxy in Pair of Galaxies", "", 0, 0, "", "", 21.88],
+["M 102", 15.10821, 55.76331, "Seyfert Galaxy", "", 0, 0, "", "", 6.31],
+["M 103", 1.55639, 60.65, "Open (galactic) Cluster", "", 0, 0, "", "", 7.4],
+["M 104", 12.66651, -11.62305, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 8.51],
+["M 105", 10.79711, 12.58163, "LINER-type Active Galaxy Nucleus", "", 0, 0, "", "", 5.13],
+["M 106", 12.31601, 47.30372, "Seyfert 2 Galaxy", "", 0, 0, "", "", 17.78],
+["M 107", 16.54218, -13.05378, "Globular Cluster", "", 0, 0, "", "", 10.0],
+["M 108", 11.19194, 55.67412, "Starburst Galaxy", "", 0, 0, "", "", 7.76],
+["M 109", 11.96, 53.37452, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 7.24],
+["M 110", 0.67279, 41.68542, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 18.62]]
 };
 
+// var catalogs_home = "https://ruuth.xyz/";
+var catalogs_home = "";
+
 var catalogs = [
-    { name: "Messier", targets: messier_catalog.data, url: "https://ruuth.xyz/Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
-    { name: "Slooh 500 Teide", targets: null, url: "https://ruuth.xyz/Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
-    { name: "Slooh 500 Chile", targets: null, url: "https://ruuth.xyz/Slooh500Chile.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
-    { name: "NGC", targets: null, url: "https://ruuth.xyz/OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
-    { name: "IC", targets: null, url: "https://ruuth.xyz/OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
-    { name: "RCW", targets: null, url: "https://ruuth.xyz/RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
-    { name: "Sharpless", targets: null, url: "https://ruuth.xyz/Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
-    { name: "LDN", targets: null, url: "https://ruuth.xyz/LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
-    { name: "Barnard", targets: null, url: "https://ruuth.xyz/Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' },  // light cyan
-    { name: "Cederblad", targets: null, url: "https://ruuth.xyz/Cederblad.json", source: "vizier", AladinCatalog: null, color: '#A0FFFF' }
+    { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
+    { name: "Slooh 500 Teide", targets: null, url: catalogs_home + "Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
+    { name: "Slooh 500 Chile", targets: null, url: catalogs_home + "Slooh500Chile.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
+    { name: "NGC", targets: null, url: catalogs_home + "OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
+    { name: "IC", targets: null, url: catalogs_home + "OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
+    { name: "RCW", targets: null, url: catalogs_home + "RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
+    { name: "Sharpless", targets: null, url: catalogs_home + "Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
+    { name: "LDN", targets: null, url: catalogs_home + catalogs_home + "LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
+    { name: "Barnard", targets: null, url: catalogs_home + "Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' },  // light cyan
+    { name: "Cederblad", targets: null, url: catalogs_home + "Cederblad.json", source: "vizier", AladinCatalog: null, color: '#A0FFFF' }
 ];
 
 // zero horizon if nothing else is specified
@@ -961,6 +960,7 @@ var catalog_filter_time = null;
 var catalogFilterDegrees = null;
 var catalogFilterMoon = null;
 var catalogFilterMagnitude = null;
+var catalogFilterTargetSize = null;
 var catalog_index = null;
 
 var wikiChecked = false;
@@ -2040,6 +2040,7 @@ function dataObjectToTable(data)
         tab = addTabRow(tab, "RA/DEC",  data.info.radec);
         tab = addTabRow(tab, "Constellation", data.info.constellation);
         tab = addTabRow(tab, "Magnitude", data.info.mag);
+        tab = addTabRow(tab, "Size", data.info.size);
         tab = addTabRow(tab, "Distance (Mly)", data.info.distance);
         tab = addTabRow(tab, "Notes", data.info.notes);
         tab = addTabRow(
@@ -2066,8 +2067,8 @@ function dataObjectToTable(data)
 function catalogToDataObject(target)
 {
     // target array
-    //   0      1     2      3       4      5       6      7       8
-    // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+    //   0      1     2      3       4      5       6      7       8      9
+    // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO", "SIZE"]
     var catname = target[0];    // CAT
     var extname = target[7];    // NAME
     var dispname;
@@ -2075,6 +2076,11 @@ function catalogToDataObject(target)
         dispname = catname + ', ' + extname;
     } else {
         dispname = catname;
+    }
+    if (target.length > 9) {
+        var size = target[9];
+    } else {
+        var size = 0;
     }
     return {
             name: dispname, 
@@ -2084,6 +2090,7 @@ function catalogToDataObject(target)
                     type: target[3],
                     constellation: target[4],
                     mag: target[5],
+                    size: size,
                     distance: target[6],
                     notes: target[8]
             }
@@ -2267,7 +2274,7 @@ function filter_visible_catalog_items(cat, lat, lng)
     }
     for (var i = 0; i < cat.targets.length; i++) {
         //   0      1     2      3       4      5       6      7       8
-        // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+        // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO", "SIZE"]
         var ra = cat.targets[i][1] * hoursToDeg;
         var dec = cat.targets[i][2];
         var alt = 0;
@@ -2306,9 +2313,14 @@ function filter_visible_catalog_items(cat, lat, lng)
                 addToList = false;
             }
         }
+        if (addToList && catalogFilterTargetSize != null) {
+            if (cat.targets[i].length > 9 && cat.targets[i][9] < catalogFilterTargetSize) {
+                addToList = false;
+            }
+        }
         if (addToList) {
             //   0      1     2      3       4      5       6      7       8
-            // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO"]
+            // ["CAT", "RA", "DEC", "TYPE", "CON", "BMAG", "DST", "NAME", "INFO", "SIZE"]
             // -> RA DEC, CAT+NAME+TYPE
             var name = cat.targets[i][0];                   // CAT
             if (cat.targets[i][7] != "") {
@@ -2504,7 +2516,7 @@ function checkFilterMagnitudeChanged()
         var newvalue = parseFloat(newvalue_str);
     }
     if (catalogFilterMagnitude != newvalue) {
-        // time changed, reset view list
+        // magnitude changed, reset view list
         console.log("checkFilterMagnitudeChanged, magnitude changed, reset catalog view");
         catalogFilterMagnitude = newvalue;
         catalog_reset();
@@ -2518,6 +2530,37 @@ function filterMagnitudeChanged()
 {
     console.log("filterMagnitudeChanged");
     if (checkFilterMagnitudeChanged()) {
+        ViewImage(0);
+    }
+}
+
+function checkFilterTargetSizeChanged()
+{
+    if (url_view != "all") {
+        return;
+    }
+    var newvalue_str = document.getElementById("catalogFilterTargetSize").value;
+    console.log("checkFilterTargetSizeChanged, size value", newvalue);
+    if (newvalue_str == '') {
+        var newvalue = null;
+    } else {
+        var newvalue = parseFloat(newvalue_str);
+    }
+    if (catalogFilterTargetSize != newvalue) {
+        // size changed, reset view list
+        console.log("checkFilterTargetSizeChanged, size changed, reset catalog view");
+        catalogFilterTargetSize = newvalue;
+        catalog_reset();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function filterTargetSizeChanged()
+{
+    console.log("filterTargetSizeChanged");
+    if (checkFilterTargetSizeChanged()) {
         ViewImage(0);
     }
 }
@@ -2644,6 +2687,9 @@ function aladinObjectHovered(data)
             }
             if (data.info.mag != 0) {
                 txt += ', Magnitude: ' + data.info.mag;
+            }
+            if (data.info.size) {
+                txt += ', Size: ' + data.info.size;
             }
             if (data.info.distance != 0) {
                 txt += ', Distance (Mly): ' + data.info.distance;
