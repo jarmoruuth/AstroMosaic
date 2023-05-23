@@ -327,6 +327,10 @@ function StartAstroMosaicViewerEngine(
         return;
     }
 
+    if (!engine_params.timezoneOffset) {
+        engine_params.timezoneOffset = 0;
+    }
+
     console.log('timezoneOffset', engine_params.timezoneOffset);
 
     var grid_type = engine_params.grid_type;
@@ -916,13 +920,9 @@ function StartAstroMosaicViewerEngine(
         return options;
     }
 
-    function dayVisibilityTime(celldate, time_as_string)
+    function dayVisibilityTime(celldate)
     {
-        if (time_as_string) {
-            return toDateString(celldate.getUTCHours()) + ":" + toDateString(celldate.getUTCMinutes());
-        } else {
-            return celldate;
-        }
+        return toDateString(celldate.getUTCHours()) + ":" + toDateString(celldate.getUTCMinutes());
     }
 
     function drawDayVisibilityandGrid() 
@@ -941,7 +941,7 @@ function StartAstroMosaicViewerEngine(
             }
         }
         engine_data.daydata = new google.visualization.DataTable();
-        // get midday in UTC time in ms
+        // get midday in UTC time
         var midday = engine_params.UTCdate_ms + day_ms/2;
 
         // For time column string seem to be better than time because
@@ -949,12 +949,7 @@ function StartAstroMosaicViewerEngine(
         // the whole night always. We loose vertical grid lines but
         // to me it looks better to see the whole night and not only
         // a part of it.
-        var time_as_string = true;
-        if (time_as_string) {
-            engine_data.daydata.addColumn('string', 'Time');
-        } else {
-            engine_data.daydata.addColumn('datetime', 'Time');
-        }
+        engine_data.daydata.addColumn('string', 'Time');
         engine_data.daydata.addColumn('number', 'Visible');            // object altitude
         if (engine_params.horizonSoft != null) {
             engine_data.daydata.addColumn('number', 'Below soft horizon'); // object altitude if below soft horizon
@@ -992,7 +987,7 @@ function StartAstroMosaicViewerEngine(
         var starttime;
         var endtime;
         if (draw_full_day) {
-            starttime = midday;
+            starttime = midday - engine_params.timezoneOffset * 3600 * 1000;
             endtime = starttime + day_ms;
         } else {
             if (engine_params.UTCdatetime_ms != null && engine_params.UTCdatetime_ms < suntimes.sunset) {
@@ -1064,21 +1059,9 @@ function StartAstroMosaicViewerEngine(
             if (moonalt < 0) {
                 moonalt = null;
             }
-            if (engine_params.timezoneOffset == null) {
-                if (time_as_string) {
-                    var celldate = new Date(d);
-                } else {
-                    var celldate = new Date(d + localdate.getTimezoneOffset()*60*60*1000);
-                }
-            } else {
-                if (time_as_string) {
-                    var celldate = new Date(d + engine_params.timezoneOffset*60*60*1000);
-                } else {
-                    var celldate = new Date(d + (localdate.getTimezoneOffset() - engine_params.timezoneOffset)*60*60*1000);
-                }
-            }
+            var celldate = new Date(d + engine_params.timezoneOffset*60*60*1000);
             var row = [
-                dayVisibilityTime(celldate, time_as_string),
+                dayVisibilityTime(celldate),
                 getAltitudeCellObject(visiblealt) 
             ];
             if (engine_params.horizonSoft != null) {
@@ -1126,17 +1109,7 @@ function StartAstroMosaicViewerEngine(
 
         engine_data.daydata.addRows(rowdata);
 
-        if (!time_as_string) {
-            /*  The following formatting is needed if showing time as a time. */
-            if (engine_params.timezoneOffset == null) {
-                var format = new google.visualization.DateFormat({ pattern: 'HH:mm' + " UTC" });
-            } else {
-                var format = new google.visualization.DateFormat({ pattern: 'HH:mm' });
-            }
-            format.format(engine_data.daydata, 0);
-        }
-
-        if (engine_params.timezoneOffset == null) {
+        if (!engine_params.timezoneOffset) {
             var hAxisTitle = 'Time (UTC)';
         } else {
             if (engine_params.timezoneOffset >= 0) {
@@ -2032,8 +2005,9 @@ function StartAstroMosaicViewerEngine(
 
     function amISOdatestring(amdate)
     {
-        var amdatestr = amdate.toISOString().substr(0, 10) + ' ' + amdate.toISOString().substr(11, 8);
-        if (engine_params.timezoneOffset == null) {
+        var amdatestr = toDateString(amdate.getUTCFullYear()) + "-" + toDateString(amdate.getUTCMonth()+1) + "-" + toDateString(amdate.getUTCDate()) + " " +
+                        toDateString(amdate.getUTCHours()) + ":" + toDateString(amdate.getUTCMinutes());
+        if (!engine_params.timezoneOffset) {
             amdatestr += ' UTC';
         } else {
             amdatestr += ' TZ' + engine_params.timezoneOffset;
@@ -2212,7 +2186,7 @@ function StartAstroMosaicViewerEngine(
                 if (engine_params.grid_type == "visual" && engine_params.UTCdatetime_ms != null) {
                     var starttime = engine_params.UTCdatetime_ms;
                 } else {
-                    var starttime = midday;
+                    var starttime = midday - engine_params.timezoneOffset * 3600 * 1000;
                 }
                 var endtime = starttime + day_ms;
             } else {
@@ -2228,22 +2202,16 @@ function StartAstroMosaicViewerEngine(
                 var moonpathinfo = [];
                 for (var d2 = d; d2 < d + interval; d2 = d2 + 10*60*1000) { // every 10 minutes
                     var moonpos2 = moon_position(d2);
-                    if (engine_params.timezoneOffset == null) {
-                        var pathdate = new Date(d2);
-                    } else {
-                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
-                    }
-                    moonpathinfo.push([amISOdatestring(pathdate), (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5)]);
+                    var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
+                    var radec_str = (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5);
+                    moonpathinfo.push([amISOdatestring(pathdate), radec_str, reformat_coordinates(radec_str)]);
                 }
                 if (d != engine_params.UTCdate_now_ms) {
-                    if (engine_params.timezoneOffset == null) {
-                        var moondate = new Date(d);
-                    } else {
-                        var moondate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
-                    }
+                    var moondate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
+                    var radec_str = (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5);
                     moonsources.push(A.source(moonpos.ra, moonpos.dec, 
                                     { name: 'Moon, ' + amISOdatestring(moondate) + 
-                                            ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
+                                            ', RA/DEC ' +  radec_str + ', ' + reformat_coordinates(radec_str),
                                       pathname: 'Moon',
                                       pathinfo: moonpathinfo }));
                     }
@@ -2267,21 +2235,14 @@ function StartAstroMosaicViewerEngine(
                 var moonposinfo = [];
                 for (var d2 = engine_params.UTCdate_now_ms; d2 < engine_params.UTCdate_now_ms + interval; d2 = d2 + 10*60*1000) { // every 10 minutes
                     var moonpos2 = moon_position(d2);
-                    if (engine_params.timezoneOffset == null) {
-                        var pathdate = new Date(d2);
-                    } else {
-                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
-                    }
+                    var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
                     moonposinfo.push([amISOdatestring(pathdate), (moonpos2.ra * degToHours).toFixed(5) + ' ' + moonpos2.dec.toFixed(5)]);
                 }
-                if (engine_params.timezoneOffset == null) {
-                    var moondate = new Date(engine_params.UTCdate_now_ms);
-                } else {
-                    var moondate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset * 3600 * 1000);
-                }
+                var moondate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset * 3600 * 1000);
+                var radec_str = (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5);
                 moonsources.push(A.source(moonpos.ra, moonpos.dec,
                                 { name: 'Moon now, ' + amISOdatestring(moondate) +
-                                        ', RA/DEC ' +  (moonpos.ra * degToHours).toFixed(5) + ' ' + moonpos.dec.toFixed(5),
+                                        ', RA/DEC ' +  radec_str + ', ' + reformat_coordinates(radec_str),
                                     pathname: 'Moon now',
                                     pathinfo: moonposinfo }));
                 var cat = A.catalog({sourceSize: 28, shape: 'circle', color: '#1c91c0', name: 'Moon now' });
@@ -2306,22 +2267,16 @@ function StartAstroMosaicViewerEngine(
                     var planetpathinfo = [];
                     for (var d2 = d; d2 < d + interval; d2 = d2 + 60*60*1000) { // every 60 minutes
                         var planetpos2 = planet_position(d2, planets[engine_params.planet_id]);
-                        if (engine_params.timezoneOffset == null) {
-                            var pathdate = new Date(d2);
-                        } else {
-                            var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
-                        }
-                        planetpathinfo.push([amISOdatestring(pathdate), (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5)]);
+                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
+                        var radec_str = (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5);
+                        planetpathinfo.push([amISOdatestring(pathdate), radec_str, reformat_coordinates(radec_str)]);
                     }
                     if (d != engine_params.UTCdate_now_ms) {
-                        if (engine_params.timezoneOffset == null) {
-                            var planetdate = new Date(d);
-                        } else {
-                            var planetdate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
-                        }
+                        var planetdate = new Date(d + engine_params.timezoneOffset * 3600 * 1000);
+                        var radec_str = (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5);
                         planetsources.push(A.source(planetpos.ra, planetpos.dec, 
                                             { name: planets[engine_params.planet_id].name + ', ' + amISOdatestring(planetdate) + 
-                                                    ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
+                                                    ', RA/DEC ' + radec_str + ', ' + reformat_coordinates(radec_str),
                                             pathname: planets[engine_params.planet_id].name,
                                             pathinfo: planetpathinfo }));
                     }
@@ -2344,21 +2299,14 @@ function StartAstroMosaicViewerEngine(
                     var planetposinfo = [];
                     for (var d2 = engine_params.UTCdate_now_ms; d2 < engine_params.UTCdate_now_ms + interval; d2 = d2 + 60*60*1000) { // every 60 minutes
                         var planetpos2 = planet_position(d2, planets[engine_params.planet_id]);
-                        if (engine_params.timezoneOffset == null) {
-                            var pathdate = new Date(d2);
-                        } else {
-                            var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
-                        }
+                        var pathdate = new Date(d2 + engine_params.timezoneOffset * 3600 * 1000);
                         planetposinfo.push([amISOdatestring(pathdate), (planetpos2.ra * degToHours).toFixed(5) + ' ' + planetpos2.dec.toFixed(5)]);
                     }
-                    if (engine_params.timezoneOffset == null) {
-                        var planetdate = new Date(engine_params.UTCdate_now_ms);
-                    } else {
-                        var planetdate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset);
-                    }
+                    var planetdate = new Date(engine_params.UTCdate_now_ms + engine_params.timezoneOffset * 3600 * 1000);
+                    var radec_str = (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5);
                     planetsources.push(A.source(planetpos.ra, planetpos.dec,
                                        { name: planets[engine_params.planet_id].name + ' now, ' + amISOdatestring(planetdate) +
-                                            ', RA/DEC ' +  (planetpos.ra * degToHours).toFixed(5) + ' ' + planetpos.dec.toFixed(5),
+                                            ', RA/DEC ' + radec_str + ', ' + reformat_coordinates(radec_str),
                                          pathname: planets[engine_params.planet_id].name + ' now',
                                          pathinfo: planetposinfo }));
                     var cat = A.catalog({sourceSize: 18, shape: 'circle', color: 'Magenta', name: planets[engine_params.planet_id].name + ' now' });

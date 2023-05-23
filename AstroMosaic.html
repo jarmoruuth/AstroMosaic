@@ -1914,7 +1914,11 @@ function ViewImage(oper)
     viewer_params.horizonSoft = current_telescope.horizon_limits.soft;
     viewer_params.horizonHard = current_telescope.horizon_limits.hard;
     viewer_params.meridian_transit = current_telescope.meridian_transit;
-    viewer_params.timezoneOffset = current_telescope.timezoneOffset;
+    if (current_telescope.timezoneOffset) {
+        viewer_params.timezoneOffset = current_telescope.timezoneOffset;
+    } else {
+        viewer_params.timezoneOffset = 0;
+    }
     if (url_view == "all") {
         viewer_params.showAz = document.getElementById("showAzCheckbox").checked;
     } else {
@@ -2022,10 +2026,12 @@ function ViewImage(oper)
 
 }
 
-function addTabRow(tab, v1, v2)
+function addTabRow(tab, v1, v2, v3)
 {
-    if (v1 && v2) {
-        var tdstyle = 'style="padding: 5px; border: 1px solid black; border-collapse: collapse;"';
+    var tdstyle = 'style="padding: 5px; border: 1px solid black; border-collapse: collapse;"';
+    if (v1 && v2 && v3) {
+        return tab + '<TR><TD ' + tdstyle + '>' + v1 + '</TD><TD ' + tdstyle + '>' + v2 + '</TD><TD ' + tdstyle + '>' + v3 + "</TD></TR>";
+    } else if (v1 && v2) {
         return tab + '<TR><TD ' + tdstyle + '>' + v1 + '</TD><TD ' + tdstyle + '>' + v2 + "</TD></TR>";
     } else {
         return tab;
@@ -2052,9 +2058,9 @@ function dataObjectToTable(data)
     } else if (data.pathinfo) {
         var tab = '<p style="padding: 5px;">' + data.pathname + '</p>';
         var tab = tab + tabstart;
-        tab = addTabRow(tab, "<b>Date</b>", "<b>RA DEC</b>");
+        tab = addTabRow(tab, "<b>Date</b>", "<b>RA DEC</b>", "<b>RA DEC</b>");
         for (var i = 0; i < data.pathinfo.length; i++) {
-            tab = addTabRow(tab, data.pathinfo[i][0], data.pathinfo[i][1]);
+            tab = addTabRow(tab, data.pathinfo[i][0], data.pathinfo[i][1], data.pathinfo[i][2]);
         }
     } else {
         var tab = tabstart;
@@ -2209,15 +2215,9 @@ function filter_visible_catalog_items(cat, lat, lng)
         console.log("filter_visible_catalog_items:use whole night");
         var midday = viewer_params.UTCdate_ms + day_ms/2;
         var suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
-        midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2;
+        midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2 + viewer_params.timezoneOffset*60*60*1000;
     } else {
-        if (viewer_params.timezoneOffset == null) {
-            console.log("filter_visible_catalog_items:use specific UTC time");
-            midnight = viewer_params.UTCdate_ms + catalog_filter_time;
-        } else {
-            console.log("filter_visible_catalog_items:use specific timezone time");
-            midnight = viewer_params.UTCdate_ms + catalog_filter_time + viewer_params.timezoneOffset*60*60*1000;
-        }
+        midnight = viewer_params.UTCdate_ms + catalog_filter_time + viewer_params.timezoneOffset*60*60*1000;
     }
     var fl = [];
     fl[fl.length] = ['', ''];
