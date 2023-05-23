@@ -395,11 +395,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.75.1";
+var version_number = "1.75.2";
 var startup_image = "M75";
 var startup_info_text = "v" + version_number + " Filtering by target size, time zone fixes.";
 
 var version_text = 
+    "Version 1.75.2\n"+
+    "- Fix to catalogs home path, pointing again to https://ruuth.xyz/.\n" +
     "Version 1.75.1\n"+
     "- Time zone fixes.\n" +
     "Version 1.75\n"+
@@ -686,8 +688,8 @@ var messier_catalog = {
 ["M 110", 0.67279, 41.68542, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 18.62]]
 };
 
-// var catalogs_home = "https://ruuth.xyz/";
-var catalogs_home = "";
+var catalogs_home = "https://ruuth.xyz/";
+// var catalogs_home = "";
 
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
