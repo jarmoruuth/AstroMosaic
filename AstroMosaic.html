@@ -378,7 +378,7 @@ p {
     <p>
         Author: Jarmo Ruuth. 
         Feedback: <a href="https://forums.ruuth.xyz" target="_blank">forums.ruuth.xyz</a> 
-        or <a href="mailto:astroimagetools@gmail.com" target="_blank">astroimagetools@gmail.com</a>
+        or <a href="mailto:info@astroimagetools.net" target="_blank">info@astroimagetools.net</a>
         or <a href="https://discord.gg/baqMqmKS3N" target="_blank">Discord</a> 
     </p>
     <p>
@@ -395,11 +395,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.75.2";
-var startup_image = "M75";
-var startup_info_text = "v" + version_number + " Filtering by target size, time zone fixes.";
+var version_number = "1.76";
+var startup_image = "M76";
+var startup_info_text = "v" + version_number + " Added LBN catalog, fixed LDN catalog path.";
 
 var version_text = 
+    "Version 1.76\n"+
+    "- Added LBN catalog, fixed LDN catalog path.\n" +
     "Version 1.75.2\n"+
     "- Fix to catalogs home path, pointing again to https://ruuth.xyz/.\n" +
     "Version 1.75.1\n"+
@@ -693,15 +695,16 @@ var catalogs_home = "https://ruuth.xyz/";
 
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
-    { name: "Slooh 500 Teide", targets: null, url: catalogs_home + "Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
-    { name: "Slooh 500 Chile", targets: null, url: catalogs_home + "Slooh500Chile.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
     { name: "NGC", targets: null, url: catalogs_home + "OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "IC", targets: null, url: catalogs_home + "OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
-    { name: "RCW", targets: null, url: catalogs_home + "RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
     { name: "Sharpless", targets: null, url: catalogs_home + "Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
-    { name: "LDN", targets: null, url: catalogs_home + catalogs_home + "LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
+    { name: "RCW", targets: null, url: catalogs_home + "RCW.json", source: "simbad", AladinCatalog: null, color: '#00af00' },
+    { name: "LDN", targets: null, url: catalogs_home + "LDN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
+    { name: "LBN", targets: null, url: catalogs_home + "LBN.json", source: "vizier", AladinCatalog: null, color: '#CBCC49' },
     { name: "Barnard", targets: null, url: catalogs_home + "Barnard.json", source: "vizier", AladinCatalog: null, color: '#E0FFFF' },  // light cyan
-    { name: "Cederblad", targets: null, url: catalogs_home + "Cederblad.json", source: "vizier", AladinCatalog: null, color: '#A0FFFF' }
+    { name: "Cederblad", targets: null, url: catalogs_home + "Cederblad.json", source: "vizier", AladinCatalog: null, color: '#A0FFFF' },
+    { name: "Slooh 500 Teide", targets: null, url: catalogs_home + "Slooh500Teide.json" , source: "slooh", AladinCatalog: null, color: '#29a329' },
+    { name: "Slooh 500 Chile", targets: null, url: catalogs_home + "Slooh500Chile.json" , source: "slooh", AladinCatalog: null, color: '#29a329' }
 ];
 
 // zero horizon if nothing else is specified
@@ -717,28 +720,26 @@ var all_services = {
     { 
             name: "Telescope Live", 
             radec_format: 1, 
-            default_telescope: 5,
+            default_telescope: 4,
             telescopes: [
-                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, seeing: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
                 { name: "AUS-2-CMOS", fov_x: 233, fov_y: 155, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, seeing: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
-                
-                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "SPA-1-CMOS", fov_x: 321, fov_y: 214, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "SPA-2-CMOS", fov_x: 22, fov_y: 15, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "SPA-3-CMOS", fov_x: 320, fov_y: 213, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
-            
-                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-1-CMOS", fov_x: 31, fov_y: 21, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
+                // { name: "CHI-7-CMOS", fov_x: 118, fov_y: 79, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                // { name: "USA-NM-1-CMOS", fov_x: 100, fov_y: 100, lat: 31.94653, lng: -108.89821, timezoneOffset: null, alt: 1000, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
+                
+                { name: "AUS-2", fov_x: 324, fov_y: 324, lat: -34.8285, lng: 148.8413, timezoneOffset: null, alt: 530, seeing: "tl-aus", horizon_limits: [20], meridian_transit: 60 },
+                { name: "SPA-1", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-2", fov_x: 23, fov_y: 23, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "SPA-3", fov_x: 324, fov_y: 324, lat: 37.4988, lng: -2.42178, timezoneOffset: null, alt: 1250, seeing: "tl-spa", horizon_limits: [30], meridian_transit: 60  }, 
+                { name: "CHI-1", fov_x: 32, fov_y: 32, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-2", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-3", fov_x: 19, fov_y: 19, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-4", fov_x: 67, fov_y: 67, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }, 
                 { name: "CHI-5", fov_x: 473, fov_y: 378, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-                { name: "CHI-7-CMOS", fov_x: 118, fov_y: 79, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  },
-
-                { name: "USA-NM-1-CMOS", fov_x: 100, fov_y: 100, lat: 31.94653, lng: -108.89821, timezoneOffset: null, alt: 1000, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
+                { name: "CHI-6", fov_x: 124, fov_y: 155, lat: -30.472529, lng: -70.762999, timezoneOffset: null, alt: 1252, seeing: "tl-chi", horizon_limits: [30], meridian_transit: 60  }
             ] 
         },
         { 
