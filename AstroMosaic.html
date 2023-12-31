@@ -397,10 +397,11 @@ var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.h
 
 var version_number = "1.77";
 var startup_image = "M77";
-var startup_info_text = "v" + version_number + " Fix to Cederblad catalog.";
+var startup_info_text = "v" + version_number + " Added some DSLR lens FoV, fix to Cederblad catalog.";
 
 var version_text = 
     "Version 1.77\n"+
+    "- Added some common DSLR lens FoV.\n" +
     "- Fix to Cederblad catalog.\n" +
     "Version 1.76\n"+
     "- Added LBN catalog, fixed LDN catalog path.\n" +
@@ -804,6 +805,18 @@ var all_services = {
                 { name: "NIRCam A+B", fov_x: 2.2, fov_y: 5.1, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, seeing: null, horizon_limits: [0], meridian_transit: 0  },
                 { name: "NIRCam", fov_x: 2.2, fov_y: 2.2, lat: 0, lng: 0, timezoneOffset: null, alt: 100000, seeing: null, horizon_limits: [0], meridian_transit: 0  }
             ]
+        },
+        { 
+            name: "Full Frame DSLR",
+            radec_format: 1, 
+            telescopes: [
+                { name: "135 mm", fov_x: 911.4, fov_y: 609.6, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "200 mm", fov_x: 617.4, fov_y: 412.02, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "300 mm", fov_x: 412.02, fov_y: 274.86, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "400 mm", fov_x: 309.18, fov_y: 206.22, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "500 mm", fov_x: 247.44, fov_y: 165, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  },
+                { name: "600 mm", fov_x: 206.22, fov_y: 137.52, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 10, seeing: "detect_location", horizon_limits: [0], meridian_transit: 0  }
+            ] 
         },
         { 
             name: "Current location",
