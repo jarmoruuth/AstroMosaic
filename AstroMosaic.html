@@ -395,11 +395,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.77";
-var startup_image = "M77";
-var startup_info_text = "v" + version_number + " Added some DSLR lens FoV, fix to Cederblad catalog.";
+var version_number = "1.78";
+var startup_image = "M78";
+var startup_info_text = "v" + version_number + " Added Seestar, Vaonis and Vestia telescopes.";
 
 var version_text = 
+    "Version 1.78\n"+
+    "- Added Seestar, Vaonis and Vestia telescopes.\n" +
     "Version 1.77\n"+
     "- Added some common DSLR lens FoV.\n" +
     "- Fix to Cederblad catalog.\n" +
@@ -789,6 +791,30 @@ var all_services = {
                 { name: "Spain CDK500", fov_x: 37, fov_y: 37, lat: 38.2, lng: -6.6, timezoneOffset: null, alt: 1025, seeing: "rs-spa", horizon_limits: [12], meridian_transit: 60  },
 
                 { name: "Dream Astrograph New Mexico", fov_x: 101, fov_y: 101, lat: 34.2, lng: -108.1, timezoneOffset: null, alt: 2371, seeing: "sg-newmex", horizon_limits: [35], meridian_transit: 60  }
+            ] 
+        },
+        { 
+            name: "Seestar", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "S50", fov_x: 1.29*60, fov_y: 0.73*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  }
+            ] 
+        },
+        { 
+            name: "Vaonis", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "Stellina", fov_x: 1.0*60, fov_y: 0.7*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  }
+            ] 
+        },
+        { 
+            name: "Vestia", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "Hestia", fov_x: 1.8*60, fov_y: 1.8*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  },
+                { name: "Vespera", fov_x: 1.6*60, fov_y: 0.9*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  },
+                { name: "Vespera II", fov_x: 2.5*60, fov_y: 1.4*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  },
+                { name: "Vespera Pro", fov_x: 1.6*60, fov_y: 1.6*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 60  }
             ] 
         },
         { 
