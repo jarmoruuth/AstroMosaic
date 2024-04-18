@@ -1854,7 +1854,8 @@ function StartAstroMosaicViewerEngine(
         } else {
             var isShowing = false;
         }
-        if (catalogSimbad == null) {
+        if (0 && catalogSimbad == null) {
+            // Very slow loading Simbad with Aladin Lite v3
             console.log("add simbad catalog");
             catalogSimbad = [];
             // Limit Simbad and NED catalogs to 1 degree to avoid excessive memory usage
@@ -1867,7 +1868,9 @@ function StartAstroMosaicViewerEngine(
                 catalogSimbad[0].hide();
             }
         }
-        aladin.addCatalog(catalogSimbad[0]);
+        if (catalogSimbad != null) {
+            aladin.addCatalog(catalogSimbad[0]);
+        }
 
         if (catalogNED != null) {
             isShowing = catalogNED[0].isShowing;
@@ -1880,7 +1883,8 @@ function StartAstroMosaicViewerEngine(
         } else {
             isShowing = false;
         }
-        if (catalogNED == null) {
+        if (0 && catalogNED == null) {
+            // Very slow loading NED with Aladin Lite v3
             console.log("add NED catalog")
             catalogNED = [];
             catalogNED[0] = A.catalogFromNED({ra: radec[0], dec: radec[1]}, 1);
@@ -1892,7 +1896,9 @@ function StartAstroMosaicViewerEngine(
                 catalogNED[0].hide();
             }
         }
-        aladin.addCatalog(catalogNED[0]);
+        if (catalogNED != null) {
+            aladin.addCatalog(catalogNED[0]);
+        }
         console.log("addAladinCatalogs, radec = " + radec);
     }
 

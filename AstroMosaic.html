@@ -4,7 +4,7 @@
 <head>
 <link rel="icon" type="image/png" sizes="16x16" href="AM-favicon.png">
 <!-- include Aladin Lite CSS file in the head section of your page -->
-<link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+<!-- link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" / -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta property="og:title" content="Astro Mosaic Telescope Planner" />
 <meta property="og:url" content="https://ruuth.xyz/AstroMosaic.html" />
@@ -118,7 +118,8 @@ p {
 
 <body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
+<!-- script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script -->
+<script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
 
 <div id="allDiv" class="all_div">
 <div id="headerDiv" class="header">
@@ -395,11 +396,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.78";
-var startup_image = "M78";
-var startup_info_text = "v" + version_number + " Added Seestar and Vaonis telescopes.";
+var version_number = "1.79";
+var startup_image = "M79";
+var startup_info_text = "v" + version_number + " Switching to Aladin Lite v3 API";
 
 var version_text = 
+    "Version 1.79\n"+
+    "- Switching to Aladin Lite v3 API\n" +
     "Version 1.78\n"+
     "- Added Seestar and Vaonis telescopes.\n" +
     "Version 1.77\n"+
@@ -554,11 +557,9 @@ var version_text =
 var target_info_text = "Supported target formats\n" +
                        "\n" +
                        "Target name:\n" +
-                       "\n" +
                        "A target name that can be resolved by name resolvers.\n" +
                        "\n" +
                        "RA/DEC in hours and degrees:\n" +
-                       "\n" +
                        "HH:MM:SS DD:MM:SS\n" +
                        "HH MM SS DD MM SS\n" +
                        "HH:MM:SS/DD:MM:SS\n" +
