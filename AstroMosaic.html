@@ -1940,14 +1940,15 @@ function ViewImage(oper)
     }
 
     viewer_params.planet_id = null;
-    var planet_name = document.getElementById("view-planet").value;
-    for (var i = 0; i < planets.length; i++) {
-        if (planet_name == planets[i].name) {
-            viewer_params.planet_id = i;
-            break;
+    if (url_view == "all") {
+        var planet_name = document.getElementById("view-planet").value;
+        for (var i = 0; i < planets.length; i++) {
+            if (planet_name == planets[i].name) {
+                viewer_params.planet_id = i;
+                break;
+            }
         }
     }
-
     if (url_view == "all") {
         var img_fov = document.getElementById("overlap_percentage").value;
     } else {
