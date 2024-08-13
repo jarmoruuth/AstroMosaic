@@ -1081,8 +1081,11 @@ function StartAstroMosaicViewerEngine(
         // All rows added
         // Check meridian crossing
 
+        var meridian_crossing = false;
         if (meridian_index != null && engine_params.meridian_transit > 0) {
-            // Mark Meridian crossing as not visible. We use literal 30 minutes clock time here.
+            // Add meridian crossing to the chart
+            var meridian_crossing_index = rowdata[0].length;
+            // Mark Meridian crossing. We use engine_params.meridian_transit time here.
             // Maybe it could be done some other way...
             var timer = Math.round(((engine_params.meridian_transit / 2) * 60 * 1000) / interval);
             var begin = Math.max(meridian_index - timer, 0);
@@ -1090,18 +1093,29 @@ function StartAstroMosaicViewerEngine(
             if (engine_params.horizonSoft != null) {
                 for (var i = begin; i < end; i++) {
                     if (rowdata[i][1] != null) {        // visiblealt != null
-                        rowdata[i][3] = rowdata[i][1];  // hardalt = visiblealt
+                        rowdata[i][meridian_crossing_index] = rowdata[i][1];
                         rowdata[i][1] = null;           // visible = null
+                        meridian_crossing = true;
                     } else if (rowdata[i][2] != null) { // softalt != null
-                        rowdata[i][3] = rowdata[i][2];  // hardalt = softalt
+                        rowdata[i][meridian_crossing_index] = rowdata[i][2];
                         rowdata[i][2] = null;           // softalt = null
+                        meridian_crossing = true;
                     }
                 }
             } else {
                 for (var i = begin; i < end; i++) {
                     if (rowdata[i][1] != null) {        // visiblealt != null
-                        rowdata[i][2] = rowdata[i][1];  // hardalt = visiblealt
+                        rowdata[i][meridian_crossing_index] = rowdata[i][1];
                         rowdata[i][1] = null;           // visible = null
+                        meridian_crossing = true;
+                    }
+                }
+            }
+            if (meridian_crossing) {
+                engine_data.daydata.addColumn('number', 'Meridian crossing');  // Meridian crossing
+                for (var i = 0; i < rowdata.length; i++) {
+                    if (rowdata[i].length <= meridian_crossing_index) {
+                        rowdata[i].push(null);
                     }
                 }
             }
@@ -1130,6 +1144,9 @@ function StartAstroMosaicViewerEngine(
         }
         if (engine_params.showAz) {
             seriesStyle.push({ color: 'gray', lineDashStyle: [2, 2], targetAxisIndex: 1 }); // Azimuth
+        }
+        if (meridian_crossing) {
+            seriesStyle.push({ color: 'green', lineDashStyle: [4, 2], lineWidth: 1 });     // Meridian crossing
         }
 
         var options = setChartOptions('Target visibility', hAxisTitle, seriesStyle, 'HH:mm', engine_params.showAz);
