@@ -1188,7 +1188,7 @@ function initAstroMosaic()
 {
     console.log("initAstroMosaic");
 
-    StartAstroMosaicViewerEngine('get_engine_native_resources', null, null, null, null, null, engine_native_resources);
+    StartAstroMosaicViewerEngine('get_engine_native_resources', null, null, null, null, null, engine_native_resources, null);
 
     init_all_services();
 
@@ -2050,6 +2050,7 @@ function ViewImage(oper)
         }
     }
     viewer_params.current_telescope_service = current_telescope_service;
+    viewer_params.astro_mosaic_link = astro_mosaic_link;
 
     showWiki();
 
