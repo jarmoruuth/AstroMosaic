@@ -33,6 +33,9 @@
  *          {
  *              fov_x            : x fov in degrees,
  *              fov_y            : y fov in degrees,
+ *              grid_type        : grid type, "fov" or "mosaic", if not set, "fov" is used,
+ *              grid_size_x      : number of grid panels in x direction, if not set, 1 is used
+ *              grid_size_y      : number of grid panels y direction, if not set, 1 is used
  *              location_lat     : location latitude,
  *              location_lng     : location longitude,
  *              horizonSoft      : soft horizon limit or null,
@@ -90,9 +93,9 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         meridian_transit : params.meridian_transit,
         UTCdate_ms : params.UTCdate_ms,
         timezoneOffset : params.timezoneOffset,
-        grid_type : "fov",
-        grid_size_x : 1,
-        grid_size_y : 1,
+        grid_type : params.grid_type ? params.grid_type : "fov",
+        grid_size_x : params.grid_size_x ? params.grid_size_x : 1,
+        grid_size_y : params.grid_size_y ? params.grid_size_y : 1,
         isCustomMode : params.isCustomMode,
         chartTextColor : params.chartTextColor,
         gridlinesColor : params.gridlinesColor,
@@ -100,7 +103,8 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div)
         isRepositionModeFunc : null,
         repositionTargetFunc : null,
         showAz: false,
-        planet_id: null
+        planet_id: null,
+        current_telescope_service: null
     };
 
     var engine_panels = {
@@ -2143,7 +2147,9 @@ function StartAstroMosaicViewerEngine(
                 var col_ra_hours = col_ra * degToHours;
 
                 if (grid_type == "mosaic" || grid_type == "visual") {
-                    if (engine_params.current_telescope_service.radec_format == 0) {
+                    if (engine_params.current_telescope_service == null ||
+                        engine_params.current_telescope_service.radec_format == 0) 
+                    {
                         panel_radec[x][y] = col_ra_hours.toFixed(5) + 
                                             " " + row_dec.toFixed(5);
                     } else {

@@ -21,6 +21,9 @@
 var viewer_params = {
     fov_x : 37,                 // x fov in degrees
     fov_y : 43,                 // y fov in degrees
+    grid_type : "fov",          // grid type, "fov" or "mosaic", if not set, "fov" is used
+    grid_size_x : 1,            // number of grid panels in x direction, if not set, 1 is used
+    grid_size_y : 1,            // number of grid panels y direction, if not set, 1 is used
     location_lat : 28.29970,    // location latitude (here Teide)
     location_lng : -16.50826,   // location longitude (here Teide)
     horizonSoft : null,         // soft horizon limit or null
