@@ -1,6 +1,6 @@
 /*************************************************************************\
  * 
- *      AstroMosaic telescope planner engine. (C) Jarmo Ruuth, 2018-2021
+ *      AstroMosaic telescope planner engine. (C) Jarmo Ruuth, 2018-2025
  *
  * An embeddable JavaScript file of AstroMosaic engine. 
  * It can show:

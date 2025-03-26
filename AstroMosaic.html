@@ -1,4 +1,4 @@
-<!-- Tool to visualize telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2022 -->
+<!-- Tool to visualize telescope FoV and mosaic grid. Jarmo Ruuth, 2018-2025 -->
 <!DOCTYPE HTML>
 <html lang = "en">
 <head>
@@ -396,11 +396,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.80";
-var startup_image = "M80";
-var startup_info_text = "v" + version_number + " Changes to meridian crossing display";
+var version_number = "1.81";
+var startup_image = "M81";
+var startup_info_text = "v" + version_number + " Added Seestar S30";
 
 var version_text = 
+    "Version 1.81\n"+
+    "- Added Seestar S30\n" +
     "Version 1.80\n"+
     "- Changes to meridian crossing display\n" +
     "Version 1.79\n"+
@@ -803,7 +805,8 @@ var all_services = {
             name: "Seestar", 
             radec_format: 1, 
             telescopes: [
-                { name: "S50", fov_x: 0.73*60, fov_y: 1.29*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
+                { name: "S50", fov_x: 0.73*60, fov_y: 1.29*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "S30", fov_x: 1.22*60, fov_y: 2.17*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
             ] 
         },
         { 
@@ -823,7 +826,8 @@ var all_services = {
             radec_format: 1, 
             telescopes: [
                 { name: "Unistellar Equinox", fov_x: 37.43, fov_y: 28.27, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
-                { name: "Dwarflab II", fov_x: 192, fov_y: 110, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
+                { name: "Dwarflab II", fov_x: 192, fov_y: 110, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "CDK14", fov_x: 0.98*60, fov_y: 0.74*60, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
             ] 
         },
         { 
