@@ -1,6 +1,6 @@
 from AstroMosaicEngine import AstroMosaicEngine
 
-# Convert arcmoniyes to degrees
+# Convert arcminutes to degrees
 def arcminutes_to_degrees(arcminutes):
     """Convert arcminutes to degrees."""
     return arcminutes / 60.0
