@@ -144,7 +144,7 @@ p {
 
 <div id="allDiv" class="all_div">
 <div id="headerDiv" class="header">
-    <div class="dropdown">
+    <div class="dropdown" id="header-dropdown">
         <button class="dropbtn"><img src="menu-24px.svg" alt="Home" height="16"></button>
         <div class="dropdown-content">
             <a href="AstroImageTools.html">Home</a>
@@ -167,7 +167,28 @@ p {
         </form>
     </div>
     <div>
-    <button onclick="alert(target_info_text)"><img src="information-outline.png"></button>
+    <dialog id="infoBox">
+        <h2>Accepted target coordinate formats</h2>
+        <h3>Target name</h3>
+        <p>A target name that can be resolved by name resolvers.</p>
+        <h3>RA/DEC in hours and degrees:</h3>
+        <ul>
+        <li>HH:MM:SS DD:MM:SS</li>
+        <li>HH MM SS DD MM SS</li>
+        <li>HH:MM:SS/DD:MM:SS</li>
+        <li>HH MM SS/DD MM SS</li>
+        <li>HHMMSS DDMMSS</li>
+        <li>HH.dec DD.dec</li>
+        </ul>
+        <h3>RA/DEC in decimal degrees:</h3>
+        <ul>
+        <li>d DD.dec DD.dec</li>
+        </ul>
+        <button onclick="document.getElementById('infoBox').close()">Close</button>
+    </dialog>
+    <button id="infoButton" onclick="document.getElementById('infoBox').showModal()">
+        <img src="information-outline.png">
+    </button>
     </div>
     <div id="service-div">
         <form title="Select telescope service.">
@@ -418,27 +439,27 @@ p {
         </p>
     </div>
     <div>
-        <button id="getting-started-tutorial-button" title="Getting started with Astro Mosaic tutorial." onclick="startTutorialAstroMosaic()">
+        <button id="getting-started-tutorial-button" title="Getting started with Astro Mosaic tutorial.">
             Getting started
         </button>
     </div>
     <div>
-        <button id="filtering-tutorial-button" title="Working with catalogs." onclick="startTutorialFiltering()">
+        <button id="filtering-tutorial-button" title="Working with catalogs.">
             Filtering
         </button>
     </div>
     <div>
-        <button id="mosaics-tutorial-button" title="Creating mosaics tutorial." onclick="startTutorialMosaics()">
+        <button id="mosaics-tutorial-button" title="Creating mosaics tutorial.">
             Mosaics
         </button>
     </div>
     <div>
-        <button id="add-telescope-tutorial-button" title="Adding your own telescope tutorial." onclick="startTutorialAddTelescope()">
+        <button id="add-telescope-tutorial-button" title="Adding your own telescope tutorial.">
             Add telescope
         </button>
     </div>
     <div>
-        <button id="advanced-tutorial-button" title="Advanced settings tutorial." onclick="startTutorialAdvanced()">
+        <button id="advanced-tutorial-button" title="Advanced settings tutorial.">
             Advanced
         </button>
     </div>
@@ -616,23 +637,6 @@ var version_text =
     "Version 1.00\n"+
     "- basic FoV, mosaic grid and panels views\n"+
     "- target visibility during one night and next 12 months\n";
-
-var target_info_text = "Supported target formats\n" +
-                       "\n" +
-                       "Target name:\n" +
-                       "A target name that can be resolved by name resolvers.\n" +
-                       "\n" +
-                       "RA/DEC in hours and degrees:\n" +
-                       "HH:MM:SS DD:MM:SS\n" +
-                       "HH MM SS DD MM SS\n" +
-                       "HH:MM:SS/DD:MM:SS\n" +
-                       "HH MM SS/DD MM SS\n" +
-                       "HHMMSS DDMMSS\n" +
-                       "HH.dec DD.dec\n" +
-                       "\n" +
-                       "RA/DEC in decimal degrees:\n" +
-                       "\n" +
-                       "d DD.dec DD.dec";
 
 document.getElementById("version-button").innerText= "v." + version_number + " info";
 
@@ -3169,6 +3173,12 @@ const gettingStartedTutorialSteps = [
         position: 'right'
     },
     {
+        element: '#infoButton',
+        title: 'Target formats',
+        content: '<p>Clicking the Info button next to the target input field shows a popup with information about supported target formats.</p>',
+        position: 'right'
+    },
+    {
         element: '#catalog-name-div',
         title: 'Catalog',
         content: '<ul><li>Another way to select a target is first to select the astronomical catalog you want to use.</li>' + 
@@ -3245,6 +3255,12 @@ const gettingStartedTutorialSteps = [
         content: '<ul><li>Click the Refresh button to update the view with the latest data.</li>' +
                  '<li>This is needed if you have changed some options, or get lost in the Aladin viewer.</li></ul>',
         position: 'left'
+    },
+    {
+        element: '#header-dropdown',
+        title: 'Documentation',
+        content: '<p>From the header dropdown menu you can find a link to Astro Mosaic documentation and to other tools</p>',
+        position: 'bottom'
     }
 ];
 
