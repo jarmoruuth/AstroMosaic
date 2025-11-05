@@ -1,0 +1,213 @@
+/* Interactive Tutorial System CSS */
+
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.tutorial-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tutorial-spotlight {
+    position: absolute;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.tutorial-tooltip {
+    position: fixed;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 350px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    pointer-events: auto;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+}
+
+.tutorial-tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tutorial-tooltip-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.tutorial-tooltip-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.tutorial-tooltip-close:hover {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.tutorial-tooltip-content {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f0f0f0;
+    padding-right: 5px;
+}
+
+.tutorial-tooltip-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tutorial-tooltip-content::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.tutorial-tooltip-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.tutorial-tooltip-content::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.tutorial-tooltip-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tutorial-tooltip-progress {
+    color: #888;
+    font-size: 14px;
+}
+
+.tutorial-tooltip-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.tutorial-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tutorial-button-prev {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.tutorial-button-prev:hover:not(:disabled) {
+    background: #d0d0d0;
+}
+
+.tutorial-button-next {
+    background: #4CAF50;
+    color: white;
+}
+
+.tutorial-button-next:hover:not(:disabled) {
+    background: #45a049;
+}
+
+.tutorial-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tutorial-start-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s;
+}
+
+.tutorial-start-button:hover {
+    background: #1976D2;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.tutorial-start-button.hidden {
+    display: none;
+}
+
+/* Arrow pointing to highlighted element */
+.tutorial-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    z-index: 9999;
+}
+
+.tutorial-arrow.arrow-top {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+}
+
+.tutorial-arrow.arrow-bottom {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+}
+
+.tutorial-arrow.arrow-left {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 10px solid white;
+}
+
+.tutorial-arrow.arrow-right {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 10px solid white;
+}

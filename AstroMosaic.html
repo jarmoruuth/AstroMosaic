@@ -11,16 +11,30 @@
 <meta property="og:image" content="https://ruuth.xyz/astromosaicscreen.jpg" />
 <meta property="og:description" content="Astro Mosaic is a tool for planning telescope observations." />
 <meta property="og:type" content="website" />
+
+<link rel="stylesheet" href="tutorial-system.css">
+<script src="tutorial-system.js"></script>
+
 <style>
 
 .header {
   background: lightgray;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  gap: 15px;
 }
 
 .h2text {
-  padding-bottom: 10px;
-  text-align: left;
-  margin-left: 80px;
+  margin: 0;
+  padding: 0;
+}
+
+.h2text h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .flex-container-top {
@@ -62,8 +76,15 @@ p {
 }
 
 .footer {
-  padding: 10px;
   background: whitesmoke;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.footer > div {
+  margin: 2px;
+  padding: 2px;
 }
 
 /* Dropdown Button */
@@ -139,7 +160,7 @@ p {
 </div>
     
 <div id="firstDiv" class="flex-container-top">
-    <div>
+    <div id="target-input">
         <form title="Enter target name or coordinates, click info icon for more info." action="javascript:ViewTarget()">
             Target:<br>
             <input type="text" id="target"><br>
@@ -148,21 +169,21 @@ p {
     <div>
     <button onclick="alert(target_info_text)"><img src="information-outline.png"></button>
     </div>
-    <div>
+    <div id="service-div">
         <form title="Select telescope service.">
             Service:<br>
             <select id="current-telescope-service" onchange="javascript:ViewImage(1)">
             </select>
         </form>
     </div>
-    <div>
+    <div id="telescope-div">
         <form title="Select telescope.">
             Telescope:<br>
             <select id="current-telescope" onchange="javascript:ViewImage(2)">
             </select>
         </form>
     </div>
-    <div>
+    <div id = "grid-type-div">
         <form title="Select grid type: telescope field of view, mosaic grid or separate mosaic panels.">
             View:<br >
             <select id="grid_type" onchange="javascript:ViewImage(0)">
@@ -172,26 +193,26 @@ p {
             </select>
         </form>
     </div>
-    <div>
+    <div id="mosaic-overlap-div">
         <form title="Select mosaic overlap, a recommended value is to use 20% overlap." action="javascript:ViewImage(0)">
             Mosaic overlap (%):<br>
             <input type="number" id="overlap_percentage" min="1" max="100">
         </form>    
     </div>
-    <div>
+    <div id="grid-size-div">
         <form title="Select mosaic grid size." action="javascript:ViewImage(0)">
             Grid size (x,y):<br>
             <input type="number" id="size_x" min="1" max="10">
             <input type="number" id="size_y" min="1" max="10">
         </form>    
     </div>
-    <div>
+    <div id="date-div">
         <form title="Select date for target visibility view." action="javascript:ViewImage(0)">
             Date (YYYY-MM-DD):<br>
             <input type="text" id="view_date">
         </form>    
     </div>
-    <div>
+    <div id="refresh-div">
         <br>
         <button title="Refresh current view." onclick="ViewImage(0)">Refresh</button>
     </div>
@@ -199,7 +220,7 @@ p {
 
 <div id="secondDiv" class="flex-container-top2">
 
-    <div>
+    <div id="catalog-name-div">
         <form title="Select catalog.">
             <select id="catalog-selection" onchange="javascript:filterChanged()">
             </select>
@@ -207,7 +228,7 @@ p {
     </div>
     <div id ="catalogDiv">
     </div>
-    <div>
+    <div id="altitude-div">
         <form title="Show only catalog objects that are higher than selected altitude.">
             Altitude:
             <select id="catalogFilterDegrees" onchange="javascript:filterChanged()">
@@ -227,13 +248,13 @@ p {
             </select>
         </form>
     </div>
-    <div>
+    <div id="time-div">
         <form title="Show only catalog objects that are visible at selected time. Time format is HH:MM." action="javascript:filterTimeChanged()">
             Time:
             <input type="text" id="catalogFilterTime" size=5>
         </form>    
     </div>
-    <div>
+    <div id="moon-div">
         <form title="Show only catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.">
             Moon:
             <select id="catalogFilterMoon" onchange="javascript:filterChanged()">
@@ -313,51 +334,51 @@ p {
     </div>
 </div>
 <div id="optionsDiv" class="flex-container-top2">
-    <div>
+    <div id="reposition-div">
         <form title="If selected, reposition image framing by moving the image using the mouse." action="javascript:ViewImage(0)">
             <input type="checkbox" id="repositionCheckbox">Reposition
        </form>    
     </div>
-    <div>
+    <div id ="add-telescope-div">
         <form title="Show add telescope controls.">
             <input type="checkbox" id="addTelescopeCheckbox" onclick="showHideAddTelescope()">
             Add telescope
        </form>    
     </div>
-    <div>
+    <div id="telescope-info-div">
         <button title="Show the current telescope info and create a link (Url) to the current view." onclick="showCurrentViewInfo()">Info</button>
     </div>
-    <div>
+    <div id="wiki-check-div">
         <form title="If selected, show target Wiki page when available." action="javascript:ViewImage(0)">
             <input type="checkbox" id="wikiCheckbox">Wiki
         </form>    
     </div>
-    <div>
+    <div id="seeing-check-div">
         <form title="If selected, show current seeing at telescope location. Seeing uses predefined locations or tries to detect the current location." action="javascript:ViewImage(0)">
             <input type="checkbox" id="seeingCheckbox">Seeing
         </form>    
     </div>
-    <div>
+    <div id="weather-check-div">
         <form title="If selected, show current weather at telescope location. Weather uses telescope latitude and longitude." action="javascript:ViewImage(0)">
             <input type="checkbox" id="weatherCheckbox">Weather
         </form>    
     </div>
-    <div>
+    <div id="catalog-panels-div">
         <form title="If selected, shows catalog targets in a panel view. Click refresh to update view." action="javascript:ViewImage(0)">
             <input type="checkbox" id="panelsCheckbox">Panels
         </form>    
     </div>
-    <div>
+    <div id="sort-div">
         <form title="If selected and altitude filtering is enabled, sort catalog list based on altitude." action="javascript:filterChanged(0)">
             <input type="checkbox" id="catalogSortCheckbox">Sort
         </form>    
     </div>
-    <div>
+    <div id="az-div">
         <form title="If selected, show azimuth in target visibility graph." action="javascript:ViewImage(0)">
             <input type="checkbox" id="showAzCheckbox">Az
         </form>    
     </div>
-    <div>
+    <div id ="planet-div">
         <form title="Select a planet to be viewed in visibility charts and sky atlas.">
         Planet:
         <select id="view-planet" onchange="javascript:ViewImage(0)">
@@ -379,16 +400,48 @@ p {
 </div>
 
 <div id="footerDiv" class="footer">
-    <p>
-        Author: Jarmo Ruuth. 
-        Feedback: <a href="https://forums.ruuth.xyz" target="_blank">forums.ruuth.xyz</a> 
-        or <a href="mailto:info@astroimagetools.net" target="_blank">info@astroimagetools.net</a>
-        or <a href="https://discord.gg/baqMqmKS3N" target="_blank">Discord</a> 
-    </p>
-    <p>
-        <button id="version-button" title="Show version history." style="background-color:white" onclick="alert(version_text)">Version info</button>
-        <a href="AstroMosaicInfo.html#credits" target="_blank">Credits</a></small>
-    </p>
+    <div>
+        <p>
+            Author: Jarmo Ruuth. 
+            Feedback: <a href="https://forums.ruuth.xyz" target="_blank">forums.ruuth.xyz</a> 
+            or <a href="mailto:info@astroimagetools.net" target="_blank">info@astroimagetools.net</a>
+            or <a href="https://discord.gg/baqMqmKS3N" target="_blank">Discord</a> 
+        </p>
+        <p>
+            <button id="version-button" title="Show version history." style="background-color:white" onclick="alert(version_text)">Version info</button>
+            <a href="AstroMosaicInfo.html#credits" target="_blank">Credits</a></small>
+        </p>
+    </div>
+    <div>
+        <p>
+            <strong>Tutorials:</strong>
+        </p>
+    </div>
+    <div>
+        <button id="getting-started-tutorial-button" title="Getting started with Astro Mosaic tutorial." onclick="startTutorialAstroMosaic()">
+            Getting started
+        </button>
+    </div>
+    <div>
+        <button id="filtering-tutorial-button" title="Working with catalogs." onclick="startTutorialFiltering()">
+            Filtering
+        </button>
+    </div>
+    <div>
+        <button id="mosaics-tutorial-button" title="Creating mosaics tutorial." onclick="startTutorialMosaics()">
+            Mosaics
+        </button>
+    </div>
+    <div>
+        <button id="add-telescope-tutorial-button" title="Adding your own telescope tutorial." onclick="startTutorialAddTelescope()">
+            Add telescope
+        </button>
+    </div>
+    <div>
+        <button id="advanced-tutorial-button" title="Advanced settings tutorial." onclick="startTutorialAdvanced()">
+            Advanced
+        </button>
+    </div>
 </div>
 
 </div>
@@ -399,11 +452,13 @@ p {
 
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
-var version_number = "1.81";
-var startup_image = "M81";
-var startup_info_text = "v" + version_number + " Added Seestar S30";
+var version_number = "1.82";
+var startup_image = "M82";
+var startup_info_text = "v" + version_number + " Tutorials available at the bottom of the page.";
 
 var version_text = 
+    "Version 1.82\n"+
+    "- Tutorials\n" +
     "Version 1.81\n"+
     "- Added Seestar S30\n" +
     "Version 1.80\n"+
@@ -3103,6 +3158,270 @@ function showCurrentViewInfo()
 
     // alert(link_text);
 }
+
+const gettingStartedTutorialSteps = [
+    {
+        element: '#target-input',
+        title: 'Target Object',
+        content: '<p>Enter your astronomical target here, such as "M31" for the Andromeda Galaxy.</p>' +
+                 '<p>You can also enter coordinates in RA/DEC format.</p>' +
+                 '<p>Press enter key or click the Refresh button to update the view.</p>',
+        position: 'right'
+    },
+    {
+        element: '#catalog-name-div',
+        title: 'Catalog',
+        content: '<p>Another way to select a target is first to select the astronomical catalog you want to use. There are various well known catalogs available.</p>',
+        position: 'right'
+    },
+    {
+        element: '#catalogDiv',
+        title: 'Target from the catalog',
+        content: '<p>Once you have selected a catalog you select a target from that catalog.</p>' +
+                 '<p>There is a separate tutorial for filtering catalog objects.</p>',
+        position: 'right'
+    },
+    {
+        element: '#service-div',
+        title: 'Services',
+        content: '<p>Select the astronomical service you want to use. There are remote telescope sites listed as well as some smart telescopes.</p> ' +
+                 '<p>The available telescopes will be updated based on your selection.</p> ' +
+                 '<p>The field of view is automatically updated in the target view based on the selected service and telescope.</p>' +
+                 '<h3>Add Your Own Telescope</h3>' +
+                 '<p>If you have a personal telescope, you can add it using the <strong>Add Telescope</strong> option.</p>' +
+                 '<p>There is a separate tutorial for adding your own telescope.</p>',
+        position: 'right'
+    },
+    {
+        element: '#telescope-div',
+        title: 'Telescope',
+        content: '<p>Select the telescope you want to use. The available telescopes will be updated based on your service selection.</p>' +
+                 '<p>The field of view is automatically updated in the target view based on the selected telescope.</p>',
+        position: 'right'
+    },
+    {
+        element: '#aladin-div',
+        title: 'Aladin viewer',
+        content: '<p>In the Aladin viewer you can see visually the framing of the target.</p>' +
+                 '<p>You can zoom in and out in, and move around in the Aladin viewer using a mouse. There is also a button for full screen view.</p>' +
+                 '<p>To fine tune the framing you can use the Reposition checkbox.</p>',
+        position: 'right'
+    },
+    {
+        element: '#aladin-div',
+        title: 'Catalog Layers',
+        content: '<p>In the view there is a layers button where you can enable some catalog layers to be visible in the Aladin viewer.</p>' +
+                 '<p>If you have enabled some catalog layers then clicking on objects in the Aladin viewer shows some info about the object at the bottom of the viewer.</p>' +
+                 '<p>If Wiki checkbox is enabled, clicking on an object will also show the Wikipedia page for that object if available.</p>',
+        position: 'right'
+    },
+    {
+        element: '#date-div',
+        title: 'Date',
+        content: '<p>Target visibility is based on date you give in the date field.</p>' +
+                 '<p>By default the current date is used.</p>' +
+                 '<p>Format for the date is YYYY-MM-DD.</p>',
+        position: 'left'
+    },
+    {
+        element: '#day-div',
+        title: 'Target visibility',
+        content: '<p>Target visibility is based on date you give in the date field.</p>' +
+                 '<p>The line on the graphs shows the visibility and altitude of the target during the night.</p>' +
+                 '<p>Also moon visibility and altitude are shown.</p>',
+        position: 'left'
+    },
+    {
+        element: '#year-div',
+        title: 'Target visibility over next 12 months',
+        content: '<p>Target visibility and moon altitude are shown also for the next 12 months</p>',
+        position: 'left'
+    },
+    {
+        element: '#refresh-div',
+        title: 'Refresh',
+        content: '<p>Click the Refresh button to update the view with the latest data. Useful also if you get lost in the Aladin viewer.</p>',
+        position: 'left'
+    }
+];
+
+const filteringTutorialSteps = [
+    {
+        element: '#catalog-name-div',
+        title: 'Catalog filtering',
+        content: '<p>When you have selected a catalog you can do some filtering on objects in that catalog.</p>',
+        position: 'right'
+    },
+    {
+        element: '#date-div',
+        title: 'Date',
+        content: '<p>Filtering is based on date you give in the date field.</p>',
+        position: 'left'
+    },
+    {
+        element: '#altitude-div',
+        title: 'Altitude',
+        content: '<p>Altitude filtering lists only catalog objects that are higher on the sky than selected altitude on a given date.</p>',
+        position: 'right'
+    },
+    {
+        element: '#time-div',
+        title: 'Time',
+        content: '<p>Time filtering lists only catalog objects that are visible at the selected time on a given date.</p>' +
+                 '<p>If no time is given, the filtering is done based on midnight time and also 2 and 4 hours before and after midnight.</p>' +
+                 '<p>Time format is HH:MM</p>',
+        position: 'right'
+    },
+    {
+        element: '#moon-div',
+        title: 'Moon',
+        content: '<p>Moon filtering lists catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.</p>' + 
+                 '<p>Note that the moon path is always plotted to the sky atlas.</p>' +
+                 '<p>Last two filtering options, Magnitude and Size, are are not really effective since most catalogs do not include that info.</p>',
+        position: 'right'
+    }
+];
+
+const mosaicTutorialSteps = [
+    {
+        element: '#grid-type-div',
+        title: 'Mosaic Grid',
+        content: 'When you start to plan mosaic, first you need to switch the view to a mosaic Grid. Mosaic grid will show how the mosaic panels will be arranged.',
+        position: 'right'
+    },
+    {
+        element: '#mosaic-overlap-div',
+        title: 'Mosaic Overlap',
+        content: 'Set the overlap percentage for the mosaic panels. A recommended value is to use 20% overlap to ensure good coverage.',
+        position: 'right'
+    },
+    {
+        element: '#grid-size-div',
+        title: 'Mosaic Grid Size',
+        content: '<p>Set the size of the mosaic grid. This determines how many panels will be used in the mosaic.<p>' +
+                 '<p>For example, a size of 3x2 will create a mosaic with 3 panels in the horizontal direction and 2 panels in the vertical direction.</p>' +
+                 '<p>A table of RA/DEC values for each panel is shown below the Aladin viewer.</p>',
+        position: 'right'
+    }
+];
+
+const addTelescopeTutorialSteps = [
+    {
+        element: '#add-telescope-div',
+        title: 'Add Telescope',
+        content: '<p>When you want to add your own telescope to the Astro Mosaic, check on the "Add Telescope" box.</p>' +
+                 '<p>This will open a new row where you can enter the details of your telescope, including its name, field of view, location, and other parameters.</p>' +
+                 '<p>After entering the details, click on the "Add" button to add the telescope as a new service.</p>',
+        position: 'right'
+    },
+    {
+        element: '#telescope-info-div',
+        title: 'Telescope Information',
+        content: '<p>When a new telescope is added to the service, it is not permanently stored anywhere. The next time you start Astro Mosaic you need to enter the information again.</p>' +
+                 '<h3>Save the URL</h3>' +
+                 '<p>Using the Info button you can display the current telescope information. The information includes a URL that has the current telescope settings.</p>' +
+                 '<p>You can bookmark that URL to be able to quickly access your telescope settings in the future.</p>',
+        position: 'right'
+    }
+];
+
+const advancedTutorialSteps = [
+    {
+        element: '#reposition-div',
+        title: 'Reposition Mosaic',
+        content: '<p>To reposition the current framing, select the Reposition tool and click and drag the view to the desired location.</p>',
+        position: 'right'
+    },
+    {
+        element: '#wiki-check-div',
+        title: 'Wiki Information',
+        content: '<p>If selected, a Wiki page of the current target is displayed when available.</p>' +
+                 '<p>Click the refresh button to reload the Wiki page.</p>',
+        position: 'right'
+    },
+    {
+        element: '#seeing-check-div',
+        title: 'Seeing Conditions',
+        content: '<p>Displays the current seeing conditions for the selected target.</p>' +
+                 '<p>Click the refresh button to reload the seeing conditions.</p>',
+        position: 'right'
+    },
+    {
+        element: '#weather-check-div',
+        title: 'Weather Information',
+        content: '<p>Displays the current weather conditions for the selected target.</p>' +
+                 '<p>Click the refresh button to reload the weather information.</p>',
+        position: 'right'
+    },
+    {
+        element: '#catalog-panels-div',
+        title: 'Catalog Panels',
+        content: '<p>Displays the available catalog panels for the selected target.</p>' +
+                 '<p>Click the refresh button to reload the catalog panels.</p>',
+        position: 'right'
+    },
+    {
+        element: '#sort-div',
+        title: 'Sort Options',
+        content: '<p>If selected and altitude filtering is enabled, sort catalog list based on altitude.</p>',
+        position: 'right'
+    },
+    {
+        element: '#az-div',
+        title: 'Azimuth Information',
+        content: '<p>If selected, show azimuth in target visibility graph.</p>',
+        position: 'right'
+    },
+    {
+        element: '#planet-div',
+        title: 'Planet Information',
+        content: '<p>Select a planet to be viewed in visibility charts and sky atlas.</p>' +
+                 '<h3>Planet path</h3>' +
+                 '<p>Planet path is plotted to the sky atlas.</p>' +
+                 '<p>Note that you may need to zoom very far out from the current sky atlas view to see the planet path.</p>' +
+                 '<p>Also, some planets may not be visible at the current date and time.</p>' +
+                 '<p>By checking the planet path you can see if a planet for example crosses some interesting object.</p>' +
+                 '<h3>Moon path</h3>' +
+                 '<p>Note that the moon path is always plotted to the sky atlas.</p>',
+        position: 'right'
+    },
+];
+
+// Initialize the tutorial
+const gettingStartedTutorial = new TutorialSystem(gettingStartedTutorialSteps);
+const filteringTutorial = new TutorialSystem(filteringTutorialSteps);
+const mosaicTutorial = new TutorialSystem(mosaicTutorialSteps);
+const addTelescopeTutorial = new TutorialSystem(addTelescopeTutorialSteps);
+const advancedTutorial = new TutorialSystem(advancedTutorialSteps);
+
+// Hide the auto-generated button
+gettingStartedTutorial.elements.startButton.style.display = 'none';
+filteringTutorial.elements.startButton.style.display = 'none';
+mosaicTutorial.elements.startButton.style.display = 'none';
+addTelescopeTutorial.elements.startButton.style.display = 'none';
+advancedTutorial.elements.startButton.style.display = 'none';
+
+
+// Wire up your custom button
+document.getElementById('getting-started-tutorial-button').addEventListener('click', () => {
+    gettingStartedTutorial.start();
+});
+
+document.getElementById('filtering-tutorial-button').addEventListener('click', () => {
+    filteringTutorial.start();
+});
+
+document.getElementById('mosaics-tutorial-button').addEventListener('click', () => {
+    mosaicTutorial.start();
+});
+
+document.getElementById('add-telescope-tutorial-button').addEventListener('click', () => {
+    addTelescopeTutorial.start();
+});
+
+document.getElementById('advanced-tutorial-button').addEventListener('click', () => {
+    advancedTutorial.start();
+});
 
 </script>
 </body>
