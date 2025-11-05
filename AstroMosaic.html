@@ -379,7 +379,7 @@ p {
         </form>    
     </div>
     <div id ="planet-div">
-        <form title="Select a planet to be viewed in visibility charts and sky atlas.">
+        <form title="Select a planet to be viewed in visibility charts and Aladin viewer.">
         Planet:
         <select id="view-planet" onchange="javascript:ViewImage(0)">
         </select>
@@ -3163,72 +3163,74 @@ const gettingStartedTutorialSteps = [
     {
         element: '#target-input',
         title: 'Target Object',
-        content: '<p>Enter your astronomical target here, such as "M31" for the Andromeda Galaxy.</p>' +
-                 '<p>You can also enter coordinates in RA/DEC format.</p>' +
-                 '<p>Press enter key or click the Refresh button to update the view.</p>',
+        content: '<ul><li>Enter your astronomical target here, such as "M31" for the Andromeda Galaxy.</li>' +
+                 '<li>You can also enter coordinates in RA/DEC format.</li>' +
+                 '<li>Press enter key or click the Refresh button to update the view.</li></ul>',
         position: 'right'
     },
     {
         element: '#catalog-name-div',
         title: 'Catalog',
-        content: '<p>Another way to select a target is first to select the astronomical catalog you want to use. There are various well known catalogs available.</p>',
+        content: '<ul><li>Another way to select a target is first to select the astronomical catalog you want to use.</li>' + 
+                 '<li>There are various well known catalogs available.</li></ul>',
         position: 'right'
     },
     {
         element: '#catalogDiv',
         title: 'Target from the catalog',
-        content: '<p>Once you have selected a catalog you select a target from that catalog.</p>' +
-                 '<p>There is a separate tutorial for filtering catalog objects.</p>',
+        content: '<ul><li>Once you have selected a catalog you select a target from that catalog.</li>' +
+                 '<li>There is a separate tutorial for filtering catalog objects.</li></ul>',
         position: 'right'
     },
     {
         element: '#service-div',
         title: 'Services',
-        content: '<p>Select the astronomical service you want to use. There are remote telescope sites listed as well as some smart telescopes.</p> ' +
-                 '<p>The available telescopes will be updated based on your selection.</p> ' +
-                 '<p>The field of view is automatically updated in the target view based on the selected service and telescope.</p>' +
+        content: '<ul><li>Select the astronomical service you want to use.</li>' + 
+                 '<li>There are remote telescope sites listed as well as some smart telescopes.</li>' +
+                 '<li>The available telescopes will be updated based on your selection.</li></ul>' +
                  '<h3>Add Your Own Telescope</h3>' +
-                 '<p>If you have a personal telescope, you can add it using the <strong>Add Telescope</strong> option.</p>' +
-                 '<p>There is a separate tutorial for adding your own telescope.</p>',
+                 '<ul><li>If you have a personal telescope, you can add it using the <strong>Add Telescope</strong> option.</li>' +
+                 '<li>There is a separate tutorial for adding your own telescope.</li></ul>',
         position: 'right'
     },
     {
         element: '#telescope-div',
         title: 'Telescope',
-        content: '<p>Select the telescope you want to use. The available telescopes will be updated based on your service selection.</p>' +
-                 '<p>The field of view is automatically updated in the target view based on the selected telescope.</p>',
+        content: '<ul><li>Select the telescope you want to use.</li>' + 
+                 '<li>The available telescopes will be updated based on your service selection.</li></ul>',
         position: 'right'
     },
     {
         element: '#aladin-div',
         title: 'Aladin viewer',
-        content: '<p>In the Aladin viewer you can see visually the framing of the target.</p>' +
-                 '<p>You can zoom in and out in, and move around in the Aladin viewer using a mouse. There is also a button for full screen view.</p>' +
-                 '<p>To fine tune the framing you can use the Reposition checkbox.</p>',
+        content: '<ul><li>In the Aladin viewer you can see visually the framing of the target.</li>' +
+                 '<li>You can zoom in and out in, and move around in the Aladin viewer using a mouse.</li>' + 
+                 '<li>There is a button for full screen view.</li>' +
+                 '<li>Moon path is always visible, to see it you usually need to zoom out.</li>' +
+                 '<li>To fine tune the framing you can use the Reposition checkbox.</li></ul>',
         position: 'right'
     },
     {
         element: '#aladin-div',
         title: 'Catalog Layers',
-        content: '<p>In the view there is a layers button where you can enable some catalog layers to be visible in the Aladin viewer.</p>' +
-                 '<p>If you have enabled some catalog layers then clicking on objects in the Aladin viewer shows some info about the object at the bottom of the viewer.</p>' +
-                 '<p>If Wiki checkbox is enabled, clicking on an object will also show the Wikipedia page for that object if available.</p>',
+        content: '<ul><li>In the view there is a layers button where you can enable some catalog layers to be visible in the Aladin viewer.</li>' +
+                 '<li>If you have enabled some catalog layers then clicking on objects in the Aladin viewer shows some info about the object at the bottom of the viewer.</li>' +
+                 '<li>If Wiki checkbox is enabled, clicking on an object will also show the Wikipedia page for that object if available.</li></ul>',
         position: 'right'
     },
     {
         element: '#date-div',
         title: 'Date',
-        content: '<p>Target visibility is based on date you give in the date field.</p>' +
-                 '<p>By default the current date is used.</p>' +
-                 '<p>Format for the date is YYYY-MM-DD.</p>',
+        content: '<ul><li>Target visibility is based on date you give in the date field.</li>' +
+                 '<li>By default the current date is used.</li>' +
+                 '<li>Format for the date is YYYY-MM-DD.</li></ul>',
         position: 'left'
     },
     {
         element: '#day-div',
         title: 'Target visibility',
-        content: '<p>Target visibility is based on date you give in the date field.</p>' +
-                 '<p>The line on the graphs shows the visibility and altitude of the target during the night.</p>' +
-                 '<p>Also moon visibility and altitude are shown.</p>',
+        content: '<ul><li>The line on the graph shows the visibility and altitude of the target during the night on the selected date.</li>' +
+                 '<li>Also moon visibility and altitude are shown.</li></ul>',
         position: 'left'
     },
     {
@@ -3240,7 +3242,8 @@ const gettingStartedTutorialSteps = [
     {
         element: '#refresh-div',
         title: 'Refresh',
-        content: '<p>Click the Refresh button to update the view with the latest data. Useful also if you get lost in the Aladin viewer.</p>',
+        content: '<ul><li>Click the Refresh button to update the view with the latest data.</li>' +
+                 '<li>This is needed if you have changed some options, or get lost in the Aladin viewer.</li></ul>',
         position: 'left'
     }
 ];
@@ -3267,17 +3270,16 @@ const filteringTutorialSteps = [
     {
         element: '#time-div',
         title: 'Time',
-        content: '<p>Time filtering lists only catalog objects that are visible at the selected time on a given date.</p>' +
-                 '<p>If no time is given, the filtering is done based on midnight time and also 2 and 4 hours before and after midnight.</p>' +
-                 '<p>Time format is HH:MM</p>',
+        content: '<ul><li>Time filtering lists only catalog objects that are visible at the selected time on a given date.</li>' +
+                 '<li>If no time is given, the filtering is done based on midnight time and also 2 and 4 hours before and after midnight.</li>' +
+                 '<li>Time format is HH:MM</li></ul>',
         position: 'right'
     },
     {
         element: '#moon-div',
         title: 'Moon',
-        content: '<p>Moon filtering lists catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.</p>' + 
-                 '<p>Note that the moon path is always plotted to the sky atlas.</p>' +
-                 '<p>Last two filtering options, Magnitude and Size, are are not really effective since most catalogs do not include that info.</p>',
+        content: '<ul><li>Moon filtering lists catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.</li>' +
+                 '<li>Last two filtering options, Magnitude and Size, are are not really effective since most catalogs do not include that info.</li></ul>',
         position: 'right'
     }
 ];
@@ -3286,21 +3288,23 @@ const mosaicTutorialSteps = [
     {
         element: '#grid-type-div',
         title: 'Mosaic Grid',
-        content: 'When you start to plan mosaic, first you need to switch the view to a mosaic Grid. Mosaic grid will show how the mosaic panels will be arranged.',
+        content: '<ul><li>When you start to plan mosaic, first you need to switch the view to a mosaic Grid.</li>' + 
+                 '<li>Mosaic grid will show how the mosaic panels will be arranged.</li></ul>',
         position: 'right'
     },
     {
         element: '#mosaic-overlap-div',
         title: 'Mosaic Overlap',
-        content: 'Set the overlap percentage for the mosaic panels. A recommended value is to use 20% overlap to ensure good coverage.',
+        content: '<ul><li>Set the overlap percentage for the mosaic panels.</li>' +
+                 '<li>A 20% overlap is recommended to make it easier to stitch the images together later.</li></ul>',
         position: 'right'
     },
     {
         element: '#grid-size-div',
         title: 'Mosaic Grid Size',
-        content: '<p>Set the size of the mosaic grid. This determines how many panels will be used in the mosaic.<p>' +
-                 '<p>For example, a size of 3x2 will create a mosaic with 3 panels in the horizontal direction and 2 panels in the vertical direction.</p>' +
-                 '<p>A table of RA/DEC values for each panel is shown below the Aladin viewer.</p>',
+        content: '<ul><li>Set the size of the mosaic grid. This determines how many panels will be used in the mosaic.</li>' +
+                 '<li>For example, a size of 3x2 will create a mosaic with 3 panels in the horizontal direction and 2 panels in the vertical direction.</li>' +
+                 '<li>A table of RA/DEC values for each panel is shown below the Aladin viewer.</li></ul>',
         position: 'right'
     }
 ];
@@ -3309,18 +3313,19 @@ const addTelescopeTutorialSteps = [
     {
         element: '#add-telescope-div',
         title: 'Add Telescope',
-        content: '<p>When you want to add your own telescope to the Astro Mosaic, check on the "Add Telescope" box.</p>' +
-                 '<p>This will open a new row where you can enter the details of your telescope, including its name, field of view, location, and other parameters.</p>' +
-                 '<p>After entering the details, click on the "Add" button to add the telescope as a new service.</p>',
+        content: '<ul><li>When you want to add your own telescope to the Astro Mosaic, check on the "Add Telescope" box.</li>' +
+                 '<li>This will open a new row where you can enter the details of your telescope, including its name, field of view, location, and other parameters.</li>' +
+                 '<li>After entering the details, click on the "Add" button to add the telescope as a new service.</li></ul>',
         position: 'right'
     },
     {
         element: '#telescope-info-div',
         title: 'Telescope Information',
-        content: '<p>When a new telescope is added to the service, it is not permanently stored anywhere. The next time you start Astro Mosaic you need to enter the information again.</p>' +
+        content: '<ul><li>When a new telescope is added to the service, it is not permanently stored anywhere.</li>' + 
+                 '<li> The next time you start Astro Mosaic you need to enter the information again.</li></ul>' +
                  '<h3>Save the URL</h3>' +
-                 '<p>Using the Info button you can display the current telescope information. The information includes a URL that has the current telescope settings.</p>' +
-                 '<p>You can bookmark that URL to be able to quickly access your telescope settings in the future.</p>',
+                 '<ul><li>Using the Info button you can display the current telescope information. The information includes a URL that has the current telescope settings.</li>' +
+                 '<li>You can bookmark that URL to be able to quickly access your telescope settings in the future.</li></ul>',
         position: 'right'
     }
 ];
@@ -3335,29 +3340,29 @@ const advancedTutorialSteps = [
     {
         element: '#wiki-check-div',
         title: 'Wiki Information',
-        content: '<p>If selected, a Wiki page of the current target is displayed when available.</p>' +
-                 '<p>Click the refresh button to reload the Wiki page.</p>',
+        content: '<ul><li>If selected, a Wiki page of the current target is displayed when available.</li>' +
+                 '<li>Click the refresh button to reload the Wiki page.</li></ul>',
         position: 'right'
     },
     {
         element: '#seeing-check-div',
         title: 'Seeing Conditions',
-        content: '<p>Displays the current seeing conditions for the selected target.</p>' +
-                 '<p>Click the refresh button to reload the seeing conditions.</p>',
+        content: '<ul><li>Displays the current seeing conditions for the selected target.</li>' +
+                 '<li>Click the refresh button to reload the seeing conditions.</li></ul>',
         position: 'right'
     },
     {
         element: '#weather-check-div',
         title: 'Weather Information',
-        content: '<p>Displays the current weather conditions for the selected target.</p>' +
-                 '<p>Click the refresh button to reload the weather information.</p>',
+        content: '<ul><li>Displays the current weather conditions for the selected target.</li>' +
+                 '<li>Click the refresh button to reload the weather information.</li></ul>',
         position: 'right'
     },
     {
         element: '#catalog-panels-div',
         title: 'Catalog Panels',
-        content: '<p>Displays the available catalog panels for the selected target.</p>' +
-                 '<p>Click the refresh button to reload the catalog panels.</p>',
+        content: '<ul><li>Displays the available catalog panels for the selected target.</li>' +
+                 '<li>Click the refresh button to reload the catalog panels.</li></ul>',
         position: 'right'
     },
     {
@@ -3375,14 +3380,14 @@ const advancedTutorialSteps = [
     {
         element: '#planet-div',
         title: 'Planet Information',
-        content: '<p>Select a planet to be viewed in visibility charts and sky atlas.</p>' +
+        content: '<p>Select a planet to be viewed in visibility charts and Aladin viewer.</p>' +
                  '<h3>Planet path</h3>' +
-                 '<p>Planet path is plotted to the sky atlas.</p>' +
-                 '<p>Note that you may need to zoom very far out from the current sky atlas view to see the planet path.</p>' +
-                 '<p>Also, some planets may not be visible at the current date and time.</p>' +
-                 '<p>By checking the planet path you can see if a planet for example crosses some interesting object.</p>' +
+                 '<ul><li>Planet path is plotted to the Aladin viewer.</li>' +
+                 '<li>Note that you may need to zoom very far out from the current Aladin viewer to see the planet path.</li>' +
+                 '<li>Also, some planets may not be visible at the current date and time.</li>' +
+                 '<li>By checking the planet path you can see if a planet for example crosses some interesting object.</li></ul>' +
                  '<h3>Moon path</h3>' +
-                 '<p>Note that the moon path is always plotted to the sky atlas.</p>',
+                 '<ul><li>Note that the moon path is always plotted to the Aladin viewer.</li></ul>',
         position: 'right'
     },
 ];
