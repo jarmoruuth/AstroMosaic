@@ -270,7 +270,7 @@ p {
         </form>
     </div>
     <div id="time-div">
-        <form title="Show only catalog objects that are visible at selected time. Time format is HH:MM." action="javascript:filterTimeChanged()">
+        <form title="Show only catalog objects that are visible at selected time. The time format is HH:MM." action="javascript:filterTimeChanged()">
             Time:
             <input type="text" id="catalogFilterTime" size=5>
         </form>    
@@ -385,7 +385,7 @@ p {
         </form>    
     </div>
     <div id="catalog-panels-div">
-        <form title="If selected, shows catalog targets in a panel view. Click refresh to update view." action="javascript:ViewImage(0)">
+        <form title="If selected, shows catalog targets in a panel view. Click refresh to update the view." action="javascript:ViewImage(0)">
             <input type="checkbox" id="panelsCheckbox">Panels
         </form>    
     </div>
@@ -645,7 +645,7 @@ var hour_ms = 60*60*1000;
 var day_ms = 24*hour_ms;
 
 // Messier catalog is in the source as a default catalog (although
-// not that useful for southern sky). But we need to have some
+// not that useful for the southern sky). But we need to have some
 // catalog in place at startup and loading catalogs may take time.
 var messier_catalog = { 
 "Credits" : "Information retrieved from Sesame",
@@ -1304,7 +1304,7 @@ function init_all_services()
     for (var i = 0; i < all_services.telescope_services.length; i++) {
         for (var j = 0; j < all_services.telescope_services[i].telescopes.length; j++) {
             if (Array.isArray(all_services.telescope_services[i].telescopes[j].horizon_limits)) {
-                // Already array. Check if it is has enough enties. If not, repeat last item.
+                // Already array. Check if it has enough entries. If not, repeat the last item.
                 console.log("init_all_services", "horizon_limits is array");
                 var horizon = { 
                         name: "horizon limits",
@@ -1678,7 +1678,7 @@ function set_url_add_service(url_add_service, clear_old_services)
     }
 }
 
-// Add a new offaxis from url. 
+// Add a new offaxis from the url. 
 // Format is: service_name, telescope_name, fov_x, fov_y, offset, position
 function set_url_add_offaxis(url_add_offaxis, clear_old_services)
 {
@@ -1924,7 +1924,7 @@ function clearStartupInfoText()
     startup_info_text = null;
 }
 
-// Main function to view image. Get parameters
+// Main function to view images. Get parameters
 // and call correct view function
 // Values for oper_
 //      1 - Telescope service changed
@@ -2380,7 +2380,7 @@ function filter_visible_catalog_items(cat, lat, lng)
     var thisfilterdate = new Date(midnight);
     console.log("filter date 1:", thisfilterdate.toUTCString());
     var moonpos = engine_native_resources.moon_position(midnight);
-    // Check moon altitude at given time. If it is below horizon we do not filter with moon.
+    // Check the moon's altitude at a given time. If it is below the horizon we do not filter with the moon.
     var moonalt = engine_native_resources.object_altaz(midnight, moonpos.ra, moonpos.dec, lat, lng).alt;
     moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
     if (moonalt < 0) {
