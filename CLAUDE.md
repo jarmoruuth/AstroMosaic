@@ -4,20 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AstroMosaic is a telescope observation planning tool that visualizes celestial targets and calculates telescope parameters for mosaic observations. It provides dual implementations: a JavaScript web application and a Python backend/CLI engine.
+AstroMosaic is a telescope observation planning tool that visualizes celestial targets and calculates telescope parameters for mosaic observations. 
+It provides a JavaScript web application.
 
 ## Development Commands
 
 No build system is configured. The project runs directly from source files.
-
-**Python:**
-```bash
-# Run the Python example
-python AstroMosaicEngineExample.py
-
-# Syntax check Python engine
-python -m py_compile AstroMosaicEngine.py
-```
 
 **Web Application:**
 - Open `AstroMosaic.html` directly in a browser
@@ -25,24 +17,19 @@ python -m py_compile AstroMosaicEngine.py
 
 ## Architecture
 
-### Dual Engine Design
+### JavaScript Engine
 
-The core astronomy calculations are implemented in parallel:
+**`AstroMosaicEngine.js`** (~2600 lines) is the main calculation engine:
+- Client-side execution for web application
+- Entry point: `StartAstroMosaicViewerEngine()`
+- Uses Aladin Lite v3 for sky atlas visualization
+- Uses Google Charts for visibility graphs
 
-1. **JavaScript Engine** (`AstroMosaicEngine.js`, ~2600 lines)
-   - Client-side execution for web application
-   - Entry point: `StartAstroMosaicViewerEngine()`
-   - Uses Aladin Lite v3 for sky atlas visualization
-   - Uses Google Charts for visibility graphs
-
-2. **Python Engine** (`AstroMosaicEngine.py`, ~320 lines)
-   - `AstroMosaicEngine` class for programmatic use
-   - Dependencies: `ephem`, `requests`
-   - Key methods: `get_day_visibility()`, `get_year_visibility()`, `get_mosaic_coordinates()`
+> **Note:** Python files (`AstroMosaicEngine.py`, `AstroMosaicEngineExample.py`) are outdated and should be ignored.
 
 ### Key Calculations
 
-Both engines provide:
+The JavaScript engine provides:
 - Target coordinate resolution (decimal degrees, HMS/DMS, name resolution via CDS Sesame)
 - Daily visibility (altitude/azimuth over night)
 - Yearly visibility patterns
@@ -68,8 +55,6 @@ Both engines provide:
 |------|---------|
 | `AstroMosaic.html` | Main web application UI |
 | `AstroMosaicEngine.js` | JavaScript calculation engine |
-| `AstroMosaicEngine.py` | Python calculation engine |
-| `AstroMosaicEngineExample.py` | Python usage example |
 | `AstroMosaicEngineExample.html` | JavaScript embedding example |
 | `tutorial-system.js` | Interactive tutorial UI |
 
