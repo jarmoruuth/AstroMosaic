@@ -236,6 +236,7 @@ p {
     <div id="refresh-div">
         <br>
         <button title="Refresh current view." onclick="ViewImage(0)">Refresh</button>
+        <span id="filter-status" style="margin-left:8px; font-size:0.85em;"></span>
     </div>
 </div>
 
@@ -1092,6 +1093,7 @@ console.log(url);
 var current_catalog = null;                 // current visible catalog
 var current_catalog_filtered_list = null;   // filtered list of catalog items
 var catalog_filters_changed = true;
+var filter_status_timer = null;
 var catalogDiv_select = null;
 var catalog_text = null;
 var catalog_date = null;
@@ -2469,6 +2471,12 @@ function moonVectorFromRaDecDeg(raDeg, decDeg)
     };
 }
 
+function is_filtering_enabled() 
+{
+    return catalog_filter_time != null || catalogFilterDegrees != null || catalogFilterMagnitude != null || 
+           catalogFilterTargetSize != null || catalogFilterMoon != null;
+}
+
 // create list filtered by visibility during the night
 function filter_visible_catalog_items(cat, lat, lng) 
 {
@@ -2603,7 +2611,8 @@ function filter_visible_catalog_items(cat, lat, lng)
     if (doSort && fl.length > 1) {
         fl.sort((a, b) => b[3] - a[3]);
     }
-    return { list: fl, filtered };
+
+    return { list: fl, filtered: filtered };
 }
 
 function init_catalog_view_list()
@@ -2617,6 +2626,19 @@ function init_catalog_view_list()
     }
 
     console.log("init_catalog_view_list", current_catalog.name);
+
+    if (is_filtering_enabled()) {
+        console.log("init_catalog_view_list:filtering enabled");
+        var filterStatusEl = document.getElementById("filter-status");
+        if (filter_status_timer != null) {
+            clearTimeout(filter_status_timer);
+            filter_status_timer = null;
+        }
+        filterStatusEl.style.color = "";
+        filterStatusEl.textContent = "Filtering...";
+    } else {
+        console.log("init_catalog_view_list:filtering not enabled");
+    }
 
     wikiReset();
     catalog_index = null;
@@ -2632,6 +2654,14 @@ function init_catalog_view_list()
     if (current_catalog_filtered_list != null) {
 
         console.log("init_catalog_view_list:filtered list");
+
+        if (is_filtering_enabled()) {
+            filterStatusEl.style.color = "green";
+            filterStatusEl.textContent = "Filtering done";
+            filter_status_timer = setTimeout(function() { 
+                                                            filterStatusEl.textContent = ""; 
+                                                        }, 3000);
+        }
 
         catalogDiv_select = create_catalog_select_list('catalogDiv_select', current_catalog_filtered_list.list);
         catalogDiv_select.onchange = function() { 
