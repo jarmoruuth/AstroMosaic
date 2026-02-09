@@ -1120,7 +1120,6 @@ var url_services_json = null;
 var url_view = "all";
 
 var DEG = Math.PI / 180;
-var HOUR_TO_DEG = 15.0;
 
 showHideAddTelescope(); // By default hide add telescope
 
@@ -2370,207 +2369,241 @@ Sample catalog content, targets is the data field from the json.
 
 */
 
-function ensureCatalogCache(cat) {
-  if (cat._cache) return;
-
-  const n = cat.targets.length;
-
-  // Object equatorial unit vectors (from RA/Dec)
-  const x = new Float64Array(n);
-  const y = new Float64Array(n);
-  const z = new Float64Array(n);
-
-  // For filters
-  const bmag = new Float32Array(n);
-  const size = new Float32Array(n);
-  const hasSize = new Uint8Array(n);
-
-  // For moon distance and display
-  const raDeg = new Float64Array(n);
-  const decDeg = new Float64Array(n);
-
-  // Optional: cache display name (saves string concat each filter run)
-  const dispName = new Array(n);
-
-  for (let i = 0; i < n; i++) {
-    const t = cat.targets[i];
-
-    const raD  = t[1] * HOUR_TO_DEG; // hours -> degrees
-    const decD = t[2];
-
-    raDeg[i] = raD;
-    decDeg[i] = decD;
-
-    const a = raD * DEG;
-    const d = decD * DEG;
-
-    const cd = Math.cos(d);
-    x[i] = cd * Math.cos(a);
-    y[i] = cd * Math.sin(a);
-    z[i] = Math.sin(d);
-
-    // magnitude/size
-    bmag[i] = (t[5] === "" || t[5] == null) ? 99.0 : Number(t[5]);
-    if (t.length > 9 && t[9] != null && t[9] !== "") {
-      size[i] = Number(t[9]);
-      hasSize[i] = 1;
-    } else {
-      size[i] = 0;
-      hasSize[i] = 0;
+function ensureCatalogCache(cat) 
+{
+    if (cat._cache) {
+        return;
     }
 
-    // display name string (unchanging)
-    let name = t[0];
-    if (t[7] !== "") name += ", " + t[7];
-    if (t[3] !== "") name += ", " + t[3];
-    dispName[i] = name;
-  }
+    const n = cat.targets.length;
 
-  cat._cache = { x, y, z, raDeg, decDeg, bmag, size, hasSize, dispName };
+    // Object equatorial unit vectors (from RA/Dec)
+    const x = new Float64Array(n);
+    const y = new Float64Array(n);
+    const z = new Float64Array(n);
+
+    // For filters
+    const bmag = new Float32Array(n);
+    const hasMag = new Uint8Array(n);
+    const size = new Float32Array(n);
+    const hasSize = new Uint8Array(n);
+
+    // For moon distance and display
+    const raDeg = new Float64Array(n);
+    const decDeg = new Float64Array(n);
+
+    // Optional: cache display name (saves string concat each filter run)
+    const dispName = new Array(n);
+
+    for (let i = 0; i < n; i++) {
+        const t = cat.targets[i];
+
+        const raD  = t[1] * hoursToDeg; // hours -> degrees
+        const decD = t[2];
+
+        raDeg[i] = raD;
+        decDeg[i] = decD;
+
+        const a = raD * DEG;
+        const d = decD * DEG;
+
+        const cd = Math.cos(d);
+        x[i] = cd * Math.cos(a);
+        y[i] = cd * Math.sin(a);
+        z[i] = Math.sin(d);
+
+        // magnitude/size
+        if (t[5] !== "" && t[5] != null) {
+            bmag[i] = Number(t[5]);
+            hasMag[i] = 1;
+        } else {
+            bmag[i] = 0;
+            hasMag[i] = 0;
+        }
+        if (t.length > 9 && t[9] != null && t[9] !== "") {
+            size[i] = Number(t[9]);
+            hasSize[i] = 1;
+        } else {
+            size[i] = 0;
+            hasSize[i] = 0;
+        }
+
+        // display name string (unchanging)
+        let name = t[0];
+        if (t[7] !== "") {
+            name += ", " + t[7];
+        }
+        if (t[3] !== "") {
+            name += " (" + t[3] + ")";
+        }
+        dispName[i] = name;
+    }
+
+    cat._cache = { x, y, z, raDeg, decDeg, bmag, hasMag, size, hasSize, dispName };
 }
 
-function zenithFromLatLstDeg(latDeg, lstDeg) {
-  const lat = latDeg * DEG;
-  const lst = lstDeg * DEG;
+function zenithFromLatLstDeg(latDeg, lstDeg) 
+{
+    const lat = latDeg * DEG;
+    const lst = lstDeg * DEG;
 
-  const sinLat = Math.sin(lat);
-  const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    const cosLat = Math.cos(lat);
 
-  return {
-    zx: cosLat * Math.cos(lst),
-    zy: cosLat * Math.sin(lst),
-    zz: sinLat
-  };
+    return {
+        zx: cosLat * Math.cos(lst),
+        zy: cosLat * Math.sin(lst),
+        zz: sinLat
+    };
 }
 
-function moonVectorFromRaDecDeg(raDeg, decDeg) {
-  const a = raDeg * DEG;
-  const d = decDeg * DEG;
-  const cd = Math.cos(d);
-  return {
-    mx: cd * Math.cos(a),
-    my: cd * Math.sin(a),
-    mz: Math.sin(d)
-  };
+function moonVectorFromRaDecDeg(raDeg, decDeg) 
+{
+    const a = raDeg * DEG;
+    const d = decDeg * DEG;
+    const cd = Math.cos(d);
+    return {
+        mx: cd * Math.cos(a),
+        my: cd * Math.sin(a),
+        mz: Math.sin(d)
+    };
 }
 
 // create list filtered by visibility during the night
-function filter_visible_catalog_items(cat, lat, lng) {
-  let midnight;
-  let moonFilter = catalogFilterMoon;
-  let filtered = false;
+function filter_visible_catalog_items(cat, lat, lng) 
+{
+    let midnight;
+    let moonFilter = catalogFilterMoon;
+    let filtered = false;
 
-  if (cat == null || cat.targets == null) {
-    console.log("filter_visible_catalog_items:cat == null or cat.targets == null");
-    return { list: [['', '', null, 0]], filtered: false };
-  }
+    if (cat == null || cat.targets == null) {
+        console.log("filter_visible_catalog_items:cat == null or cat.targets == null");
+        return { list: [['', '', null, 0]], filtered: false };
+    }
 
-  ensureCatalogCache(cat);
-  const C = cat._cache;
-  const n = cat.targets.length;
+    ensureCatalogCache(cat);
+    const C = cat._cache;
+    const n = cat.targets.length;
 
-  // ----- pick time(s)
-  if (catalog_filter_time == null) {
-    const midday = viewer_params.UTCdate_ms + day_ms / 2;
-    const suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
-    midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2
-             + viewer_params.timezoneOffset * 60 * 60 * 1000;
-  } else {
-    midnight = viewer_params.UTCdate_ms + catalog_filter_time
-             + viewer_params.timezoneOffset * 60 * 60 * 1000;
-  }
+    // ----- pick time(s)
+    if (catalog_filter_time == null) {
+        const midday = viewer_params.UTCdate_ms + day_ms / 2;
+        const suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
+        midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2
+                   + viewer_params.timezoneOffset * 60 * 60 * 1000;
+    } else {
+        midnight = viewer_params.UTCdate_ms + catalog_filter_time
+                   + viewer_params.timezoneOffset * 60 * 60 * 1000;
+    }
 
-  const times = (catalog_filter_time == null)
-    ? [midnight, midnight + 2*hour_ms, midnight - 2*hour_ms, midnight + 4*hour_ms, midnight - 4*hour_ms]
-    : [midnight];
+    const times = (catalog_filter_time == null)
+                    ? [midnight, midnight + 2*hour_ms, midnight - 2*hour_ms, midnight + 4*hour_ms, midnight - 4*hour_ms]
+                    : [midnight];
 
-  // ----- precompute zenith vectors for each timepoint
-  const zlist = [];
-  for (let k = 0; k < times.length; k++) {
-    const aa = engine_native_resources.object_altitude_init(times[k], lat, lng); // gives LST deg
-    zlist.push(zenithFromLatLstDeg(lat, aa.Lst));
-  }
-
-  // ----- moon setup
-  const moonpos = engine_native_resources.moon_position(midnight); // returns RA/Dec in degrees (your implementation)
-  const moonVec = moonVectorFromRaDecDeg(moonpos.ra, moonpos.dec);
-
-  // Disable moon filter if moon below horizon at ANY of the checked times (matches your logic overall)
-  if (moonFilter != null) {
+    // ----- precompute zenith vectors for each timepoint
+    const zlist = [];
     for (let k = 0; k < times.length; k++) {
-      let moonalt = engine_native_resources.object_altaz(times[k], moonpos.ra, moonpos.dec, lat, lng).alt;
-      moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
-      if (moonalt < 0) { moonFilter = null; break; }
+        const aa = engine_native_resources.object_altitude_init(times[k], lat, lng); // gives LST deg
+        zlist.push(zenithFromLatLstDeg(lat, aa.Lst));
     }
-  }
 
-  // Precompute moon threshold comparison once
-  // keep objects only if moonAngle >= moonFilter  <=>  dot <= cos(moonFilter)
-  const moonDotMax = (moonFilter != null) ? Math.cos(moonFilter * DEG) : null;
+    // ----- moon setup
+    const moonpos = engine_native_resources.moon_position(midnight); // returns RA/Dec in degrees (your implementation)
+    const moonVec = moonVectorFromRaDecDeg(moonpos.ra, moonpos.dec);
 
-  // ----- altitude threshold (sin compare)
-  const useAlt = (catalogFilterDegrees != null);
-  const sinAlt0 = useAlt ? Math.sin(catalogFilterDegrees * DEG) : null;
-  const doSort = useAlt && document.getElementById("catalogSortCheckbox").checked;
-
-  const fl = [];
-  fl.push(['', '']);
-
-  for (let i = 0; i < n; i++) {
-    // altitude-anytime test via dot with zenith
-    let passesAlt = true;
-    let altForSort = 0;
-
-    if (useAlt) {
-      passesAlt = false;
-      const xi = C.x[i], yi = C.y[i], zi = C.z[i];
-
-      for (let k = 0; k < zlist.length; k++) {
-        const zz = zlist[k];
-        const sinAlt = xi*zz.zx + yi*zz.zy + zi*zz.zz;
-
-        if (sinAlt >= sinAlt0) {
-          passesAlt = true;
-
-          // only compute degrees altitude if sorting/display needs it
-          if (doSort) {
-            const clamped = Math.max(-1, Math.min(1, sinAlt));
-            altForSort = Math.asin(clamped) / DEG;
-          }
-          break;
+    // Disable moon filter if moon below horizon at ANY of the checked times (matches your logic overall)
+    if (moonFilter != null) {
+        for (let k = 0; k < times.length; k++) {
+            let moonalt = engine_native_resources.object_altaz(times[k], moonpos.ra, moonpos.dec, lat, lng).alt;
+            moonalt = engine_native_resources.moon_topocentric_correction(moonalt);
+            if (moonalt < 0) { 
+                moonFilter = null; 
+                break; 
+            }
         }
-      }
-      if (!passesAlt) { filtered = true; continue; }
     }
 
-    // moon distance filter via dot product (no acos)
-    if (moonDotMax != null) {
-      const dot = C.x[i]*moonVec.mx + C.y[i]*moonVec.my + C.z[i]*moonVec.mz;
-      if (dot > moonDotMax) { filtered = true; continue; } // too close to moon
+    // Precompute moon threshold comparison once
+    // keep objects only if moonAngle >= moonFilter  <=>  dot <= cos(moonFilter)
+    const moonDotMax = (moonFilter != null) ? Math.cos(moonFilter * DEG) : null;
+
+    // ----- altitude threshold (sin compare)
+    const useAlt = (catalogFilterDegrees != null);
+    const sinAlt0 = useAlt ? Math.sin(catalogFilterDegrees * DEG) : null;
+    const doSort = useAlt && document.getElementById("catalogSortCheckbox").checked;
+
+    const fl = [];
+    fl.push(['', '']);
+
+    for (let i = 0; i < n; i++) {
+        // altitude-anytime test via dot with zenith
+        let passesAlt = true;
+        let altForSort = 0;
+
+        if (useAlt) {
+            passesAlt = false;
+            const xi = C.x[i], yi = C.y[i], zi = C.z[i];
+
+            for (let k = 0; k < zlist.length; k++) {
+                const zz = zlist[k];
+                const sinAlt = xi*zz.zx + yi*zz.zy + zi*zz.zz;
+
+                if (sinAlt >= sinAlt0) {
+                    passesAlt = true;
+
+                    // only compute degrees altitude if sorting/display needs it
+                    if (doSort) {
+                        const clamped = Math.max(-1, Math.min(1, sinAlt));
+                        altForSort = Math.asin(clamped) / DEG;
+                    }
+                    break;
+                }
+            }
+            if (!passesAlt) { 
+                filtered = true; 
+                continue; 
+            }
+        }
+
+        // moon distance filter via dot product (no acos)
+        if (moonDotMax != null) {
+            const dot = C.x[i]*moonVec.mx + C.y[i]*moonVec.my + C.z[i]*moonVec.mz;
+            if (dot > moonDotMax) { 
+                filtered = true; 
+                continue; 
+            }
+        }
+
+        // magnitude filter (skip objects without magnitude data)
+        if (catalogFilterMagnitude != null) {
+            if (!C.hasMag[i] || C.bmag[i] > catalogFilterMagnitude) { 
+                filtered = true; 
+                continue; 
+            }
+        }
+
+        // size filter (skip objects without size data)
+        if (catalogFilterTargetSize != null) {
+            if (!C.hasSize[i] || C.size[i] < catalogFilterTargetSize) { 
+                filtered = true; 
+                continue; 
+            }
+        }
+
+        // Build output row (do strings only now)
+        const t = cat.targets[i];
+        fl.push([
+            t[1].toFixed(5) + " " + t[2].toFixed(5),
+            C.dispName[i],
+            t,
+            altForSort
+        ]);
     }
 
-    // magnitude filter
-    if (catalogFilterMagnitude != null) {
-      if (C.bmag[i] > catalogFilterMagnitude) { filtered = true; continue; }
+    if (doSort && fl.length > 1) {
+        fl.sort((a, b) => b[3] - a[3]);
     }
-
-    // size filter
-    if (catalogFilterTargetSize != null) {
-      if (!(C.hasSize[i] && C.size[i] >= catalogFilterTargetSize)) { filtered = true; continue; }
-    }
-
-    // Build output row (do strings only now)
-    const t = cat.targets[i];
-    fl.push([
-      t[1].toFixed(5) + " " + t[2].toFixed(5),
-      C.dispName[i],
-      t,
-      altForSort
-    ]);
-  }
-
-  if (doSort && fl.length > 1) fl.sort((a, b) => b[3] - a[3]);
-  return { list: fl, filtered };
+    return { list: fl, filtered };
 }
 
 function init_catalog_view_list()
