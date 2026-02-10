@@ -236,7 +236,7 @@ p {
     <div id="refresh-div">
         <br>
         <button title="Refresh current view." onclick="ViewImage(0)">Refresh</button>
-        <span id="filter-status" style="margin-left:8px; font-size:0.85em;"></span>
+        <span id="processing-status" style="margin-left:8px; font-size:0.85em;"></span>
     </div>
 </div>
 
@@ -1093,7 +1093,8 @@ console.log(url);
 var current_catalog = null;                 // current visible catalog
 var current_catalog_filtered_list = null;   // filtered list of catalog items
 var catalog_filters_changed = true;
-var filter_status_timer = null;
+var processing_status_timer = null;
+var processing_status_start_time = 0;
 var catalogDiv_select = null;
 var catalog_text = null;
 var catalog_date = null;
@@ -1963,6 +1964,7 @@ function ViewImage(oper)
     checkFilterChanged();
     checkFilterTimeChanged();
     checkFilterMagnitudeChanged();
+    checkFilterTargetSizeChanged();
 
     //console.log("curdate", curdate);
     viewer_params.UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
@@ -1974,7 +1976,6 @@ function ViewImage(oper)
         catalog_date = viewer_params.UTCdate_ms;
         catalog_reset();
     }
-
 
     if (oper == 1) {
         // Telescope service changed
@@ -2160,6 +2161,8 @@ function ViewImage(oper)
 
     engine_data = null;
 
+    processing_status_start("AstroMosaicViewerEngine processing...");
+
     engine_data = StartAstroMosaicViewerEngine(
                     url_view, 
                     image_target, 
@@ -2170,6 +2173,7 @@ function ViewImage(oper)
                     engine_native_resources,
                     json_image_target);
 
+    processing_status_stop("AstroMosaicViewerEngine completed");
     console.log('returned from StartAstroMosaicViewerEngine');
 
     if (url_view == "all" || url_view == "weather" || url_view == "seeing") {
@@ -2183,7 +2187,6 @@ function ViewImage(oper)
             clearStartupInfoText();
         }
     }
-
 }
 
 function addTabRow(tab, v1, v2, v3)
@@ -2544,6 +2547,7 @@ function filter_visible_catalog_items(cat, lat, lng)
     fl.push(['', '']);
 
     for (let i = 0; i < n; i++) {
+
         // altitude-anytime test via dot with zenith
         let passesAlt = true;
         let altForSort = 0;
@@ -2615,6 +2619,48 @@ function filter_visible_catalog_items(cat, lat, lng)
     return { list: fl, filtered: filtered };
 }
 
+function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+function processing_status_start(txt)
+{
+        // Stop possible old timer
+        if (processing_status_timer != null) {
+            clearTimeout(processing_status_timer);
+            processing_status_timer = null;
+        }
+        // Set status text immediately
+        var processingStatusEl = document.getElementById("processing-status");
+        processingStatusEl.style.color = "";
+        processingStatusEl.textContent = txt;
+        processing_status_start_time = performance.now();
+        // Force the browser to paint the text before blocking work begins
+        processingStatusEl.offsetHeight;
+        console.log("*** processing_status_start:started with text", txt);
+}
+
+function processing_status_stop(txt)
+{
+        // Stop possible old timer
+        if (processing_status_timer != null) {
+            clearTimeout(processing_status_timer);
+            processing_status_timer = null;
+        }
+        var processingStatusEl = document.getElementById("processing-status");
+        var elapsed = performance.now() - processing_status_start_time;
+        if (elapsed >= 100) {
+            processingStatusEl.style.color = "green";
+            processingStatusEl.textContent = txt;
+            processing_status_timer = setTimeout(function() {
+                                                                processingStatusEl.textContent = "";
+                                                            }, 3000);
+        } else {
+            processingStatusEl.textContent = "";
+        }
+        console.log("*** processing_status_stop:stopped with text", txt, "elapsed", elapsed);
+}
+
 function init_catalog_view_list()
 {
     if (url_view != "all") {
@@ -2629,13 +2675,7 @@ function init_catalog_view_list()
 
     if (is_filtering_enabled()) {
         console.log("init_catalog_view_list:filtering enabled");
-        var filterStatusEl = document.getElementById("filter-status");
-        if (filter_status_timer != null) {
-            clearTimeout(filter_status_timer);
-            filter_status_timer = null;
-        }
-        filterStatusEl.style.color = "";
-        filterStatusEl.textContent = "Filtering...";
+        processing_status_start("Filtering...");
     } else {
         console.log("init_catalog_view_list:filtering not enabled");
     }
@@ -2656,11 +2696,7 @@ function init_catalog_view_list()
         console.log("init_catalog_view_list:filtered list");
 
         if (is_filtering_enabled()) {
-            filterStatusEl.style.color = "green";
-            filterStatusEl.textContent = "Filtering done";
-            filter_status_timer = setTimeout(function() { 
-                                                            filterStatusEl.textContent = ""; 
-                                                        }, 3000);
+            processing_status_stop("Filtering done");
         }
 
         catalogDiv_select = create_catalog_select_list('catalogDiv_select', current_catalog_filtered_list.list);

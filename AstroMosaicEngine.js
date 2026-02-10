@@ -1960,6 +1960,7 @@ function StartAstroMosaicViewerEngine(
 
     function EngineInitAladin(aladin_fov, aladin_target)
     {
+        var start_time = performance.now();
         console.log('EngineInitAladin', aladin_target, engine_panels.aladin_panel, engine_view_type);
         var aladin = null;
         var layers;
@@ -2027,6 +2028,7 @@ function StartAstroMosaicViewerEngine(
               }
           });
         }
+        console.log("*** EngineInitAladin", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
         return aladin;
     }
 
@@ -2054,6 +2056,7 @@ function StartAstroMosaicViewerEngine(
 
     function EngineViewGrid(reposition)
     {
+        var start_time = performance.now();
         var grid_size_x;
         var grid_size_y;
 
@@ -2218,6 +2221,7 @@ function StartAstroMosaicViewerEngine(
         }
         if (engine_view_type == "all") {
             /* Add moon and optionally planet path to the Aladin view */
+            var start_time = performance.now();
             var midday = engine_params.UTCdate_ms + day_ms/2;
             var interval = 60*60*1000; // 60 minutes
             var draw_full_day = 1;  // if 0 draw only during astronomical twilight
@@ -2353,8 +2357,10 @@ function StartAstroMosaicViewerEngine(
                     cat.addSources(planetsources);
                 }
             }
+            console.log("*** EngineViewGrid, moon and planet paths", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
         }
         aladin_view_ready = true; 
+        console.log("*** EngineViewGrid", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
     }
 
     function EngineViewGridFromList(coordinates)
