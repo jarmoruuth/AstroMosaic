@@ -324,19 +324,19 @@ p {
             </select>
         </form>
     </div>
-    <div>
+    <div id ="magnitude-div">
         <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have the magnitude info available." action="javascript:filterMagnitudeChanged()">
             Magnitude:
             <input type="text" id="catalogFilterMagnitude" size=3>
         </form>    
     </div>
-    <div>
+    <div id ="size-div">
         <form title="Show only catalog objects that are larger than the selected size in arcminutes. NOTE! Some objects do not have the size info available." action="javascript:filterTargetSizeChanged()">
             Size:
             <input type="text" id="catalogFilterTargetSize" size=3>
         </form>
     </div>
-    <div>
+    <div id="type-div">
         <form title="Show only catalog objects whose type contains the entered text. The match is case-insensitive and partial." action="javascript:filterTypeChanged()">
             Type:
             <input type="text" id="catalogFilterType" size=8>
@@ -3564,11 +3564,32 @@ const filteringTutorialSteps = [
     {
         element: '#moon-div',
         title: 'Moon',
-        content: '<ul><li>Moon filtering lists catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.</li>' +
-                 '<li>Last two filtering options, Magnitude and Size, are are not really effective since most catalogs do not include that info.</li></ul>',
-        position: 'right'
+        content: '<p>Moon filtering lists catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.</p>',
+        position: 'left'
+    },
+    {
+        element: '#magnitude-div',
+        title: 'Magnitude',
+        content: '<ul><li>Magnitude filtering lists catalog objects that are brighter than selected magnitude.</li>' +
+                 '<li>Note that most catalogs do not include magnitude information for all objects.</li>' +
+                 '<li>If magnitude information is not available for an object, it will not be included in the results.</li></ul>',
+        position: 'left'
+    },
+    {
+        element: '#size-div',
+        title: 'Size',
+        content: '<ul><li>Size filtering lists catalog objects that are larger than selected size in arcminutes.</li>' +
+                 '<li>Note that most catalogs do not include size information for all objects.</li>' +
+                 '<li>If size information is not available for an object, it will not be included in the results.</li></ul>',
+        position: 'left'
+    },
+    {
+        element: '#type-div',
+        title: 'Type',
+        content: '<p>Type filtering lists catalog objects that have the given type. If the type includes the given text, such as "Galaxy", "Nebula", "cluster", then it will be included in the results.</p>',
+        position: 'left'
     }
-];
+    ];
 
 const mosaicTutorialSteps = [
     {
