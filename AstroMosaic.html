@@ -297,7 +297,13 @@ p {
         <form title="Show only catalog objects that are larger than the selected size in arcminutes. NOTE! Some objects do not have the size info available." action="javascript:filterTargetSizeChanged()">
             Size:
             <input type="text" id="catalogFilterTargetSize" size=3>
-        </form>    
+        </form>
+    </div>
+    <div>
+        <form title="Show only catalog objects whose type contains the entered text. The match is case-insensitive and partial." action="javascript:filterTypeChanged()">
+            Type:
+            <input type="text" id="catalogFilterType" size=8>
+        </form>
     </div>
 </div>
 
@@ -1103,6 +1109,7 @@ var catalogFilterDegrees = null;
 var catalogFilterMoon = null;
 var catalogFilterMagnitude = null;
 var catalogFilterTargetSize = null;
+var catalogFilterType = null;
 var catalog_index = null;
 
 var wikiChecked = false;
@@ -1965,6 +1972,7 @@ function ViewImage(oper)
     checkFilterTimeChanged();
     checkFilterMagnitudeChanged();
     checkFilterTargetSizeChanged();
+    checkFilterTypeChanged();
 
     //console.log("curdate", curdate);
     viewer_params.UTCdate_ms = Date.UTC(parseInt(view_date.substr(0, 4)), parseInt(view_date.substr(5, 2))-1, 
@@ -2397,6 +2405,9 @@ function ensureCatalogCache(cat)
     const raDeg = new Float64Array(n);
     const decDeg = new Float64Array(n);
 
+    // Type strings for type filter (lowercased for case-insensitive matching)
+    const typeLC = new Array(n);
+
     // Optional: cache display name (saves string concat each filter run)
     const dispName = new Array(n);
 
@@ -2433,6 +2444,9 @@ function ensureCatalogCache(cat)
             hasSize[i] = 0;
         }
 
+        // type (lowercased for filter matching)
+        typeLC[i] = (t[3] !== "" && t[3] != null) ? t[3].toLowerCase() : "";
+
         // display name string (unchanging)
         let name = t[0];
         if (t[7] !== "") {
@@ -2444,7 +2458,7 @@ function ensureCatalogCache(cat)
         dispName[i] = name;
     }
 
-    cat._cache = { x, y, z, raDeg, decDeg, bmag, hasMag, size, hasSize, dispName };
+    cat._cache = { x, y, z, raDeg, decDeg, bmag, hasMag, size, hasSize, typeLC, dispName };
 }
 
 function zenithFromLatLstDeg(latDeg, lstDeg) 
@@ -2476,8 +2490,8 @@ function moonVectorFromRaDecDeg(raDeg, decDeg)
 
 function is_filtering_enabled() 
 {
-    return catalog_filter_time != null || catalogFilterDegrees != null || catalogFilterMagnitude != null || 
-           catalogFilterTargetSize != null || catalogFilterMoon != null;
+    return catalog_filter_time != null || catalogFilterDegrees != null || catalogFilterMagnitude != null ||
+           catalogFilterTargetSize != null || catalogFilterMoon != null || catalogFilterType != null;
 }
 
 // create list filtered by visibility during the night
@@ -2596,9 +2610,17 @@ function filter_visible_catalog_items(cat, lat, lng)
 
         // size filter (skip objects without size data)
         if (catalogFilterTargetSize != null) {
-            if (!C.hasSize[i] || C.size[i] < catalogFilterTargetSize) { 
-                filtered = true; 
-                continue; 
+            if (!C.hasSize[i] || C.size[i] < catalogFilterTargetSize) {
+                filtered = true;
+                continue;
+            }
+        }
+
+        // type filter (partial, case-insensitive match)
+        if (catalogFilterType != null) {
+            if (C.typeLC[i] === "" || C.typeLC[i].indexOf(catalogFilterType) === -1) {
+                filtered = true;
+                continue;
             }
         }
 
@@ -2887,6 +2909,36 @@ function filterTargetSizeChanged()
 {
     console.log("filterTargetSizeChanged");
     if (checkFilterTargetSizeChanged()) {
+        ViewImage(0);
+    }
+}
+
+function checkFilterTypeChanged()
+{
+    if (url_view != "all") {
+        return;
+    }
+    var newvalue_str = document.getElementById("catalogFilterType").value.trim();
+    console.log("checkFilterTypeChanged, type value", newvalue_str);
+    if (newvalue_str == '') {
+        var newvalue = null;
+    } else {
+        var newvalue = newvalue_str.toLowerCase();
+    }
+    if (catalogFilterType != newvalue) {
+        console.log("checkFilterTypeChanged, type changed, reset catalog view");
+        catalogFilterType = newvalue;
+        catalog_reset();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function filterTypeChanged()
+{
+    console.log("filterTypeChanged");
+    if (checkFilterTypeChanged()) {
         ViewImage(0);
     }
 }
