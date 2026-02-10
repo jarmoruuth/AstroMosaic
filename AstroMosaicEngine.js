@@ -270,10 +270,15 @@ var planets = [
     }
 ];
 
+// Persistent Aladin instance - reused across calls to avoid expensive re-creation
+var _persistent_aladin = null;
+var _persistent_aladin_panel = null;
+var _aladin_event_context = null;
+
 /*************************************************************************
  *
  *      StartAstroMosaicViewerEngine
- * 
+ *
  * Interface for the native viewer.
  *
  * Parameters:
@@ -1973,12 +1978,55 @@ function StartAstroMosaicViewerEngine(
             fullscreen = false;
         }
         if (A) {
-            document.getElementById(engine_panels.aladin_panel).innerHTML = "";
-            aladin = A.aladin('#'+engine_panels.aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
-                            showReticle:false, showZoomControl:false, showFullscreenControl:fullscreen, 
-                            showLayersControl:layers, showGotoControl:false, 
-                            showControl: false, cooFrame: "J2000", showFrame: false,
-                            showSimbadPointerControl: true });
+            if (_persistent_aladin && _persistent_aladin_panel === engine_panels.aladin_panel) {
+                // Reuse existing Aladin instance - just update target, fov and layers
+                console.log('EngineInitAladin, reusing existing instance');
+                aladin = _persistent_aladin;
+                aladin.removeLayers();
+                var target_radec = get_ra_dec(aladin_target);
+                if (target_radec.length == 2) {
+                    aladin.gotoRaDec(target_radec[0], target_radec[1]);
+                }
+                aladin.setFov(aladin_fov);
+            } else {
+                // Create new Aladin instance
+                console.log('EngineInitAladin, creating new instance');
+                document.getElementById(engine_panels.aladin_panel).innerHTML = "";
+                aladin = A.aladin('#'+engine_panels.aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
+                                showReticle:false, showZoomControl:false, showFullscreenControl:fullscreen,
+                                showLayersControl:layers, showGotoControl:false,
+                                showControl: false, cooFrame: "J2000", showFrame: false,
+                                showSimbadPointerControl: true });
+                _persistent_aladin = aladin;
+                _persistent_aladin_panel = engine_panels.aladin_panel;
+
+                // Set up delegating event handlers once on creation
+                if (engine_view_type == "all") {
+                    console.log('EngineInitAladin, set objectClicked');
+                    _aladin_event_context = {};
+                    aladin.on('objectClicked', function(object) {
+                        if (object) {
+                            console.log('aladin objectClicked, show object');
+                            object.select();
+                            if (_aladin_event_context.objectClicked) {
+                                _aladin_event_context.objectClicked(object);
+                            }
+                        } else {
+                            console.log('aladin objectClicked, no object');
+                        }
+                    });
+                    aladin.on('objectHovered', function(object) {
+                        if (_aladin_event_context.objectHovered) {
+                            _aladin_event_context.objectHovered(object);
+                        }
+                    });
+                    aladin.on('positionChanged', function(pos) {
+                        if (_aladin_event_context.positionChanged) {
+                            _aladin_event_context.positionChanged(pos);
+                        }
+                    });
+                }
+            }
         } else {
             document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
         }
@@ -1989,44 +2037,36 @@ function StartAstroMosaicViewerEngine(
         aladin_position = getAladinPosition(aladin);
         console.log('EngineInitAladin', aladin_position);
 
-        // define function triggered when an object is clicked
+        // Update event handler context to reference current closure variables
         if (aladin && engine_view_type == "all") {
-            console.log('EngineInitAladin, set objectClicked');
-            aladin.on('objectClicked', function(object) {
-                if (object) {
-                    console.log('aladin objectClicked, show object');
-                    object.select();
-                    engine_native_resources.aladin_object_clicked(object.data);
-                } else {
-                    console.log('aladin objectClicked, no object');
-                }
-            });
-            aladin.on('objectHovered', function(object) {
+            if (!_aladin_event_context) {
+                _aladin_event_context = {};
+            }
+            _aladin_event_context.objectClicked = function(object) {
+                engine_native_resources.aladin_object_clicked(object.data);
+            };
+            _aladin_event_context.objectHovered = function(object) {
                 if (object && object.data) {
                     engine_native_resources.aladin_object_hovered(object.data);
                 }
-            });            // Update on user move of view
-            aladin.on('positionChanged', function(pos) {
-              if (pos) {
-                  //console.log('View moved to ' + pos.ra*degToHours + ' ' + pos.dec);
-                  var tempcoords = (pos.ra*degToHours).toFixed(5) + " " + (pos.dec).toFixed(5);
-                  if (engine_params.isRepositionModeFunc != null
-                        && engine_params.isRepositionModeFunc()
-                        && tempcoords != aladin_position
-                        && aladin_view_ready)
-                    {
-                        aladin_position = tempcoords;
-                        image_target = tempcoords;
-                        aladin_view_ready = false;
-                        get_image_target_ra_dec();
-                        EngineViewGrid(true);
-                        engine_params.repositionTargetFunc(image_target);
-                  }
-              }
-              else {
-                //not sure if there is a fail condition here
-              }
-          });
+            };
+            _aladin_event_context.positionChanged = function(pos) {
+                if (pos) {
+                    var tempcoords = (pos.ra*degToHours).toFixed(5) + " " + (pos.dec).toFixed(5);
+                    if (engine_params.isRepositionModeFunc != null
+                          && engine_params.isRepositionModeFunc()
+                          && tempcoords != aladin_position
+                          && aladin_view_ready)
+                      {
+                          aladin_position = tempcoords;
+                          image_target = tempcoords;
+                          aladin_view_ready = false;
+                          get_image_target_ra_dec();
+                          EngineViewGrid(true);
+                          engine_params.repositionTargetFunc(image_target);
+                    }
+                }
+            };
         }
         console.log("*** EngineInitAladin", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
         return aladin;
