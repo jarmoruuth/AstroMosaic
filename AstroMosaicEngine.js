@@ -2066,9 +2066,15 @@ function StartAstroMosaicViewerEngine(
                           aladin_position = tempcoords;
                           image_target = tempcoords;
                           aladin_view_ready = false;
-                          get_image_target_ra_dec();
-                          EngineViewGrid(true);
-                          engine_params.repositionTargetFunc(image_target);
+                          try {
+                              get_image_target_ra_dec();
+                              EngineViewGrid(true);
+                              engine_params.repositionTargetFunc(image_target);
+                          } catch (e) {
+                              console.log('positionChanged error', e);
+                          } finally {
+                              aladin_view_ready = true;
+                          }
                     }
                 }
             };
@@ -2230,7 +2236,9 @@ function StartAstroMosaicViewerEngine(
         }
         if (grid_type == "mosaic") {
             if (engine_panels.aladin_panel_text) {
-                document.getElementById(engine_panels.aladin_panel_text).innerHTML = panel_radec[1][1];
+                var center_x = Math.floor(grid_size_x / 2);
+                var center_y = Math.floor(grid_size_y / 2);
+                document.getElementById(engine_panels.aladin_panel_text).innerHTML = panel_radec[center_x][center_y];
                 var tab = document.createElement("TABLE");
                 tab.style.width = "100%";
                 tab.style.borderCollapse="collapse";
@@ -2264,7 +2272,7 @@ function StartAstroMosaicViewerEngine(
                 document.getElementById(engine_panels.aladin_panel_text).innerHTML = engine_params.astro_mosaic_link;
             }
         }
-        if (engine_view_type == "all") {
+        if (engine_view_type == "all" && !reposition) {
             /* Add moon and optionally planet path to the Aladin view */
             var start_time = performance.now();
             var midday = engine_params.UTCdate_ms + day_ms/2;
