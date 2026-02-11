@@ -273,6 +273,7 @@ var planets = [
 // Persistent Aladin instance - reused across calls to avoid expensive re-creation
 var _persistent_aladin = null;
 var _persistent_aladin_panel = null;
+var _persistent_aladin_el = null;
 var _aladin_event_context = null;
 
 /*************************************************************************
@@ -1978,7 +1979,10 @@ function StartAstroMosaicViewerEngine(
             fullscreen = false;
         }
         if (A) {
-            if (_persistent_aladin && _persistent_aladin_panel === engine_panels.aladin_panel) {
+            // Check if the DOM element was destroyed and recreated (e.g. switching from panels view back to fov)
+            var aladin_el = document.getElementById(engine_panels.aladin_panel);
+            var dom_still_valid = _persistent_aladin_el && _persistent_aladin_el.isConnected && _persistent_aladin_el === aladin_el;
+            if (_persistent_aladin && _persistent_aladin_panel === engine_panels.aladin_panel && dom_still_valid) {
                 // Reuse existing Aladin instance - just update target, fov and layers
                 console.log('EngineInitAladin, reusing existing instance');
                 aladin = _persistent_aladin;
@@ -1999,6 +2003,7 @@ function StartAstroMosaicViewerEngine(
                                 showSimbadPointerControl: true });
                 _persistent_aladin = aladin;
                 _persistent_aladin_panel = engine_panels.aladin_panel;
+                _persistent_aladin_el = document.getElementById(engine_panels.aladin_panel);
 
                 // Set up delegating event handlers once on creation
                 if (engine_view_type == "all") {
