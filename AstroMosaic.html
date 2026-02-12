@@ -519,12 +519,13 @@ var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.h
 
 var version_number = "1.84";
 var startup_image = "M84";
-var startup_info_text = "v" + version_number + " Performance updates, type filtering."
+var startup_info_text = "v" + version_number + " Performance updates, type filtering, Caldwell catalog."
 
 var version_text = 
     "Version 1.84\n"+
     "- Performance updates\n" +
     "- Filtering by type\n" +
+    "- Caldwell catalog\n" +
     "Version 1.83\n"+
     "- Added Seestar S30 Pro\n" +
     "Version 1.82\n"+
@@ -817,6 +818,7 @@ var catalogs_home = "https://ruuth.xyz/";
 
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
+    { name: "Caldwell", targets: null, url: catalogs_home + "Caldwell.json",  source: "Wikipedia", AladinCatalog: null, color: '#29a329' },
     { name: "NGC", targets: null, url: catalogs_home + "OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "IC", targets: null, url: catalogs_home + "OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "Sharpless", targets: null, url: catalogs_home + "Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
