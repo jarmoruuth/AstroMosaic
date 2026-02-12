@@ -308,9 +308,9 @@ p {
         </form>
     </div>
     <div id="time-div">
-        <form title="Show only catalog objects that are visible at selected time. The time format is HH:MM." action="javascript:filterTimeChanged()">
+        <form title="Show only catalog objects that are visible at selected time. The time format is HH:MM. Multiple times can be given separated by comma like HH:MM,HH:MM. When multiple times are given all times must match the altitude filter." action="javascript:filterTimeChanged()">
             Time:
-            <input type="text" id="catalogFilterTime" size=5>
+            <input type="text" id="catalogFilterTime" size=14>
         </form>    
     </div>
     <div id="moon-div">
@@ -2553,19 +2553,24 @@ function filter_visible_catalog_items(cat, lat, lng)
     const n = cat.targets.length;
 
     // ----- pick time(s)
+    // catalog_filter_time is null (no filter), or an array of ms-from-midnight values
+    let times;
+    let allTimesMustMatch = false;
     if (catalog_filter_time == null) {
         const midday = viewer_params.UTCdate_ms + day_ms / 2;
         const suntimes = engine_native_resources.sun_rise_set(midday, lat, lng, 0);
         midnight = suntimes.sunset + (suntimes.sunrise - suntimes.sunset) / 2
                    + viewer_params.timezoneOffset * 60 * 60 * 1000;
+        times = [midnight, midnight + 2*hour_ms, midnight - 2*hour_ms, midnight + 4*hour_ms, midnight - 4*hour_ms];
     } else {
-        midnight = viewer_params.UTCdate_ms + catalog_filter_time
-                   + viewer_params.timezoneOffset * 60 * 60 * 1000;
+        times = [];
+        for (let ti = 0; ti < catalog_filter_time.length; ti++) {
+            times.push(viewer_params.UTCdate_ms + catalog_filter_time[ti]
+                       + viewer_params.timezoneOffset * 60 * 60 * 1000);
+        }
+        midnight = times[0];
+        allTimesMustMatch = catalog_filter_time.length > 1;
     }
-
-    const times = (catalog_filter_time == null)
-                    ? [midnight, midnight + 2*hour_ms, midnight - 2*hour_ms, midnight + 4*hour_ms, midnight - 4*hour_ms]
-                    : [midnight];
 
     // ----- precompute zenith vectors for each timepoint
     const zlist = [];
@@ -2609,27 +2614,46 @@ function filter_visible_catalog_items(cat, lat, lng)
         let altForSort = 0;
 
         if (useAlt) {
-            passesAlt = false;
             const xi = C.x[i], yi = C.y[i], zi = C.z[i];
 
-            for (let k = 0; k < zlist.length; k++) {
-                const zz = zlist[k];
-                const sinAlt = xi*zz.zx + yi*zz.zy + zi*zz.zz;
-
-                if (sinAlt >= sinAlt0) {
-                    passesAlt = true;
-
-                    // only compute degrees altitude if sorting/display needs it
+            if (allTimesMustMatch) {
+                // all specified times must meet the altitude threshold
+                passesAlt = true;
+                for (let k = 0; k < zlist.length; k++) {
+                    const zz = zlist[k];
+                    const sinAlt = xi*zz.zx + yi*zz.zy + zi*zz.zz;
+                    if (sinAlt < sinAlt0) {
+                        passesAlt = false;
+                        break;
+                    }
                     if (doSort) {
                         const clamped = Math.max(-1, Math.min(1, sinAlt));
-                        altForSort = Math.asin(clamped) / DEG;
+                        const alt = Math.asin(clamped) / DEG;
+                        if (alt > altForSort) altForSort = alt;
                     }
-                    break;
+                }
+            } else {
+                // any time matching is enough (single time or no-filter spread)
+                passesAlt = false;
+                for (let k = 0; k < zlist.length; k++) {
+                    const zz = zlist[k];
+                    const sinAlt = xi*zz.zx + yi*zz.zy + zi*zz.zz;
+
+                    if (sinAlt >= sinAlt0) {
+                        passesAlt = true;
+
+                        // only compute degrees altitude if sorting/display needs it
+                        if (doSort) {
+                            const clamped = Math.max(-1, Math.min(1, sinAlt));
+                            altForSort = Math.asin(clamped) / DEG;
+                        }
+                        break;
+                    }
                 }
             }
-            if (!passesAlt) { 
-                filtered = true; 
-                continue; 
+            if (!passesAlt) {
+                filtered = true;
+                continue;
             }
         }
 
@@ -2850,34 +2874,49 @@ function filterChanged()
     }
 }
 
+function parseFilterTime(str)
+{
+    var hhmm = str.split(':');
+    if (hhmm.length != 2) {
+        return null;
+    }
+    var h = parseInt(hhmm[0]);
+    var m = parseInt(hhmm[1]);
+    if (isNaN(h) || isNaN(m)) {
+        return null;
+    }
+    return (h * 60 * 60 + m * 60) * 1000;
+}
+
 function checkFilterTimeChanged()
 {
     if (url_view != "all") {
         return;
     }
-    var newvalue = document.getElementById("catalogFilterTime").value;
-    var UTCtime_ms;
+    var newvalue = document.getElementById("catalogFilterTime").value.trim();
+    var newFilterTime;
     console.log("checkFilterTimeChanged, time value", newvalue);
     if (newvalue == '') {
-        UTCtime_ms = null;
+        newFilterTime = null;
         console.log("checkFilterTimeChanged, no time given");
     } else {
-        var hhmm = newvalue.split(':');
-        if (hhmm.length != 2) {
-            document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid ISO format time (HH:MM)");
-            return;
+        var parts = newvalue.split(',');
+        var timeArray = [];
+        for (var i = 0; i < parts.length; i++) {
+            var t = parseFilterTime(parts[i].trim());
+            if (t == null) {
+                document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid time format. Use HH:MM or HH:MM,HH:MM for multiple times.");
+                return;
+            }
+            timeArray.push(t);
         }
-        UTCtime_ms = (parseInt(hhmm[0]) * 60 * 60 + parseInt(hhmm[1]) * 60) * 1000;
-        if (UTCtime_ms == null) {
-            document.getElementById(viewer_panels.error_text).innerHTML = build_error_text("Invalid ISO format time (HH:MM)");
-            return;
-        }
-        console.log("checkFilterTimeChanged, time ", UTCtime_ms);
+        newFilterTime = timeArray;
+        console.log("checkFilterTimeChanged, times ", newFilterTime);
     }
-    if (catalog_filter_time != UTCtime_ms) {
+    if (JSON.stringify(catalog_filter_time) != JSON.stringify(newFilterTime)) {
         // time changed, reset view list
         console.log("checkFilterTimeChanged, time changed, reset catalog view");
-        catalog_filter_time = UTCtime_ms;
+        catalog_filter_time = newFilterTime;
         catalog_reset();
         return true;
     } else {
