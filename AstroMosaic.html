@@ -313,6 +313,18 @@ p {
             <input type="text" id="catalogFilterTime" size=14>
         </form>    
     </div>
+    <div id="rising-div">
+        <form title="Show only catalog objects whose altitude is rising (increasing) over the selected number of weeks. Rising objects will be at a higher altitude at the same time on future dates.">
+            ↗
+            <select id="catalogFilterRising" onchange="javascript:filterChanged()">
+                <option value="off">Off</option>
+                <option value="1">1w</option>
+                <option value="2">2w</option>
+                <option value="3">3w</option>
+                <option value="4">4w</option>
+            </select>
+        </form>
+    </div>
     <div id="moon-div">
         <form title="Show only catalog objects that are further away from the moon than selected angle. If no time is selected then objects are included if at any point during the night they match the filter.">
             Moon:
@@ -326,14 +338,14 @@ p {
     </div>
     <div id ="magnitude-div">
         <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have the magnitude info available." action="javascript:filterMagnitudeChanged()">
-            Magnitude:
-            <input type="text" id="catalogFilterMagnitude" size=3>
+            Mag:
+            <input type="text" id="catalogFilterMagnitude" size=2>
         </form>    
     </div>
     <div id ="size-div">
         <form title="Show only catalog objects that are larger than the selected size in arcminutes. NOTE! Some objects do not have the size info available." action="javascript:filterTargetSizeChanged()">
             Size:
-            <input type="text" id="catalogFilterTargetSize" size=3>
+            <input type="text" id="catalogFilterTargetSize" size=2>
         </form>
     </div>
     <div id="type-div">
@@ -519,13 +531,14 @@ var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.h
 
 var version_number = "1.84";
 var startup_image = "M84";
-var startup_info_text = "v" + version_number + " Performance updates, type filtering, Caldwell catalog."
+var startup_info_text = "v" + version_number + " Filtering by type and rising, Caldwell catalog."
 
 var version_text = 
     "Version 1.84\n"+
-    "- Performance updates\n" +
     "- Filtering by type\n" +
+    "- Filtering by rising\n" +
     "- Caldwell catalog\n" +
+    "- Performance updates\n" +
     "Version 1.83\n"+
     "- Added Seestar S30 Pro\n" +
     "Version 1.82\n"+
@@ -1152,6 +1165,7 @@ var catalogFilterMoon = null;
 var catalogFilterMagnitude = null;
 var catalogFilterTargetSize = null;
 var catalogFilterType = null;
+var catalogFilterRising = null;
 var catalog_index = null;
 
 var wikiChecked = false;
@@ -2599,6 +2613,15 @@ function filter_visible_catalog_items(cat, lat, lng)
     // keep objects only if moonAngle >= moonFilter  <=>  dot <= cos(moonFilter)
     const moonDotMax = (moonFilter != null) ? Math.cos(moonFilter * DEG) : null;
 
+    // ----- rising filter: precompute future zenith vector
+    const useRising = (catalogFilterRising != null);
+    let futureZ = null;
+    if (useRising) {
+        const futureTime = times[0] + catalogFilterRising * 7 * day_ms;
+        const futureAA = engine_native_resources.object_altitude_init(futureTime, lat, lng);
+        futureZ = zenithFromLatLstDeg(lat, futureAA.Lst);
+    }
+
     // ----- altitude threshold (sin compare)
     const useAlt = (catalogFilterDegrees != null);
     const sinAlt0 = useAlt ? Math.sin(catalogFilterDegrees * DEG) : null;
@@ -2690,11 +2713,29 @@ function filter_visible_catalog_items(cat, lat, lng)
             }
         }
 
+        // rising filter: compare current vs future altitude
+        let risingAnnotation = '';
+        if (useRising) {
+            const xi = C.x[i], yi = C.y[i], zi = C.z[i];
+            const zz0 = zlist[0];
+            const sinAltNow = xi*zz0.zx + yi*zz0.zy + zi*zz0.zz;
+            const sinAltFuture = xi*futureZ.zx + yi*futureZ.zy + zi*futureZ.zz;
+            const altNow = Math.asin(Math.max(-1, Math.min(1, sinAltNow))) / DEG;
+            const altFuture = Math.asin(Math.max(-1, Math.min(1, sinAltFuture))) / DEG;
+            const altDelta = Math.round(altFuture - altNow);
+            if (sinAltFuture > sinAltNow) {
+                risingAnnotation = ' \u2191+' + altDelta + '\u00B0';
+            } else {
+                filtered = true;
+                continue;
+            }
+        }
+
         // Build output row (do strings only now)
         const t = cat.targets[i];
         fl.push([
             t[1].toFixed(5) + " " + t[2].toFixed(5),
-            C.dispName[i],
+            C.dispName[i] + risingAnnotation,
             t,
             altForSort
         ]);
@@ -2858,6 +2899,17 @@ function checkFilterChanged()
     if (catalogFilterMoon != newfilter) {
         catalogFilterMoon = newfilter;
         console.log("checkFilterChanged:catalogFilterMoon", catalogFilterMoon);
+        ret = true;
+    }
+    newvalue = document.getElementById("catalogFilterRising").value;
+    if (newvalue == 'off') {
+        newfilter = null;
+    } else {
+        newfilter = parseInt(newvalue);
+    }
+    if (catalogFilterRising != newfilter) {
+        catalogFilterRising = newfilter;
+        console.log("checkFilterChanged:catalogFilterRising", catalogFilterRising);
         ret = true;
     }
     if (ret) {
@@ -3604,6 +3656,13 @@ const filteringTutorialSteps = [
                  '<li>If no time is given, the filtering is done based on midnight time and also 2 and 4 hours before and after midnight.</li>' +
                  '<li>Time format is HH:MM</li></ul>',
         position: 'right'
+    },
+    {
+        element: '#rising-div',
+        title: 'Rising',
+        content: '<p>Rising filtering lists catalog objects that are increasing in altitude over the selected number of weeks. ' + 
+                 'If no time is given then objects are included based on midnight time.</p>',
+        position: 'left'
     },
     {
         element: '#moon-div',
