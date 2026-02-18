@@ -423,7 +423,10 @@ p {
        </form>    
     </div>
     <div id="telescope-info-div">
-        <button title="Show the current telescope info and create a link (Url) to the current view." onclick="showCurrentViewInfo()">Info</button>
+        <button title="Show a short info of the current telescope." onclick="showCurrentViewInfo()">Info</button>
+    </div>
+    <div id="telescope-url-div">
+        <button title="Create a link (Url) to the current view." onclick="showCurrentViewUrl()">Url</button>
     </div>
     <div id="wiki-check-div">
         <form title="If selected, show target Wiki page when available." action="javascript:ViewImage(0)">
@@ -3494,6 +3497,13 @@ function showCurrentViewInfo()
         info_text = info_text + ", Tz: UTC";
     }
 
+    clearStartupInfoText();
+
+    document.getElementById(viewer_panels.status_text).innerHTML = info_text;
+}
+
+function showCurrentViewUrl()
+{
     var link_text = "https://ruuth.xyz/AstroMosaic.html?";
     if (current_telescope.is_user_telescope) {
         // add_service=service-name,telescope-name,fov-x-minutes,fov-y-minutes,latitude,longitude[,tz:timezone][,seeing:detect_location]
@@ -3523,9 +3533,7 @@ function showCurrentViewInfo()
 
     clearStartupInfoText();
 
-    document.getElementById(viewer_panels.status_text).innerHTML = info_text + "<br>" + link_text;
-
-    // alert(link_text);
+    document.getElementById(viewer_panels.status_text).innerHTML = link_text;
 }
 
 const gettingStartedTutorialSteps = [
@@ -3731,10 +3739,13 @@ const addTelescopeTutorialSteps = [
     {
         element: '#telescope-info-div',
         title: 'Telescope Information',
-        content: '<ul><li>When a new telescope is added to the service, it is not permanently stored anywhere.</li>' + 
-                 '<li> The next time you start Astro Mosaic you need to enter the information again.</li></ul>' +
-                 '<h3>Save the URL</h3>' +
-                 '<ul><li>Using the Info button you can display the current telescope information. The information includes a URL that has the current telescope settings.</li>' +
+        content: '<p>Using the Info button you can display the current telescope information. The information includes the name of the telescope, its field of view, location, and other parameters.</p>',
+        position: 'right'
+    },
+    {
+        element: '#telescope-url-div',
+        title: 'Telescope URL',
+        content: '<ul><li>Using the URL button you can display the current telescope information. The information includes a URL that has the current telescope settings.</li>' +
                  '<li>You can bookmark that URL to be able to quickly access your telescope settings in the future.</li></ul>',
         position: 'right'
     }
