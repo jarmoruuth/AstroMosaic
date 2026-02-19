@@ -1171,6 +1171,12 @@ function StartAstroMosaicViewerEngine(
 
         var options = setChartOptions('Target visibility', hAxisTitle, seriesStyle, 'HH:mm', engine_params.showAz);
 
+        if (options.vAxis) {
+            options.vAxis.viewWindow = { min: 0, max: 90 };
+        } else if (options.vAxes) {
+            options.vAxes[0].viewWindow = { min: 0, max: 90 };
+        }
+
         engine_data.daychart = new google.visualization.LineChart(document.getElementById(engine_panels.dayvisibility_panel));
 
         engine_data.daychart.draw(engine_data.daydata, options);
@@ -1321,6 +1327,12 @@ function StartAstroMosaicViewerEngine(
                         seriesStyle,
                         "MMM YYYY",
                         false);
+
+        if (options.vAxis) {
+            options.vAxis.viewWindow = { min: 0, max: 90 };
+        } else if (options.vAxes) {
+            options.vAxes[0].viewWindow = { min: 0, max: 90 };
+        }
 
         engine_data.yearchart = new google.visualization.LineChart(document.getElementById(engine_panels.yearvisibility_panel));
 
@@ -1603,9 +1615,9 @@ function StartAstroMosaicViewerEngine(
 
         resolver_url = resolver_url + image_target.replace(/ /g, "+");
 
-        if (engine_panels.error_text) {
+        if (engine_panels.status_text) {
             var waitingTimeout = setTimeout(function() {
-                                    document.getElementById(engine_panels.error_text).innerHTML = "Resolving name..."; 
+                                    document.getElementById(engine_panels.status_text).innerHTML = "Resolving name..."; 
                                 }, 1000);
         }
 
