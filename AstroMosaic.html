@@ -260,15 +260,21 @@ p {
     <div id="grid-size-div">
         <form title="Select mosaic grid size." action="javascript:ViewImage(0)">
             Grid size (x,y):<br>
-            <input type="number" id="size_x" min="1" max="10">
-            <input type="number" id="size_y" min="1" max="10">
+            <input type="number" id="size_x" min="1" max="10" size="3">
+            <input type="number" id="size_y" min="1" max="10" size="3">
         </form>    
     </div>
     <div id="date-div">
         <form title="Select date for target visibility view." action="javascript:ViewImage(0)">
             Date (YYYY-MM-DD):<br>
-            <input type="text" id="view_date">
-        </form>    
+            <div style="display:flex; gap:2px; align-items:center;">
+                <input type="text" id="view_date" style="width:9em;">
+                <button title="7 days back" onclick="adjustDate(-7)" style="padding:1px 4px; font-size:0.8em;">«</button>
+                <button title="1 day back" onclick="adjustDate(-1)" style="padding:1px 4px; font-size:0.8em;">‹</button>
+                <button title="1 day forward" onclick="adjustDate(1)" style="padding:1px 4px; font-size:0.8em;">›</button>
+                <button title="7 days forward" onclick="adjustDate(7)" style="padding:1px 4px; font-size:0.8em;">»</button>
+            </div>
+        </form>
     </div>
     <div id="refresh-div">
         <br>
@@ -310,7 +316,7 @@ p {
     <div id="time-div">
         <form title="Show only catalog objects that are visible at selected time. The time format is HH:MM. Multiple times can be given separated by comma like HH:MM,HH:MM. When multiple times are given all times must match the altitude filter." action="javascript:filterTimeChanged()">
             Time:
-            <input type="text" id="catalogFilterTime" size=14>
+            <input type="text" id="catalogFilterTime" size="14">
         </form>    
     </div>
     <div id="rising-div">
@@ -339,19 +345,19 @@ p {
     <div id ="magnitude-div">
         <form title="Show only catalog objects that have higher magnitude than selected magnitude. NOTE! Not many objects have the magnitude info available." action="javascript:filterMagnitudeChanged()">
             Mag:
-            <input type="text" id="catalogFilterMagnitude" size=2>
+            <input type="text" id="catalogFilterMagnitude" size="3">
         </form>    
     </div>
     <div id ="size-div">
         <form title="Show only catalog objects that are larger than the selected size in arcminutes. NOTE! Some objects do not have the size info available." action="javascript:filterTargetSizeChanged()">
             Size:
-            <input type="text" id="catalogFilterTargetSize" size=2>
+            <input type="text" id="catalogFilterTargetSize" size="3">
         </form>
     </div>
     <div id="type-div">
         <form title="Show only catalog objects whose type contains the entered text. The match is case-insensitive and partial." action="javascript:filterTypeChanged()">
             Type:
-            <input type="text" id="catalogFilterType" size=8>
+            <input type="text" id="catalogFilterType" size="8">
         </form>
     </div>
 </div>
@@ -360,37 +366,37 @@ p {
     <div>
         <form title="Service name">
         Service:
-        <input type="text" id="ServiceNameField" size=5>
+        <input type="text" id="ServiceNameField" size="5">
         </form>
     </div>
     <div>
         <form title="Telescope name">
         Telescope:
-        <input type="text" id="TelescopeNameField" size=5>
+        <input type="text" id="TelescopeNameField" size="5">
         </form>
     </div>
     <div>
         <form title="Horizontal field of view in arcminutes">
         FoV x:
-        <input type="text" id="TelescopeFoVxField" size=5>
+        <input type="text" id="TelescopeFoVxField" size="5">
         </form>
     </div>
     <div>
         <form title="Vertical field of view in arcminutes">
         FoV y:
-        <input type="text" id="TelescopeFoVyField" size=5>
+        <input type="text" id="TelescopeFoVyField" size="5">
         </form>
     </div>
     <div>
         <form title="Latitude of telescope location in degrees">
         Lat:
-        <input type="text" id="LatField" size=5>
+        <input type="text" id="LatField" size="5">
         </form>
     </div>
     <div>
         <form title="Longitude of telescope location in degrees">
         Lng:
-        <input type="text" id="LngField" size=5>
+        <input type="text" id="LngField" size="5">
         </form>    
     </div>
     <div>
@@ -401,7 +407,7 @@ p {
     <div>
         <form title="Timezone in hours from UTC to be used in time display">
         Tz:
-        <input type="text" id="TzField" size=3>
+        <input type="text" id="TzField" size="3">
         </form>    
     </div>
     <div>
@@ -1997,6 +2003,19 @@ function clearStartupInfoText()
 {
     document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
     startup_info_text = null;
+}
+
+function adjustDate(days)
+{
+    var el = document.getElementById("view_date");
+    var val = el.value.trim();
+    var datePart = val.substr(0, 10);
+    var timePart = val.length > 10 ? val.substr(10) : "";
+    var d = new Date(datePart + "T00:00:00Z");
+    if (isNaN(d.valueOf())) return;
+    d.setUTCDate(d.getUTCDate() + days);
+    el.value = d.toISOString().substr(0, 10) + timePart;
+    ViewImage(0);
 }
 
 // Main function to view images. Get parameters
