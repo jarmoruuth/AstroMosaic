@@ -271,6 +271,7 @@ p {
                 <input type="text" id="view_date" style="width:9em;">
                 <button title="7 days back" onclick="adjustDate(-7)" style="padding:1px 4px; font-size:0.8em;">«</button>
                 <button title="1 day back" onclick="adjustDate(-1)" style="padding:1px 4px; font-size:0.8em;">‹</button>
+                <button title="Go to today" onclick="goToToday()" style="padding:1px 4px; font-size:0.8em;">⌂</button>
                 <button title="1 day forward" onclick="adjustDate(1)" style="padding:1px 4px; font-size:0.8em;">›</button>
                 <button title="7 days forward" onclick="adjustDate(7)" style="padding:1px 4px; font-size:0.8em;">»</button>
             </div>
@@ -2003,6 +2004,13 @@ function clearStartupInfoText()
 {
     document.getElementById(viewer_panels.startup_info_text).innerHTML = '';
     startup_info_text = null;
+}
+
+function goToToday()
+{
+    var el = document.getElementById("view_date");
+    el.value = new Date().toISOString().substr(0, 10);
+    ViewImage(0);
 }
 
 function adjustDate(days)
