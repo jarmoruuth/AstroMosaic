@@ -463,7 +463,26 @@ p {
     <div id="az-div">
         <form title="If selected, show azimuth in target visibility graph." action="javascript:ViewImage(0)">
             <input type="checkbox" id="showAzCheckbox">Az
-        </form>    
+        </form>
+    </div>
+    <div id="year-months-div">
+        <form title="Number of months to show in the year visibility chart." action="javascript:ViewImage(0)">
+        Months:
+        <select id="yearMonthsSelect" onchange="javascript:ViewImage(0)">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12" selected>12</option>
+        </select>
+        </form>
     </div>
     <div id ="planet-div">
         <form title="Select a planet to be viewed in visibility charts and Aladin viewer.">
@@ -1194,6 +1213,7 @@ var url_grid_size = null;
 var url_date = null;
 var url_services_json = null;
 var url_view = "all";
+var url_year_months = null;
 
 var DEG = Math.PI / 180;
 
@@ -1456,6 +1476,7 @@ function parse_url(searchParams)
     url_date = searchParams.get('date');
     url_services_json = searchParams.get('services_json');
     url_view = searchParams.get('view');
+    url_year_months = searchParams.get('year_months');
 }
 
 // apply url add parameters, if there are any
@@ -1534,6 +1555,9 @@ function apply_url_set()
         let size_y = size_vals[1];
         document.getElementById("size_x").value = parseInt(size_x);
         document.getElementById("size_y").value = parseInt(size_y);
+    }
+    if (url_year_months) {
+        document.getElementById("yearMonthsSelect").value = url_year_months;
     }
     if (url_date) {
         document.getElementById("view_date").value = url_date;
@@ -2177,6 +2201,13 @@ function ViewImage(oper)
         viewer_params.showAz = document.getElementById("showAzCheckbox").checked;
     } else {
         viewer_params.showAz = false;
+    }
+    if (url_view == "all") {
+        viewer_params.year_months = parseInt(document.getElementById("yearMonthsSelect").value);
+    } else if (url_year_months != null) {
+        viewer_params.year_months = parseInt(url_year_months);
+    } else {
+        viewer_params.year_months = 12;
     }
     if (current_telescope.hasOwnProperty('offaxis')) {
         viewer_params.offaxis = current_telescope.offaxis;
@@ -3556,6 +3587,11 @@ function showCurrentViewUrl()
                                 "&overlap=" + document.getElementById("overlap_percentage").value +
                                 "&grid_size=" + document.getElementById("size_x").value + "," +
                                                 document.getElementById("size_y").value;
+    }
+
+    var year_months_val = parseInt(document.getElementById("yearMonthsSelect").value);
+    if (year_months_val != 12) {
+        link_text = link_text + "&year_months=" + year_months_val;
     }
 
     clearStartupInfoText();

@@ -1268,7 +1268,8 @@ function StartAstroMosaicViewerEngine(
         var rowdata = [];
 
         var starttime = midday;
-        var endtime = starttime + 365 * day_ms;
+        var year_months = (engine_params.year_months != null) ? engine_params.year_months : 12;
+        var endtime = starttime + Math.round(year_months * 30.4375 * day_ms);
 
         for (var d = starttime; d <= endtime; d = d + interval) {
             var suntimes = sun_rise_set(d, lat, lng, 0);
@@ -1322,7 +1323,7 @@ function StartAstroMosaicViewerEngine(
             seriesStyle.push({ color: 'Magenta', lineDashStyle: [2, 1, 2], lineWidth: 1 });
         }
         var options = setChartOptions(
-                        'Target visibility at midnight over next 12 months',
+                        'Target visibility at midnight over next ' + year_months + ' month' + (year_months == 1 ? '' : 's'),
                         'Month',
                         seriesStyle,
                         "MMM YYYY",
