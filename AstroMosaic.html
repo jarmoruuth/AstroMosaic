@@ -1095,7 +1095,8 @@ var viewer_panels = {
     dayvisibility_panel_text : "day-div-text",
     yearvisibility_panel : "year-div",          // show year visibility
     yearvisibility_panel_text : "year-div-text",
-    status_text : "processing-status",
+    processing_status_text : "processing-status",
+    status_text : "startup_info_text",
     error_text : "error_text",
     startup_info_text: "startup_info_text",
     mosaic_panel_x : 5,
@@ -1619,6 +1620,7 @@ function apply_url_set()
         viewer_panels.dayvisibility_panel_text = "textDiv";
         viewer_panels.yearvisibility_panel = "imageDiv";
         viewer_panels.yearvisibility_panel_text = "textDiv";
+        viewer_panels.processing_status_text = "textDiv";
         viewer_panels.status_text = "textDiv";
         viewer_panels.error_text = "textDiv";
         viewer_panels.startup_info_text = "textDiv";
@@ -2063,6 +2065,7 @@ function ViewImage(oper)
 
     if (url_view == "all") {
         document.getElementById(viewer_panels.status_text).innerHTML = "";
+        document.getElementById(viewer_panels.processing_status_text).innerHTML = "";
         document.getElementById(viewer_panels.error_text).innerHTML = "";
     }
 

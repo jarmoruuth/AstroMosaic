@@ -119,6 +119,7 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div, radec_
         yearvisibility_panel : year_div,
         yearvisibility_panel_text : null,
         status_text : null,
+        processing_status_text : null,
         error_text : null,
         panel_view_x : null,
         panel_view_y : null,
@@ -1356,8 +1357,8 @@ function StartAstroMosaicViewerEngine(
         console.log("find_coordinates:image_target=", image_target);
         image_target = reformat_coordinates(image_target);
         //document.getElementById(engine_panels.status_text).innerHTML = "Resolved RA/DEC " + image_target;
-        if (engine_view_type == "all") {
-            document.getElementById(engine_panels.status_text).innerHTML = "";
+        if (engine_view_type == "all" && engine_panels.processing_status_text) {
+            document.getElementById(engine_panels.processing_status_text).innerHTML = "";
         }
 
         resolved_coordinates = image_target;
@@ -1597,8 +1598,8 @@ function StartAstroMosaicViewerEngine(
 
         if (resolved_name == image_target && resolved_coordinates != null) {
             // same name already resolved, do not resolve again
-            if (engine_panels.status_text) {
-                document.getElementById(engine_panels.status_text).innerHTML = "RA/DEC " + resolved_coordinates;
+            if (engine_panels.processing_status_text) {
+                document.getElementById(engine_panels.processing_status_text).innerHTML = "RA/DEC " + resolved_coordinates;
             }
             image_target = resolved_coordinates;
             EngineViewImageByType();
@@ -1616,9 +1617,9 @@ function StartAstroMosaicViewerEngine(
 
         resolver_url = resolver_url + image_target.replace(/ /g, "+");
 
-        if (engine_panels.status_text) {
+        if (engine_panels.processing_status_text) {
             var waitingTimeout = setTimeout(function() {
-                                    document.getElementById(engine_panels.status_text).innerHTML = "Resolving name..."; 
+                                    document.getElementById(engine_panels.processing_status_text).innerHTML = "Resolving name..."; 
                                 }, 1000);
         }
 
