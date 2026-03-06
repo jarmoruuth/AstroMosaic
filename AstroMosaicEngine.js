@@ -2045,6 +2045,21 @@ function StartAstroMosaicViewerEngine(
                         }
                     });
                 }
+                // Hide visibility chart divs when Aladin is maximized to full browser window.
+                if (fullscreen && engine_panels.dayvisibility_panel && engine_panels.yearvisibility_panel) {
+                    var _fsAladinEl = document.getElementById(engine_panels.aladin_panel);
+                    var _fsDayPanel = engine_panels.dayvisibility_panel;
+                    var _fsYearPanel = engine_panels.yearvisibility_panel;
+                    new ResizeObserver(function(entries) {
+                        var r = entries[0].contentRect;
+                        var isFs = r.width > window.innerWidth * 0.9 && r.height > window.innerHeight * 0.9;
+                        var vis = isFs ? 'hidden' : '';
+                        var dayEl = document.getElementById(_fsDayPanel);
+                        var yearEl = document.getElementById(_fsYearPanel);
+                        if (dayEl) dayEl.style.visibility = vis;
+                        if (yearEl) yearEl.style.visibility = vis;
+                    }).observe(_fsAladinEl);
+                }
             }
         } else {
             document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
