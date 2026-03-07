@@ -262,7 +262,13 @@ p {
             Grid size (x,y):<br>
             <input type="number" id="size_x" min="1" max="10" size="3">
             <input type="number" id="size_y" min="1" max="10" size="3">
-        </form>    
+        </form>
+    </div>
+    <div id="camera-pa-div">
+        <form title="Camera position angle in degrees (0 = North up, positive = counterclockwise)." action="javascript:ViewImage(0)">
+            PA (&deg;):<br>
+            <input type="number" id="camera_pa" min="-180" max="180" value="0" size="4" onchange="javascript:ViewImage(0)">
+        </form>
     </div>
     <div id="date-div">
         <form title="Select date for target visibility view." action="javascript:ViewImage(0)">
@@ -410,6 +416,12 @@ p {
         Tz:
         <input type="text" id="TzField" size="3">
         </form>    
+    </div>
+    <div>
+        <form title="Camera position angle in degrees (0 = North up, positive = counterclockwise)">
+        PA:
+        <input type="text" id="TelescopePAField" size="3" value="0">
+        </form>
     </div>
     <div>
         <button title="Add a new service and telescope or update an existing one." onclick="javascript:addTelescopeButtonFunction()">
@@ -931,18 +943,17 @@ var all_services = {
             name: "RoboScopes", 
             radec_format: 1, 
             telescopes: [
-                { name: "Pier 2", fov_x: 1.01*60, fov_y: 0.68*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 3", fov_x: 1.24*60, fov_y: 0.83*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 4", fov_x: 1.24*60, fov_y: 0.83*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 5", fov_x: 4.13*60, fov_y: 2.75*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [22], meridian_transit: 10  },
-                { name: "Pier 6", fov_x: 0.29*60, fov_y: 0.2*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 6b", fov_x: 7.47*60, fov_y: 4.99*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  },
-                { name: "Pier 8", fov_x: 0.7*60, fov_y: 0.47*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 9", fov_x: 0.49*60, fov_y: 0.33*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
-                { name: "Pier 11", fov_x: 3.54*60, fov_y: 2.37*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
-                { name: "Pier 14", fov_x: 3.89*60, fov_y: 2.6*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
-                { name: "Pier 16", fov_x: 12.82*60, fov_y: 8.57*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  },
-                { name: "Pier 17", fov_x: 3.13*60, fov_y: 2.09*60, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  }
+                { name: "Pier 3", fov_x: 1.24*60, fov_y: 0.83*60, camera_pa: 179, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
+                { name: "Pier 4", fov_x: 5.4*60, fov_y: 3.61*60, camera_pa: 269, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
+                { name: "Pier 5", fov_x: 4.13*60, fov_y: 2.75*60, camera_pa: 93, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
+                { name: "Pier 6", fov_x: 0.48*60, fov_y: 0.32*60, camera_pa: 271, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
+                { name: "Pier 8", fov_x: 0.7*60, fov_y: 0.47*60, camera_pa: 89, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [30], meridian_transit: 10  },
+                { name: "Pier 9", fov_x: 0.49*60, fov_y: 0.33*60, camera_pa: 270, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [35], meridian_transit: 10  },
+                { name: "Pier 14", fov_x: 6.72*60, fov_y: 4.5*60, camera_pa: 355, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  },
+                { name: "Pier 16", fov_x: 9.95*60, fov_y: 6.66*60, camera_pa: 359, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  },
+                { name: "Pier 16b", fov_x: 2.76*60, fov_y: 1.84*60, camera_pa: 87, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
+                { name: "Pier 17", fov_x: 3.13*60, fov_y: 2.09*60, camera_pa: 269, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [25], meridian_transit: 10  },
+                { name: "Pier 17b", fov_x: 9.95*60, fov_y: 6.66*60, camera_pa: 0, location: "Spain", lat: 38.2182225, lng: -6.632443, timezoneOffset: null, alt: 535, seeing: "rs-spa", horizon_limits: [20], meridian_transit: 10  },
             ] 
         },
         { 
@@ -1122,6 +1133,7 @@ var viewer_params = {
     grid_size_y : null,
     isCustomMode : false,
     showAz: false,
+    camera_pa: 0,
     planet_id: null,
     current_telescope_service: null,
     isRepositionModeFunc : isRepositionMode,
@@ -1215,6 +1227,7 @@ var url_date = null;
 var url_services_json = null;
 var url_view = "all";
 var url_year_months = null;
+var url_camera_pa = null;
 
 var DEG = Math.PI / 180;
 
@@ -1478,6 +1491,7 @@ function parse_url(searchParams)
     url_services_json = searchParams.get('services_json');
     url_view = searchParams.get('view');
     url_year_months = searchParams.get('year_months');
+    url_camera_pa = searchParams.get('camera_pa');
 }
 
 // apply url add parameters, if there are any
@@ -1559,6 +1573,9 @@ function apply_url_set()
     }
     if (url_year_months) {
         document.getElementById("yearMonthsSelect").value = url_year_months;
+    }
+    if (url_camera_pa) {
+        document.getElementById("camera_pa").value = url_camera_pa;
     }
     if (url_date) {
         document.getElementById("view_date").value = url_date;
@@ -1667,9 +1684,10 @@ function addTelescopeButtonFunction()
             lat: parseFloat(document.getElementById("LatField").value), 
             lng: parseFloat(document.getElementById("LngField").value),
             timezoneOffset : parseInt(document.getElementById("TzField").value),
-            alt: 0, 
-            seeing: "detect_location", 
-            horizon_limits: horizon_0, 
+            camera_pa: parseFloat(document.getElementById("TelescopePAField").value) || 0,
+            alt: 0,
+            seeing: "detect_location",
+            horizon_limits: horizon_0,
             meridian_transit: 0,
             is_user_telescope: true
     };
@@ -1759,7 +1777,9 @@ function set_url_add_service(url_add_service, clear_old_services)
                 is_user_telescope: true
             };
             for (pn = 6; pn < params.length; pn++) {
-                if (params[pn].startsWith("tz:")) {
+                if (params[pn].startsWith("pa:")) {
+                    new_telescope.camera_pa = parseFloat(params[pn].substring(3));
+                } else if (params[pn].startsWith("tz:")) {
                     // timezone, convert hours to minutes
                     var tz = params[pn].substring(3);
                     console.log("service, tz=" +  tz);
@@ -1909,6 +1929,11 @@ function updateTelescopeLocationText()
         locationText = current_telescope.location;
     }
     document.getElementById("telescope-location-text").textContent = locationText;
+    var pa_input = document.getElementById("camera_pa");
+    if (pa_input) {
+        pa_input.value = (current_telescope && current_telescope.camera_pa !== undefined)
+            ? current_telescope.camera_pa : 0;
+    }
 }
 
 function update_telescope_list(new_name)
@@ -2260,6 +2285,8 @@ function ViewImage(oper)
         viewer_params.grid_size_x = 1;
         viewer_params.grid_size_y = 1;
     }
+
+    viewer_params.camera_pa = parseFloat(document.getElementById("camera_pa").value) || 0;
 
     if (json_image_target != null) {
         if (screen_setup != 'catalog_panels') {
@@ -3595,6 +3622,11 @@ function showCurrentViewUrl()
     var year_months_val = parseInt(document.getElementById("yearMonthsSelect").value);
     if (year_months_val != 12) {
         link_text = link_text + "&year_months=" + year_months_val;
+    }
+
+    var pa_val = parseFloat(document.getElementById("camera_pa").value) || 0;
+    if (pa_val != 0) {
+        link_text = link_text + "&camera_pa=" + pa_val;
     }
 
     clearStartupInfoText();

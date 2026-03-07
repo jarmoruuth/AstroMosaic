@@ -108,7 +108,8 @@ function AstroMosaicEngine(target, params, target_div, day_div, year_div, radec_
         repositionTargetFunc : null,
         showAz: false,
         planet_id: null,
-        current_telescope_service: null
+        current_telescope_service: null,
+        camera_pa: params.camera_pa ? params.camera_pa : 0
     };
 
     var engine_panels = {
@@ -2195,30 +2196,43 @@ function StartAstroMosaicViewerEngine(
         for (x = 0; x < grid_size_x; x++) {
             panel_radec[x] = [];
         }
+        var pa_rad = degrees_to_radians(engine_params.camera_pa);
         y = 0;
         while (row >= -size_y) {
             var row_dec = dec + row * img_fov * engine_params.am_fov_y;
             col = size_x;
             x = 0;
             while (col >= -size_x) {
-                var col_ra = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+                // Panel center in tangent plane: +X=Eastward, +Y=Northward
+                var mx_center = -(col * img_fov * engine_params.am_fov_x);
+                var my_center = row * img_fov * engine_params.am_fov_y;
+                var hw = engine_params.am_fov_x / 2;
+                var hh = engine_params.am_fov_y / 2;
 
-                // now center ra/dec is col_ra/row_dec
-                // calculate corners
-                var row_dec1 = row_dec + engine_params.am_fov_y/2;
-                var row_dec2 = row_dec - engine_params.am_fov_y/2;
-                var col_ra1 = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-                var col_ra2 = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-                var col_ra1_delta = ((engine_params.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-                var col_ra2_delta = ((engine_params.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
-
-                var panel = [
-                    [col_ra1-col_ra1_delta, row_dec1], 
-                    [col_ra1+col_ra1_delta, row_dec1], 
-                    [col_ra2+col_ra2_delta, row_dec2], 
-                    [col_ra2-col_ra2_delta, row_dec2], 
-                    [col_ra1-col_ra1_delta, row_dec1]
+                // Define frame corners in flat tangent plane relative to center (East(+X)-North(+Y))
+                var flat_corners = [
+                    [mx_center + hw, my_center + hh], // Eastward(+X), Northward(+Y)
+                    [mx_center - hw, my_center + hh], // Westward(-X), Northward(+Y)
+                    [mx_center - hw, my_center - hh], // Westward(-X), Southward(-Y)
+                    [mx_center + hw, my_center - hh], // Eastward(+X), Southward(-Y)
+                    [mx_center + hw, my_center + hh]  // Close shape
                 ];
+
+                // Rotate corners in flat plane (N through E increases CCW on sky), THEN project to spherical RA/Dec
+                var panel = flat_corners.map(function(c) {
+                    // c[0] increases Eastward, c[1] increases Northward. Matrix rotates CCW.
+                    var rx = c[0] * Math.cos(pa_rad) - c[1] * Math.sin(pa_rad);
+                    var ry = c[0] * Math.sin(pa_rad) + c[1] * Math.cos(pa_rad);
+                    
+                    var p_dec = dec + ry;
+                    // Project local math X (rx, positive East) back to spherical RA (positive West). 
+                    // RA_sph = RA_center - ΔX_math / cos(Dec)
+                    var p_ra = ra - rx / Math.cos(degrees_to_radians(Math.abs(p_dec)));
+                    return [p_ra, p_dec];
+                });
+                
+                // Unrotated panel center RA for coordinate display later in the loop
+                var col_ra = ra - mx_center / Math.cos(degrees_to_radians(Math.abs(row_dec)));
 
                 var line_color = 'White';
 
@@ -2237,24 +2251,25 @@ function StartAstroMosaicViewerEngine(
                 }
                 col = col - 1;
 
-                var col_ra_hours = col_ra * degToHours;
+                var rot = pa_rad ? rotatePoint(col_ra, row_dec, ra, dec, pa_rad) : [col_ra, row_dec];
+                var col_ra_hours = rot[0] * degToHours;
 
                 if (grid_type == "mosaic" || grid_type == "visual") {
                     if (engine_params.current_telescope_service == null ||
-                        engine_params.current_telescope_service.radec_format == 0) 
+                        engine_params.current_telescope_service.radec_format == 0)
                     {
-                        panel_radec[x][y] = col_ra_hours.toFixed(5) + 
-                                            " " + row_dec.toFixed(5);
+                        panel_radec[x][y] = col_ra_hours.toFixed(5) +
+                                            " " + rot[1].toFixed(5);
                     } else {
                         panel_radec[x][y] = reformat_coordinates(
-                                                col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5));
+                                                col_ra_hours.toFixed(5) + " " + rot[1].toFixed(5));
                     }
                 } else {
                     /* We show only one scope FoV (default) so show
                     * coordinates in different formats.
                     */
-                    panel_radec[x][y] = "RA/DEC " + 
-                                        col_ra_hours.toFixed(5) + " " + row_dec.toFixed(5) + ", d " + 
+                    panel_radec[x][y] = "RA/DEC " +
+                                        col_ra_hours.toFixed(5) + " " + rot[1].toFixed(5) + ", d " +
                                         ra.toFixed(5) + " " + dec.toFixed(5) + ", " +
                                         image_target;
                 }
@@ -2477,31 +2492,52 @@ function StartAstroMosaicViewerEngine(
         }
     }
 
+    function rotatePoint(ra, dec, center_ra, center_dec, pa_rad) {
+        var cos_dec = Math.cos(degrees_to_radians(Math.abs(center_dec)));
+        var dx_east = -(ra - center_ra) * cos_dec;
+        var dy_north = dec - center_dec;
+        var dx2 = dx_east * Math.cos(pa_rad) - dy_north * Math.sin(pa_rad);
+        var dy2 = dx_east * Math.sin(pa_rad) + dy_north * Math.cos(pa_rad);
+        return [center_ra - dx2 / cos_dec, center_dec + dy2];
+    }
+
     function drawBox(col_ra, row_dec, fov_x, fov_y, name)
     {
         console.log('drawBox', col_ra, row_dec, fov_x, fov_y);
 
-        // calculate image corners
-        var row_dec1 = row_dec + fov_y/2;
-        var row_dec2 = row_dec - fov_y/2;
-        var col_ra1 = col_ra;
-        var col_ra2 = col_ra;
-        var col_ra1_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec1)))));
-        var col_ra2_delta = ((fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec2)))));
+        var pa_rad = degrees_to_radians(engine_params.camera_pa);
+        var hw = fov_x / 2;
+        var hh = fov_y / 2;
 
-        var panel = [
-            [col_ra1-col_ra1_delta, row_dec1], 
-            [col_ra1+col_ra1_delta, row_dec1], 
-            [col_ra2+col_ra2_delta, row_dec2], 
-            [col_ra2-col_ra2_delta, row_dec2], 
-            [col_ra1-col_ra1_delta, row_dec1]
+        // 1. Define corners in a flat local plane.
+        // NOTE THE FLIPPED SIGN on local X (East/West).
+        // In standard math frame (Dec Up), positive PA (CCW rotation N through E)
+        // requires +X to map to screen LEFT (East). +ΔRA is West (Right).
+        // So we map Math +X = -RA_delta (Eastward increase).
+        var flat_corners = [
+            [ hw,  hh], // East(+X), North(+Y) in standard CCW math plane
+            [-hw,  hh], // West(-X), North(+Y)
+            [-hw, -hh], // West(-X), South(-Y)
+            [ hw, -hh], // East(+X), South(-Y)
+            [ hw,  hh]  // Close shape
         ];
 
-        if (name == 'FoV') {
-            var line_color = 'White';
-        } else {
-            var line_color = '#ee2345';
-        }
+        // 2. Rotate the corners in the flat plane, THEN project to RA/Dec
+        var panel = flat_corners.map(function(c) {
+            // Standard CCW rotation on Math X-Y defined as East(+X)-North(+Y)
+            var rx = c[0] * Math.cos(pa_rad) - c[1] * Math.sin(pa_rad);
+            var ry = c[0] * Math.sin(pa_rad) + c[1] * Math.cos(pa_rad);
+            
+            var p_dec = row_dec + ry;
+            // Project local Math X (rx, Eastward positive) back to spherical RA 
+            // using p_dec for correct convergence scaling.
+            // math_X increases Eastward (ΔRA negative). So ΔRA = -math_X.
+            // Spherical RA = ra_center + ΔRA = ra_center - math_X.
+            var p_ra = col_ra - rx / Math.cos(degrees_to_radians(Math.abs(p_dec)));
+            return [p_ra, p_dec];
+        });
+
+        var line_color = (name == 'FoV') ? 'White' : '#ee2345';
         if (engine_data.aladin) {
             var overlay = A.graphicOverlay({color: line_color, lineWidth: 2, name: name});
             engine_data.aladin.addOverlay(overlay);
@@ -2537,43 +2573,48 @@ function StartAstroMosaicViewerEngine(
         drawBox(col_ra, row_dec, engine_params.am_fov_x, engine_params.am_fov_y, 'FoV');
 
         // offaxis guiding FoV
+        var pa_rad_offaxis = degrees_to_radians(engine_params.camera_pa);
         switch (engine_params.offaxis.position) {
-            case 'T':
-                drawBox(
-                    col_ra, 
-                    row_dec + engine_params.am_fov_y/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_y/2,
-                    engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y,
-                    'Offaxis');
+            case 'T': {
+                var offaxis_ra = col_ra;
+                var offaxis_dec = row_dec + engine_params.am_fov_y/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_y/2;
+                if (pa_rad_offaxis) {
+                    var rot_oa = rotatePoint(offaxis_ra, offaxis_dec, col_ra, row_dec, pa_rad_offaxis);
+                    offaxis_ra = rot_oa[0]; offaxis_dec = rot_oa[1];
+                }
+                drawBox(offaxis_ra, offaxis_dec, engine_params.offaxis.am_fov_x, engine_params.offaxis.am_fov_y, 'Offaxis');
                 break;
-            case 'B':
-                drawBox(
-                    col_ra, 
-                    row_dec - engine_params.am_fov_y/2 - engine_params.offaxis.am_offset - engine_params.offaxis.am_fov_y/2,
-                    engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y,
-                    'Offaxis');
+            }
+            case 'B': {
+                var offaxis_ra = col_ra;
+                var offaxis_dec = row_dec - engine_params.am_fov_y/2 - engine_params.offaxis.am_offset - engine_params.offaxis.am_fov_y/2;
+                if (pa_rad_offaxis) {
+                    var rot_oa = rotatePoint(offaxis_ra, offaxis_dec, col_ra, row_dec, pa_rad_offaxis);
+                    offaxis_ra = rot_oa[0]; offaxis_dec = rot_oa[1];
+                }
+                drawBox(offaxis_ra, offaxis_dec, engine_params.offaxis.am_fov_x, engine_params.offaxis.am_fov_y, 'Offaxis');
                 break;
-            case 'L':
-                drawBox(
-                    col_ra + 
-                        (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) *
-                        (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))), 
-                    row_dec,
-                    engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y,
-                    'Offaxis');
+            }
+            case 'L': {
+                var offaxis_ra = col_ra + (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec))));
+                var offaxis_dec = row_dec;
+                if (pa_rad_offaxis) {
+                    var rot_oa = rotatePoint(offaxis_ra, offaxis_dec, col_ra, row_dec, pa_rad_offaxis);
+                    offaxis_ra = rot_oa[0]; offaxis_dec = rot_oa[1];
+                }
+                drawBox(offaxis_ra, offaxis_dec, engine_params.offaxis.am_fov_x, engine_params.offaxis.am_fov_y, 'Offaxis');
                 break;
-            case 'R':
-                drawBox(
-                    col_ra - 
-                        (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) *
-                        (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))),
-                    row_dec,
-                    engine_params.offaxis.am_fov_x, 
-                    engine_params.offaxis.am_fov_y,
-                    'Offaxis');
+            }
+            case 'R': {
+                var offaxis_ra = col_ra - (engine_params.am_fov_x/2 + engine_params.offaxis.am_offset + engine_params.offaxis.am_fov_x/2) * (1/Math.cos(degrees_to_radians(Math.abs(row_dec))));
+                var offaxis_dec = row_dec;
+                if (pa_rad_offaxis) {
+                    var rot_oa = rotatePoint(offaxis_ra, offaxis_dec, col_ra, row_dec, pa_rad_offaxis);
+                    offaxis_ra = rot_oa[0]; offaxis_dec = rot_oa[1];
+                }
+                drawBox(offaxis_ra, offaxis_dec, engine_params.offaxis.am_fov_x, engine_params.offaxis.am_fov_y, 'Offaxis');
                 break;
+            }
         }
 
         var col_ra_hours = col_ra * degToHours;
@@ -2613,6 +2654,7 @@ function StartAstroMosaicViewerEngine(
         var ra = target_ra;
         var dec = target_dec;
 
+        var pa_rad_mp = degrees_to_radians(engine_params.camera_pa);
         var i = 0;
         var row = size_y;
         var col;
@@ -2624,20 +2666,26 @@ function StartAstroMosaicViewerEngine(
             var panel_number = 5 * row_number;
             var x = 0;
             while (col >= -size_x) {
-                var col_ra = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+                var col_ra_deg = ra + col * (img_fov * engine_params.am_fov_x * (1/Math.cos(degrees_to_radians(Math.abs(row_dec)))));
+                var panel_ra_deg = col_ra_deg;
+                var panel_dec = row_dec;
+                if (pa_rad_mp) {
+                    var rot_mp = rotatePoint(col_ra_deg, row_dec, ra, dec, pa_rad_mp);
+                    panel_ra_deg = rot_mp[0]; panel_dec = rot_mp[1];
+                }
                 // convert from degrees to hours
-                col_ra = col_ra * degToHours;
+                var col_ra = panel_ra_deg * degToHours;
 
                 var point_ra_hour = Math.floor(col_ra);
                 var point_ra_sec = (Math.abs(col_ra) - Math.abs(point_ra_hour)) * 3600;
                 var point_ra_min = Math.floor(point_ra_sec / 60);
                 point_ra_sec = point_ra_sec - point_ra_min * 60;
-        
-                var point_dec_hour = Math.floor(row_dec);
-                var point_dec_sec = (Math.abs(row_dec) - Math.abs(point_dec_hour)) * 3600;
+
+                var point_dec_hour = Math.floor(panel_dec);
+                var point_dec_sec = (Math.abs(panel_dec) - Math.abs(point_dec_hour)) * 3600;
                 var point_dec_min = Math.floor(point_dec_sec / 60);
                 point_dec_sec = point_dec_sec - point_dec_min * 60;
-        
+
                 var aladin_target_str = point_ra_hour.toString() + ":" + point_ra_min.toString() + ":" + point_ra_sec.toFixed(2) + " ";
                 var aladin_target_str = aladin_target_str + point_dec_hour.toString() + ":" + point_dec_min.toString() + ":" + point_dec_sec.toFixed(2);
 
@@ -2655,7 +2703,7 @@ function StartAstroMosaicViewerEngine(
                                                 showLayersControl:false, showGotoControl:false,
                                                 showControl: false, cooFrame: "J2000", showFrame: false});
                 }
-                document.getElementById(engine_panels.panel_view_text+y.toString()+x.toString()).innerHTML = (i+1).toString() + " RA/DEC " + col_ra.toFixed(5) + " " + row_dec.toFixed(5);
+                document.getElementById(engine_panels.panel_view_text+y.toString()+x.toString()).innerHTML = (i+1).toString() + " RA/DEC " + col_ra.toFixed(5) + " " + panel_dec.toFixed(5);
                 col = col - 1;
                 i = i + 1;
                 panel_number = panel_number + 1;
