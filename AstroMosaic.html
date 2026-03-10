@@ -572,13 +572,16 @@ var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.h
 
 var version_number = "1.84";
 var startup_image = "M84";
-var startup_info_text = "v" + version_number + " Filtering by type and rising, Caldwell catalog."
+var startup_info_text = "v" + version_number + " Filtering by type and rising, Caldwell and Named catalogs."
 
 var version_text = 
     "Version 1.84\n"+
     "- Filtering by type\n" +
     "- Filtering by rising\n" +
     "- Caldwell catalog\n" +
+    "- Named catalog is a list of well-known astronomical objects\n" +
+    "- Number of months can be selected for long term visibility\n" +
+    "- Position angle can be set for telescopes.\n" +
     "- Performance updates\n" +
     "Version 1.83\n"+
     "- Added Seestar S30 Pro\n" +
@@ -867,12 +870,13 @@ var messier_catalog = {
 ["M 110", 0.67279, 41.68542, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 18.62]]
 };
 
-var catalogs_home = "https://ruuth.xyz/";
+var catalogs_home = "https://ruuth.xyz/test/";
 // var catalogs_home = "";
 
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
     { name: "Caldwell", targets: null, url: catalogs_home + "Caldwell.json",  source: "Wikipedia", AladinCatalog: null, color: '#29a329' },
+    { name: "Named", targets: null, url: catalogs_home + "named_targets.json",  source: "multiple", AladinCatalog: null, color: '#cccccc' },
     { name: "NGC", targets: null, url: catalogs_home + "OpenNGC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "IC", targets: null, url: catalogs_home + "OpenIC.json",  source: "openngc", AladinCatalog: null, color: '#cccccc' },
     { name: "Sharpless", targets: null, url: catalogs_home + "Sharpless.json", source: "simbad", AladinCatalog: null, color: '#00afff' },
@@ -2595,9 +2599,15 @@ function ensureCatalogCache(cat)
         typeLC[i] = (t[3] !== "" && t[3] != null) ? t[3].toLowerCase() : "";
 
         // display name string (unchanging)
-        let name = t[0];
-        if (t[7] !== "") {
-            name += ", " + t[7];
+        // For "Named" catalog: show common name first, then catalog ID
+        let name;
+        if (cat.name === "Named" && t[7] !== "") {
+            name = t[7] + ", " + t[0];
+        } else {
+            name = t[0];
+            if (t[7] !== "") {
+                name += ", " + t[7];
+            }
         }
         if (t[3] !== "") {
             name += " (" + t[3] + ")";
