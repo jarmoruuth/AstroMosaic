@@ -1981,7 +1981,7 @@ function StartAstroMosaicViewerEngine(
 
     function EngineInitAladin(aladin_fov, aladin_target)
     {
-        var start_time = performance.now();
+        const start_time = performance.now();
         console.log('EngineInitAladin', aladin_target, engine_panels.aladin_panel, engine_view_type);
         var aladin = null;
         var layers;
@@ -2085,31 +2085,45 @@ function StartAstroMosaicViewerEngine(
                     engine_native_resources.aladin_object_hovered(object.data);
                 }
             };
+            var _reposition_pending_coords = null;
+            var _reposition_timer = null;
             _aladin_event_context.positionChanged = function(pos) {
                 if (pos) {
                     var tempcoords = (pos.ra*degToHours).toFixed(5) + " " + (pos.dec).toFixed(5);
                     if (engine_params.isRepositionModeFunc != null
                           && engine_params.isRepositionModeFunc()
-                          && tempcoords != aladin_position
-                          && aladin_view_ready)
+                          && tempcoords != aladin_position)
                       {
-                          aladin_position = tempcoords;
-                          image_target = tempcoords;
-                          aladin_view_ready = false;
-                          try {
-                              get_image_target_ra_dec();
-                              EngineViewGrid(true);
-                              engine_params.repositionTargetFunc(image_target);
-                          } catch (e) {
-                              console.log('positionChanged error', e);
-                          } finally {
-                              aladin_view_ready = true;
+                          _reposition_pending_coords = tempcoords;
+                          if (_reposition_timer) {
+                              clearTimeout(_reposition_timer);
                           }
+                          _reposition_timer = setTimeout(function() {
+                              _reposition_timer = null;
+                              var coords = _reposition_pending_coords;
+                              if (coords && aladin_view_ready) {
+                                  aladin_position = coords;
+                                  image_target = coords;
+                                  aladin_view_ready = false;
+                                  try {
+                                      get_image_target_ra_dec();
+                                      EngineViewGrid(true);
+                                      engine_params.repositionTargetFunc(image_target);
+                                  } catch (e) {
+                                      console.log('positionChanged error', e);
+                                  } finally {
+                                      aladin_view_ready = true;
+                                  }
+                              }
+                          }, 150);
                     }
                 }
             };
         }
-        console.log("*** EngineInitAladin", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
+        const end_time = performance.now();
+        if (end_time - start_time > 500) {
+            console.log("*** EngineInitAladin time:", end_time - start_time, "ms");
+        }
         return aladin;
     }
 
@@ -2137,7 +2151,7 @@ function StartAstroMosaicViewerEngine(
 
     function EngineViewGrid(reposition)
     {
-        var start_time = performance.now();
+        const start_time = performance.now();
         var grid_size_x;
         var grid_size_y;
 
@@ -2197,6 +2211,10 @@ function StartAstroMosaicViewerEngine(
             panel_radec[x] = [];
         }
         var pa_rad = degrees_to_radians(engine_params.camera_pa);
+        var cos_pa = Math.cos(pa_rad);
+        var sin_pa = Math.sin(pa_rad);
+        var hw = engine_params.am_fov_x / 2;
+        var hh = engine_params.am_fov_y / 2;
         y = 0;
         while (row >= -size_y) {
             var row_dec = dec + row * img_fov * engine_params.am_fov_y;
@@ -2206,30 +2224,19 @@ function StartAstroMosaicViewerEngine(
                 // Panel center in tangent plane: +X=Eastward, +Y=Northward
                 var mx_center = -(col * img_fov * engine_params.am_fov_x);
                 var my_center = row * img_fov * engine_params.am_fov_y;
-                var hw = engine_params.am_fov_x / 2;
-                var hh = engine_params.am_fov_y / 2;
 
-                // Define frame corners in flat tangent plane relative to center (East(+X)-North(+Y))
-                var flat_corners = [
-                    [mx_center + hw, my_center + hh], // Eastward(+X), Northward(+Y)
-                    [mx_center - hw, my_center + hh], // Westward(-X), Northward(+Y)
-                    [mx_center - hw, my_center - hh], // Westward(-X), Southward(-Y)
-                    [mx_center + hw, my_center - hh], // Eastward(+X), Southward(-Y)
-                    [mx_center + hw, my_center + hh]  // Close shape
-                ];
-
-                // Rotate corners in flat plane (N through E increases CCW on sky), THEN project to spherical RA/Dec
-                var panel = flat_corners.map(function(c) {
-                    // c[0] increases Eastward, c[1] increases Northward. Matrix rotates CCW.
-                    var rx = c[0] * Math.cos(pa_rad) - c[1] * Math.sin(pa_rad);
-                    var ry = c[0] * Math.sin(pa_rad) + c[1] * Math.cos(pa_rad);
-                    
+                // Define frame corners in flat tangent plane, rotate, then project to spherical RA/Dec
+                // c[0] increases Eastward, c[1] increases Northward. Matrix rotates CCW.
+                var flat_cx = [mx_center + hw, mx_center - hw, mx_center - hw, mx_center + hw, mx_center + hw];
+                var flat_cy = [my_center + hh, my_center + hh, my_center - hh, my_center - hh, my_center + hh];
+                var panel = [];
+                for (var ci = 0; ci < 5; ci++) {
+                    var rx = flat_cx[ci] * cos_pa - flat_cy[ci] * sin_pa;
+                    var ry = flat_cx[ci] * sin_pa + flat_cy[ci] * cos_pa;
                     var p_dec = dec + ry;
-                    // Project local math X (rx, positive East) back to spherical RA (positive West). 
-                    // RA_sph = RA_center - ΔX_math / cos(Dec)
                     var p_ra = ra - rx / Math.cos(degrees_to_radians(Math.abs(p_dec)));
-                    return [p_ra, p_dec];
-                });
+                    panel.push([p_ra, p_dec]);
+                }
                 
                 // Unrotated panel center RA for coordinate display later in the loop
                 var col_ra = ra - mx_center / Math.cos(degrees_to_radians(Math.abs(row_dec)));
@@ -2318,7 +2325,7 @@ function StartAstroMosaicViewerEngine(
         }
         if (engine_view_type == "all" && !reposition) {
             /* Add moon and optionally planet path to the Aladin view */
-            var start_time = performance.now();
+            const start_time2 = performance.now();
             var midday = engine_params.UTCdate_ms + day_ms/2;
             var interval = 60*60*1000; // 60 minutes
             var draw_full_day = 1;  // if 0 draw only during astronomical twilight
@@ -2454,10 +2461,16 @@ function StartAstroMosaicViewerEngine(
                     cat.addSources(planetsources);
                 }
             }
-            console.log("*** EngineViewGrid, moon and planet paths", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
+            const end_time2 = performance.now();
+            if (end_time2 - start_time2 > 500) {
+                console.log("*** EngineViewGrid, moon and planet paths time:", end_time2 - start_time2, "ms");
+            }
         }
         aladin_view_ready = true; 
-        console.log("*** EngineViewGrid", "elapsed", ( performance.now() - start_time ) / 1000, "seconds");
+        const end_time = performance.now();
+        if (end_time - start_time > 500) {
+            console.log("*** EngineViewGrid time:", end_time - start_time, "ms");
+        }
     }
 
     function EngineViewGridFromList(coordinates)
@@ -2506,36 +2519,22 @@ function StartAstroMosaicViewerEngine(
         console.log('drawBox', col_ra, row_dec, fov_x, fov_y);
 
         var pa_rad = degrees_to_radians(engine_params.camera_pa);
+        var cos_pa = Math.cos(pa_rad);
+        var sin_pa = Math.sin(pa_rad);
         var hw = fov_x / 2;
         var hh = fov_y / 2;
 
-        // 1. Define corners in a flat local plane.
-        // NOTE THE FLIPPED SIGN on local X (East/West).
-        // In standard math frame (Dec Up), positive PA (CCW rotation N through E)
-        // requires +X to map to screen LEFT (East). +ΔRA is West (Right).
-        // So we map Math +X = -RA_delta (Eastward increase).
-        var flat_corners = [
-            [ hw,  hh], // East(+X), North(+Y) in standard CCW math plane
-            [-hw,  hh], // West(-X), North(+Y)
-            [-hw, -hh], // West(-X), South(-Y)
-            [ hw, -hh], // East(+X), South(-Y)
-            [ hw,  hh]  // Close shape
-        ];
-
-        // 2. Rotate the corners in the flat plane, THEN project to RA/Dec
-        var panel = flat_corners.map(function(c) {
-            // Standard CCW rotation on Math X-Y defined as East(+X)-North(+Y)
-            var rx = c[0] * Math.cos(pa_rad) - c[1] * Math.sin(pa_rad);
-            var ry = c[0] * Math.sin(pa_rad) + c[1] * Math.cos(pa_rad);
-            
+        // Rotate corners in flat plane then project to RA/Dec
+        var flat_cx = [ hw, -hw, -hw,  hw,  hw];
+        var flat_cy = [ hh,  hh, -hh, -hh,  hh];
+        var panel = [];
+        for (var ci = 0; ci < 5; ci++) {
+            var rx = flat_cx[ci] * cos_pa - flat_cy[ci] * sin_pa;
+            var ry = flat_cx[ci] * sin_pa + flat_cy[ci] * cos_pa;
             var p_dec = row_dec + ry;
-            // Project local Math X (rx, Eastward positive) back to spherical RA 
-            // using p_dec for correct convergence scaling.
-            // math_X increases Eastward (ΔRA negative). So ΔRA = -math_X.
-            // Spherical RA = ra_center + ΔRA = ra_center - math_X.
             var p_ra = col_ra - rx / Math.cos(degrees_to_radians(Math.abs(p_dec)));
-            return [p_ra, p_dec];
-        });
+            panel.push([p_ra, p_dec]);
+        }
 
         var line_color = (name == 'FoV') ? 'White' : '#ee2345';
         if (engine_data.aladin) {

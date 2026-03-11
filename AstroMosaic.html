@@ -568,6 +568,12 @@ p {
 <script type="text/javascript" src="AstroMosaicEngine.js"></script>
 <script type="text/javascript">
 
+const isTest = window.location.pathname.includes("/test/");
+
+if (isTest) {
+    console.log("Running in TEST environment");
+}
+
 var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.html">Astro Mosaic</a>';
 
 var version_number = "1.84";
@@ -870,8 +876,11 @@ var messier_catalog = {
 ["M 110", 0.67279, 41.68542, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 18.62]]
 };
 
-var catalogs_home = "https://ruuth.xyz/test/";
-// var catalogs_home = "";
+if (isTest) {
+    catalogs_home = "https://ruuth.xyz/test/";
+} else {
+    catalogs_home = "https://ruuth.xyz/";
+}
 
 var catalogs = [
     { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json" , source: "simbad", AladinCatalog: null, color: '#29a329' },
@@ -2663,6 +2672,9 @@ function filter_visible_catalog_items(cat, lat, lng)
         return { list: [['', '', null, 0]], filtered: false };
     }
 
+    // Add timer to debug performance of filtering (can be removed later)
+    const filterStartTime = performance.now();
+
     ensureCatalogCache(cat);
     const C = cat._cache;
     const n = cat.targets.length;
@@ -2844,6 +2856,12 @@ function filter_visible_catalog_items(cat, lat, lng)
 
     if (doSort && fl.length > 1) {
         fl.sort((a, b) => b[3] - a[3]);
+    }
+
+    const filterEndTime = performance.now();
+    // Show time only if it takes more than 0.5 seconds to filter, to avoid cluttering the UI with very fast times
+    if (filterEndTime - filterStartTime > 500) {
+        console.log("*** Filtering time:", filterEndTime - filterStartTime, "ms");
     }
 
     return { list: fl, filtered: filtered };
