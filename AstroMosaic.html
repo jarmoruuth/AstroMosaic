@@ -2383,9 +2383,10 @@ function dataObjectToTable(data)
         tab = addTabRow(tab, "Distance (Mly)", data.info.distance);
         tab = addTabRow(tab, "Notes", data.info.notes);
         tab = addTabRow(
-                tab, 
-                "Url", 
-                '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>');
+                tab,
+                "Url",
+                '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident='+data.wikiname.replace(/ /g, "+")+'" target="_blank">SIMBAD</a>' +
+                ' | <a href="https://www.astrobin.com/search/?q='+encodeURIComponent('"'+data.wikiname+'"')+'" target="_blank">AstroBin</a>');
     } else if (data.pathinfo) {
         var tab = '<p style="padding: 5px;">' + data.pathname + '</p>';
         var tab = tab + tabstart;
