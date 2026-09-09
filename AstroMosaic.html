@@ -578,9 +578,11 @@ var astro_mosaic_link = 'Powered by <a href="https://ruuth.xyz/AstroMosaicInfo.h
 
 var version_number = "1.85";
 var startup_image = "M85";
-var startup_info_text = "v" + version_number + " Added Seestar S50 Pro.";
+var startup_info_text = "v" + version_number + " Added Dwarflab Draco telescope.";
 
 var version_text = 
+    "Version 1.86\n"+
+    "- Added Dwarflab Draco telescope.\n"+
     "Version 1.85\n"+
     "- Added Seestar S50 Pro.\n"+
     "Version 1.84\n"+
@@ -991,9 +993,19 @@ var all_services = {
             radec_format: 1, 
             telescopes: [
                 { name: "S50", fov_x: 0.73*60, fov_y: 1.29*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
-                { name: "S50 Pro", fov_x: 1.39*60, fov_y: 2.47*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "S50 Pro", fov_x: 1.38*60, fov_y: 2.454*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
                 { name: "S30", fov_x: 1.22*60, fov_y: 2.17*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
-                { name: "S30 Pro", fov_x: 2.4*60, fov_y: 4.6*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
+                { name: "S30 Pro", fov_x: 2.243*60, fov_y: 3.986*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
+            ] 
+        },
+        { 
+            name: "Dwarflab", 
+            radec_format: 1, 
+            telescopes: [
+                { name: "Draco", fov_x: 1.65*60, fov_y: 1.24*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "Dwarf mini", fov_x: 2.14*60, fov_y: 1.20*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "Dwarf II", fov_x: 192, fov_y: 110, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
+                { name: "Dwarf 3", fov_x: 2.95*60, fov_y: 1.66*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
             ] 
         },
         { 
@@ -1006,15 +1018,6 @@ var all_services = {
                 { name: "Vespera II", fov_x: 2.5*60, fov_y: 1.4*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
                 { name: "Vespera Pro", fov_x: 1.6*60, fov_y: 1.6*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
                 { name: "Hyperia", fov_x: 1.97*60, fov_y: 1.3*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
-            ] 
-        },
-        { 
-            name: "Dwarflab", 
-            radec_format: 1, 
-            telescopes: [
-                { name: "Dwarf II", fov_x: 192, fov_y: 110, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
-                { name: "Dwarf 3", fov_x: 2.95*60, fov_y: 1.66*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  },
-                { name: "Dwarf mini", fov_x: 2.14*60, fov_y: 1.20*60, location: "Current location", lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10  }
             ] 
         },
         { 
