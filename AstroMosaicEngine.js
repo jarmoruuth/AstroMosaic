@@ -10,6 +10,25 @@
  * 
 \*************************************************************************/
 
+/* Safe check for Aladin Lite availability. Using a bare `A` throws a
+ * ReferenceError when the Aladin script failed to load (network error,
+ * CDS server down, blocked by an extension etc.), so check with typeof.
+ */
+function AstroMosaicIsAladinAvailable()
+{
+    return typeof A !== 'undefined' && A !== null && typeof A.aladin === 'function';
+}
+
+/* Human readable reason why Aladin is not available, for UI messages. */
+function AstroMosaicAladinErrorMessage()
+{
+    var msg = "Could not load Aladin Sky Atlas";
+    if (typeof window !== 'undefined' && window.astromosaic_aladin_load_error) {
+        msg += " (" + window.astromosaic_aladin_load_error + ")";
+    }
+    return msg + ". The Aladin server may be down or blocked by the network or a browser extension. Try reloading the page later.";
+}
+
 /*************************************************************************
  * 
  *      AstroMosaicEngine
@@ -1607,6 +1626,15 @@ function StartAstroMosaicViewerEngine(
             return;
         }
 
+        if (!AstroMosaicIsAladinAvailable() && resolveNameFromCatalogs(image_target)) {
+            // Aladin did not load, so CDS servers (which also host Sesame) are
+            // likely down. Use local catalogs first to avoid waiting for a
+            // Sesame network timeout.
+            console.log('EngineViewImageByName: Aladin not available, resolved from local catalogs');
+            EngineViewImageByType();
+            return;
+        }
+
         // Simbad ascii, some problems when accessing the site
         // var resolver_url = "https://simbad.u-strasbg.fr/simbad/sim-id?output.format=ASCII&Ident=";
         
@@ -1885,6 +1913,9 @@ function StartAstroMosaicViewerEngine(
 
     function getAladinPosition(aladin)
     {
+        if (!aladin) {
+            return null;
+        }
         let radec = aladin.getRaDec();
         let ra_hours = radec[0] * degToHours;
         let dec = radec[1];
@@ -1993,7 +2024,7 @@ function StartAstroMosaicViewerEngine(
             layers = false;
             fullscreen = false;
         }
-        if (A) {
+        if (AstroMosaicIsAladinAvailable()) {
             // Check if the DOM element was destroyed and recreated (e.g. switching from panels view back to fov)
             var aladin_el = document.getElementById(engine_panels.aladin_panel);
             var dom_still_valid = _persistent_aladin_el && _persistent_aladin_el.isConnected && _persistent_aladin_el === aladin_el;
@@ -2063,7 +2094,8 @@ function StartAstroMosaicViewerEngine(
                 }
             }
         } else {
-            document.getElementById(engine_panels.aladin_panel).innerHTML = "<p>Could not access Aladin Sky Atlas</p>";
+            console.error('EngineInitAladin: ' + AstroMosaicAladinErrorMessage());
+            document.getElementById(engine_panels.aladin_panel).innerHTML = "<p style='color:red'>" + AstroMosaicAladinErrorMessage() + "</p>";
         }
         if (aladin) {
             addAladinCatalogs(aladin, false);
@@ -2195,6 +2227,10 @@ function StartAstroMosaicViewerEngine(
         var radec = null;
         if (engine_data.aladin) {
             radec = engine_data.aladin.getRaDec();
+        } else {
+            // Aladin not available, use target coordinates as grid center
+            // so that mosaic coordinates can still be calculated.
+            radec = get_ra_dec(image_target);
         }
 
         console.log("center RaDec = ", radec);
@@ -2244,7 +2280,7 @@ function StartAstroMosaicViewerEngine(
                 var line_color = 'White';
 
                 if (grid_type == "visual") {
-                    if (x == 1 && y == 1) {
+                    if (x == 1 && y == 1 && engine_data.aladin) {
                         // Add a circle to represent the 60 degree radius
                         var radius = 45;
                         var overlay = A.graphicOverlay({color: 'white', lineWidth: 1, name: radius + ' degrees'});
@@ -2323,7 +2359,7 @@ function StartAstroMosaicViewerEngine(
                 document.getElementById(engine_panels.aladin_panel_text).innerHTML = engine_params.astro_mosaic_link;
             }
         }
-        if (engine_view_type == "all" && !reposition) {
+        if (engine_view_type == "all" && !reposition && engine_data.aladin) {
             /* Add moon and optionally planet path to the Aladin view */
             const start_time2 = performance.now();
             var midday = engine_params.UTCdate_ms + day_ms/2;
@@ -2696,7 +2732,7 @@ function StartAstroMosaicViewerEngine(
                 } else {
                     document.getElementById(panel_id).style.height = "300px";
                 }
-                if (A) {
+                if (AstroMosaicIsAladinAvailable()) {
                     engine_data.aladinarr[i] = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:engine_params.am_fov_x, target: aladin_target_str,
                                                 showReticle:false, showZoomControl:false, showFullscreenControl:false, 
                                                 showLayersControl:false, showGotoControl:false,
@@ -2751,7 +2787,7 @@ function StartAstroMosaicViewerEngine(
             } else {
                 document.getElementById(panel_id).style.height = "300px";
             }
-            if (A) {
+            if (AstroMosaicIsAladinAvailable()) {
                 engine_data.aladinarr[i] = A.aladin('#'+panel_id, {survey: "P/DSS2/color", fov:engine_params.am_fov_x, target: radec,
                                             showReticle:false, showZoomControl:false, showFullscreenControl:false, 
                                             showLayersControl:false, showGotoControl:false,

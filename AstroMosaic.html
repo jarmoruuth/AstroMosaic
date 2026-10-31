@@ -177,7 +177,65 @@ p {
 <body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" charset="utf-8"></script>
 <!-- script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script -->
-<script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+<script type="text/javascript">
+// Load Aladin Lite asynchronously so that the page renders even if the Aladin
+// server is slow or down. A blocking <script> tag would keep the page blank
+// until the browser connection times out.
+// startAstroMosaic is called via whenAladinReady() after Aladin has loaded,
+// failed, or timed out.
+var aladin_script_url = "https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js";
+var aladin_load_timeout_ms = 15000;
+var aladin_load_state = "loading";  // "loading", "loaded", "failed", "timeout"
+var aladin_load_callbacks = [];
+
+function aladinLoadDone(state)
+{
+    if (aladin_load_state != "loading") {
+        if (state == "loaded" && aladin_load_state == "timeout") {
+            // Loaded after we already started without Aladin
+            console.log("Aladin Lite loaded after timeout");
+            var el = document.getElementById("error_text");
+            if (el) {
+                el.innerHTML = "Aladin Sky Atlas is now available. <a href='javascript:location.reload()'>Reload the page</a> to use it.";
+            }
+        }
+        return;
+    }
+    aladin_load_state = state;
+    if (state == "failed") {
+        window.astromosaic_aladin_load_error = "failed to load " + aladin_script_url;
+    } else if (state == "timeout") {
+        window.astromosaic_aladin_load_error = "no response from " + aladin_script_url + " in " + (aladin_load_timeout_ms / 1000) + " seconds";
+    }
+    if (state != "loaded") {
+        console.error("Aladin Lite: " + window.astromosaic_aladin_load_error);
+    }
+    var callbacks = aladin_load_callbacks;
+    aladin_load_callbacks = [];
+    for (var i = 0; i < callbacks.length; i++) {
+        callbacks[i]();
+    }
+}
+
+function whenAladinReady(callback)
+{
+    if (aladin_load_state == "loading") {
+        aladin_load_callbacks.push(callback);
+    } else {
+        callback();
+    }
+}
+
+(function() {
+    var s = document.createElement("script");
+    s.src = aladin_script_url;
+    s.charset = "utf-8";
+    s.onload = function() { aladinLoadDone("loaded"); };
+    s.onerror = function() { aladinLoadDone("failed"); };
+    document.head.appendChild(s);
+    setTimeout(function() { aladinLoadDone("timeout"); }, aladin_load_timeout_ms);
+})();
+</script>
 
 <div id="allDiv" class="all_div">
 <div id="headerDiv" class="header">
@@ -1268,7 +1326,29 @@ if (typeof URLSearchParams === "function") {
 if (url_services_json == null) {
     // Start astro mosaic. We may also start after loading
     // json services file
-    startAstroMosaic("normal start");
+    startAstroMosaicWhenAladinReady("normal start");
+}
+
+// Start AstroMosaic after Aladin Lite has loaded, failed or timed out.
+// Show a status message while waiting. The message is placed outside allDiv
+// because allDiv stays hidden until startAstroMosaic has run apply_url_add.
+function startAstroMosaicWhenAladinReady(txt)
+{
+    var waiting_el = null;
+    if (aladin_load_state == "loading") {
+        waiting_el = document.createElement("P");
+        waiting_el.id = "aladin-connecting-text";
+        waiting_el.style.margin = "10px";
+        waiting_el.innerHTML = "Connecting to Aladin Sky Atlas...";
+        var allDiv = document.getElementById("allDiv");
+        allDiv.parentNode.insertBefore(waiting_el, allDiv);
+    }
+    whenAladinReady(function() {
+        if (waiting_el) {
+            waiting_el.remove();
+        }
+        startAstroMosaic(txt);
+    });
 }
 
 function createRowDiv(rownum)
@@ -1480,7 +1560,7 @@ function load_services_json(url)
                 response.json().then(function(jsonData) {
                     console.log("Load services jsonData", jsonData);
                     all_services = jsonData;
-                    startAstroMosaic("from load_services_json");
+                    startAstroMosaicWhenAladinReady("from load_services_json");
                 })
             }
         )
@@ -2445,6 +2525,9 @@ function catalogToDataObject(target)
 
 function addJsonToAladinCatalog(cat)
 {
+    if (!AstroMosaicIsAladinAvailable()) {
+        return;
+    }
     cat.AladinCatalog = A.catalog({name: cat.name, labelColumn: 'name', displayLabel: true, labelColor: cat.color, labelFont: '12px sans-serif'});
     cat.AladinCatalog.hide();
 
@@ -2497,8 +2580,8 @@ function load_and_init_catalogs()
     if (url_view != "all") {
         return;
     }
-    if (!A) {
-        console.log("load_and_init_catalogs:Aladin not available");
+    if (!AstroMosaicIsAladinAvailable()) {
+        console.error("load_and_init_catalogs: " + AstroMosaicAladinErrorMessage());
         return;
     }
 
